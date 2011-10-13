@@ -1,4 +1,4 @@
-function [STATISTICS, AGENTS] = BeachEvacuation(INPUT,AGENTS,BUILDINGS,FLOOD,TOPOGRAPHY)
+function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,FLOOD,TOPOGRAPHY)
 
 
 
@@ -8,21 +8,20 @@ function [STATISTICS, AGENTS] = BeachEvacuation(INPUT,AGENTS,BUILDINGS,FLOOD,TOP
 % - number of families inside
 % - location of the exit
 
-
+% initialize graph with nodes, paths between them and cost per path
+% - cost due to topography
+% - cost due to street width
+% - cost due to street type (paved, unpaved)
+% - add up all costs
 
 % initialize agents in buildings and on streets
 % - location
 % - mass
-% - age
-% - group
-% - helping factor
-% - panic factor ()
-% - reaction factor
-% - maximum velocity
-
-
-
-
+% - age -> maximum velocity
+% - panic factor (how often are new strategies taken, how much are persons in the way influencing the cost of that path?)
+% - horizon distance (how far can the agent look?)
+% - group (e.g. family) --> later
+% - helping factor --> later
 
 % plot everything
 
@@ -34,10 +33,6 @@ function [STATISTICS, AGENTS] = BeachEvacuation(INPUT,AGENTS,BUILDINGS,FLOOD,TOP
 
 %----------------------------------------------------
 % compute forces from buildings
-%----------------------------------------------------
-
-%----------------------------------------------------
-% compute forces from exits
 %----------------------------------------------------
 
 %----------------------------------------------------
