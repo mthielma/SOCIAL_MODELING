@@ -17,7 +17,7 @@ function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,F
 % initialize agents in buildings and on streets
 % - location
 % - mass
-% - age -> maximum velocity
+% - age -> maximum velocity, max acceleration
 % - panic factor (how often are new strategies taken, how much are persons in the way influencing the cost of that path?)
 % - horizon distance (how far can the agent look?)
 % - group (e.g. family) --> later
@@ -48,12 +48,14 @@ function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,F
 %----------------------------------------------------
 % compute decisions of agents
 % - direction
-% - help others
+% - help others ?
 %----------------------------------------------------
 
 
 %----------------------------------------------------
 % compute velocity of agents
+% - generally, each agents wants to go with maximum speed
+% - social/wall forces make him slow down
 %----------------------------------------------------
 
 
