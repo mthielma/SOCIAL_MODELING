@@ -23,6 +23,7 @@ function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,F
 % - group (e.g. family) --> later
 % - helping factor --> later
 
+
 % plot everything
 
 
