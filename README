@@ -1,0 +1,46 @@
+MATLAB FS11 – Research Plan
+(Evacuation bottleneck in case of flood events)
+
+
+Document Version: 1.0 
+Group Name: The Convectionists
+Group participants names: F. Crameri, M. Thielmann
+
+
+General Introduction
+
+Locations close to water bodies (rivers, lakes) have always been naturally preferred for human settlements, since they provide i) water, ii) food through the animals inhabiting the water body and iii) transportation ways. In earlier times the settlements were usually located at a certain distance from the water body to prevent the settlement to be seriously affected by flooding. With the increase of inhabitants, those settlements grew closer to the water body, thus making it more vulnerable to flooding events.
+When a part of a city has to be evacuated because of a flooding event, it is important to have information about the social behavior of the inhabitants. Based on this information, more effective evacuation procedures can be developed that might be crucial in reducing possible fatalities.
+
+
+Fundamental Questions
+
+When does evacuation have to start prior to flooding in order to evacuate all persons in the given region?
+What measures can be taken to decrease evacuation time?
+
+
+Expected Results
+
+Since we plan to have a limited amount of possible exit, we expect to experience bottlenecks at those exits and possibly at crossings. We also expect that additional measures to organize the evacuation process will decrease the evacuation time and reduce bottlenecks.
+
+
+References 
+(Graf and Krebs, 2010, Helbing et al., 2000, Helbing and Molnar, 1995, Kneidl and Borrmann, 2011)
+We intend to write the code needed for the simulations from scratch. However, we also plan to make use of available Matlab functions to decrease computation time (e.g. use an existing kd-tree implementation to determine the number of people in a certain distance from the agent.)
+
+
+Research Methods
+
+In this study, we want to employ different techniques to model the evacuation behavior of a given number of people: Since we are interested in the behavior of each individual person, we are planning to use an agent based model, where interactions with other agents/walls are modeled using a social force model as described in (Helbing et al., 2000, Helbing and Molnar, 1995).  
+We plan to determine the large-scale exit strategy of each agent based on a navigation graph that consists of the roads given as input parameter. Crossings are given as nodes, which are connected by paths. Each path is then given a certain weight (depending on topography). Each agent will then try to minimize the estimated time needed to reach an exit and decide for the nearest node. Additionally, the weight of the adjacent paths is modified according to the people visible to the agent on that path. Once the agent decided on a certain path, an attractive force will draw the agent towards the next node (Graf and Krebs, 2010, Kneidl and Borrmann, 2011).
+We intend to model the flooding in a rather simple way, where the water height changes at every time step depending on given input parameters. Regions, whose height is below the water level, will be inundated immediately. There are more sophisticated models for flood simulations, but given the time available to complete this project, we decided to reduce the complexity in this case. The response of each agent to the flood front will be modeled in a similar way as “wall forces” are modeled. 
+
+
+Other
+References
+
+Graf, D. & Krebs, M., 2010. Train Boarding Platform Simulation. in Project reportETHZ, Modelling and Simulating Social Systems with MATLAB.
+Helbing, D., Farkas, I. & Vicsek, T., 2000. Simulating dynamical features of escape panic, Nature, 407, 487-490.
+Helbing, D. & Molnar, P., 1995. Social Force Model for Pedestrian Dynamics, Phys Rev E, 51, 4282-4286.
+Kneidl, A. & Borrmann, A., 2011. How Do Pedestrians find their Way? Results of an experimental study with students compared to simulation results. in Conference on Emergency Evacuation, Warsaw, Poland.
+
