@@ -148,16 +148,37 @@ Number.complete(ind_PathX) = Number.PathX;
 Number.complete(ind_Center)  = Number.Center;
 Number.complete(ind_Center)  = Number.Center;
 
-Number.complete(ind_Corner) = Number.Corner;
-Number.complete(ind_Corner) = Number.Corner;
+%Number.complete(ind_Corner) = Number.Corner;
+%Number.complete(ind_Corner) = Number.Corner;
 
 
+NumberNodes = zeros(size(Number.Phase));
+NumberNodes(ind_Corner) = Number.Corner;
 % create vector that contains the node numbers per path (the row index represents the path)
-PathVec = zeros(max(Number.complete(:)),4);
+PathVec = zeros(max(Number.complete(:)),2);
 
 % paths in x-direction
+for iPath = 1:length(Number.PathX(:));
+    % 1. find adjacent nodes to paths
+    [iz,ix]   = find(Number.complete==Number.PathX(iPath));
+    PathVec(Number.PathX(iPath),1) = NumberNodes(iz,ix-1); % left
+    PathVec(Number.PathX(iPath),2) = NumberNodes(iz,ix+1); % right   
+end
 
-PathVec(Number.PathX,1)
-PathVec(Number.PathX,2)
+% paths in z-direction
+for iPath = 1:length(Number.PathY(:));
+    % 1. find adjacent nodes to paths
+    [iz,ix]   = find(Number.complete==Number.PathY(iPath));
+    PathVec(Number.PathY(iPath),1) = NumberNodes(iz-1,ix); % left
+    PathVec(Number.PathY(iPath),2) = NumberNodes(iz+1,ix); % right   
+end
+
+
+Number.complete(ind_Corner) = Number.Corner;
+Number.complete(ind_Corner) = Number.Corner;
+
+
+bla;
+
 
 
