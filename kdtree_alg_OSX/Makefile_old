@@ -1,0 +1,62 @@
+# This will have to be changed according to your MATLAB 
+# directory
+#MATDIR = /usr/local/matlab72
+#MATDIR = /usr/local/matlab
+MATDIR = /usr/smokey/dept/matlab2006
+
+
+# These may have to be changed depeing on the MATLAB version
+# Older versions of matlab may have:
+INCDIR = -Isrc -I$(MATDIR)/extern/include
+LIBS = -lmat -lmex -lmx -lm
+
+ARCH = $(shell uname -p)
+
+ifeq ($(ARCH),x86_64)
+	CXX = g++
+	CXXFLAGS = -Wall -O3 -fomit-frame-pointer \
+	-mtune=opteron -msse -msse2 -fPIC 
+	SUFFIX = mexa64
+	LIBDIR = -L$(MATDIR)/bin/glnxa64
+else
+# Optional -- compile with Intel compiler
+# This is much faster, but requires runtime libraries to be
+# distributed with it
+#	CXX = icpc
+#	CXXFLAGS = -O3 -xN
+	CXX = g++
+	CXXFLAGS = -Wall -O3 -fomit-frame-pointer \
+	 -mtune=pentium4 -msse -msse2 -fPIC
+	SUFFIX = mexglx
+	LIBDIR = -L$(MATDIR)/bin/glnx86
+endif
+
+
+################################################################
+# No changes should need to be made below this line
+
+TARGETS = kdtree kdtree_closestpoint kdtree_range
+COMMON = kdtree.cpp
+
+
+all : $(patsubst %,kdtree/%.$(SUFFIX),$(TARGETS))
+
+kdtree/kdtree.$(SUFFIX) : kdtree_create.o $(patsubst %.cpp,%.o,$(COMMON))
+	ln -s @kdtree kdtree
+	$(CXX) $(CXXFLAGS) $(LIBDIR) $(LIBS) -shared $^ -o $@
+	rm kdtree
+
+kdtree/%.$(SUFFIX) : %.o $(patsubst %.cpp,%.o,$(COMMON))
+	ln -s @kdtree kdtree
+	$(CXX) $(CXXFLAGS) $(LIBDIR) $(LIBS) -shared $^ -o $@
+	rm kdtree
+
+%.o : src/%.cpp src/%.h
+	$(CXX) $(CXXFLAGS) $(INCDIR) -c $< -o $@
+
+%.o : src/%.cpp 
+	$(CXX) $(CXXFLAGS) $(INCDIR) -c $< -o $@
+
+clean : 
+	rm -rf $(patsubst %,@kdtree/%.$(SUFFIX),$(TARGETS)) \
+	$(patsubst %.cpp,%.o,$(COMMON)) $(patsubst %,%.o,$(TARGETS)) kdtree_create.o *.o
