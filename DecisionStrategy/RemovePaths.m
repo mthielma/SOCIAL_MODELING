@@ -1,4 +1,4 @@
-function [PathVec,Distance,Gradient] = RemovePaths(X_Grid,Y_Grid,Map,X,Y,PathVec,Distance,Gradient)
+function [PathVec,Distance,Gradient,GradientFactor] = RemovePaths(X_Grid,Y_Grid,Map,X,Y,PathVec,Distance,Gradient,GradientFactor)
 
 % remove paths from path vector if paths interfere with buildings or
 % something else
@@ -15,6 +15,7 @@ for i = 1:length(IndOn)
    PathVec(iz,:)    = []; % remove paths
    Gradient(iz,:)   = [];
    Distance(iz,:)   = [];
+   GradientFactor(iz,:)   = [];
 end
 
 axis equal, axis tight
@@ -40,3 +41,4 @@ end
 PathVec(Remove>0,:) = [];
 Gradient(Remove>0,:) = [];
 Distance(Remove>0,:) = [];
+GradientFactor(Remove>0,:) = [];
