@@ -1,4 +1,4 @@
-function [X,Y,PathVec,Distance,Gradient] = GenerateRectangularGraph(XGrid,YGrid,ZGrid)
+function [X,Y,Z,PathVec,Distance,Gradient,GradientFactor] = GenerateRectangularGraph(XGrid,YGrid,ZGrid)
 % generate graph for a rectangular net of streets.
 % additionally compute topography differences
 %
@@ -153,6 +153,10 @@ Distance   =  sqrt((X(PathVec(:,2))-X(PathVec(:,1))).^2+(Y(PathVec(:,2))-Y(PathV
 DiffHeight =  Z(PathVec(:,2))-Z(PathVec(:,1)); % compute height difference between nodes, positive:upwards, negative: downwards 
 Gradient   =  DiffHeight./Distance;
 
+% this is taken from Tobler (1993), it was originally developed for walking
+% persons, therefore it might not be the best approximation, but it was the
+% best we found so far
+GradientFactor = exp(-3.5*abs(Gradient+0.05));
 %==========================================================================
 if Debug == 1
    figure(99),clf
