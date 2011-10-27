@@ -1,11 +1,16 @@
 function [X,Y,PathVec,Distance,Gradient] = GenerateRectangularGraph(XGrid,YGrid,ZGrid)
 % generate graph for a rectangular net of streets.
 % additionally compute topography differences
+%
+% Marcel Thielmann, Oct 2011
 
+
+Debug = 0; % default is no debugging
 % INPUT: rectangular grids for x,y,z
 if nargin == 0
-   xvec = 0:10;
-   yvec = 0:10;
+   Debug = 1;
+   xvec = 0:5;
+   yvec = 0:5;
    [XGrid,YGrid] = meshgrid(xvec,yvec);
    ZGrid         = XGrid*0;
 end
@@ -31,14 +36,14 @@ Number.PathX      =   zeros(Ny  ,Nx-1);
 Number.Center     =   zeros(Ny-1,Nx-1);
 Number.Nodes     =   zeros(Ny,Nx);
 
-for ix=1:2:Nx+Nx-1, for iz=2:2:Ny+Ny-1, Number.Phase(iz,ix) = 2; end; end % Qx equations
-for ix=2:2:Nx+Nx-1, for iz=1:2:Ny+Ny-1, Number.Phase(iz,ix) = 3; end; end % Qz equations
-for ix=2:2:Nx+Nx-1, for iz=2:2:Ny+Ny-1, Number.Phase(iz,ix) = 4; end; end % Center equations
-for ix=1:2:Nx+Nx-1, for iz=1:2:Ny+Ny-1, Number.Phase(iz,ix) = 1; end; end % Corner equations
+for ix=1:2:Nx+Nx-1, for iz=2:2:Ny+Ny-1, Number.Phase(iz,ix) = 2; end; end % Paths in y-direction
+for ix=2:2:Nx+Nx-1, for iz=1:2:Ny+Ny-1, Number.Phase(iz,ix) = 3; end; end % Paths in x-direction
+for ix=2:2:Nx+Nx-1, for iz=2:2:Ny+Ny-1, Number.Phase(iz,ix) = 4; end; end % diagonal paths
+for ix=1:2:Nx+Nx-1, for iz=1:2:Ny+Ny-1, Number.Phase(iz,ix) = 1; end; end % nodes
 
 num               =     1;
 
-% Qx numbering
+% yPath numbering
 for ix=1:size(Number.Phase,2)         % x horizontal direction
     for iz=1:size(Number.Phase,1)     % z vertical direction
         if Number.Phase(iz,ix)==2
@@ -48,7 +53,7 @@ for ix=1:size(Number.Phase,2)         % x horizontal direction
     end
 end
 
-% Qz numbering
+% xPath
 for ix=1:size(Number.Phase,2)         % x horizontal direction
     for iz=1:size(Number.Phase,1)     % z vertical direction
         if Number.Phase(iz,ix)==3
@@ -58,7 +63,7 @@ for ix=1:size(Number.Phase,2)         % x horizontal direction
     end
 end
 
-% %Center-numbering
+% %Center-numbering (not done to leave diagonal paths out)
 % for ix=1:size(Number.Phase,2)         % x horizontal direction
 %     for iz=1:size(Number.Phase,1)     % z vertical direction
 %         if Number.Phase(iz,ix)==4
@@ -103,6 +108,7 @@ Number.complete(ind_Center)  = Number.Center;
 
 NumberNodes = zeros(size(Number.Phase));
 NumberNodes(ind_Corner) = Number.Nodes;
+
 % create vector that contains the node numbers per path (the row index represents the path)
 PathVec = zeros(max(Number.complete(:)),2);
 
@@ -114,7 +120,7 @@ for iPath = 1:length(Number.PathX(:));
     PathVec(Number.PathX(iPath),2) = NumberNodes(iz,ix+1); % right   
 end
 
-% paths in z-direction
+% paths in y-direction
 for iPath = 1:length(Number.PathY(:));
     % 1. find adjacent nodes to paths
     [iz,ix]   = find(Number.complete==Number.PathY(iPath));
@@ -122,10 +128,13 @@ for iPath = 1:length(Number.PathY(:));
     PathVec(Number.PathY(iPath),2) = NumberNodes(iz+1,ix); % right   
 end
 
-% diagonal paths (not used here, therefore we delete them)
+% diagonal paths (not used here, therefore we don't have to care about them)
 
 
 
+%==========================================================================
+% to get an undirected graph, flip the PathVec columns and add to PathVec
+PathVec = [PathVec;fliplr(PathVec)];
 
 %==========================================================================
 % for each path, compute the topography gradient
@@ -140,12 +149,16 @@ end
 
 
 
-Distance   =  sqrt((X(PathVec(:,2))-X(PathVec(:,1))).^2+(Y(PathVec(:,2))-Y(PathVec(:,1))).^2); % compute distance between the nodes
+Distance   =  sqrt((X(PathVec(:,2))-X(PathVec(:,1))).^2+(Y(PathVec(:,2))-Y(PathVec(:,1))).^2 + (Z(PathVec(:,2))-Z(PathVec(:,1))).^2); % compute distance between the nodes
 DiffHeight =  Z(PathVec(:,2))-Z(PathVec(:,1)); % compute height difference between nodes, positive:upwards, negative: downwards 
 Gradient   =  DiffHeight./Distance;
 
 %==========================================================================
-
+if Debug == 1
+   figure(99),clf
+   hold on
+   for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'k+-'),end  
+end
 
 
 
