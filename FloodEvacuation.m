@@ -10,6 +10,7 @@ nagent       = 100; % number of agents
 
 addpath ./DecisionStrategy/
 addpath ./WallForces/
+addpath ./Plotting/
 %==========================================================================
 % initialize fine grid (if not given as argument)
 
@@ -19,8 +20,8 @@ yvec = 0:100;
 Z_Grid = 0*X_Grid; % no topography
 
 % initialize coarse grid for road network
-xRoad = 0:10:100;
-yRoad = 0:10:100;
+xRoad = 0:5:100;
+yRoad = 0:5:100;
 [XRoad,YRoad] = meshgrid(xRoad,yRoad);
 ZRoad = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 
@@ -34,11 +35,15 @@ ZRoad = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 % - location of the exit
 
 %---------------------------------------
-% test: create one building in the middle
+% create building list (if not given)
 %---------------------------------------
-BuildingList = [42 49 42 49;...
+BuildingList = [45 50 40 50;...
                 20 40 12 30;...
-                10 16 70 80]; % coordinates of building xmin xmax ymin ymax
+                10 16 70 80;...
+                70 95 60 80;...
+                70 80 50 60;...
+                60 85 10 40;...
+                45 55 20 35]; % coordinates of building xmin xmax ymin ymax
 
 BuildingMap = X_Grid*0;
 % add buildings to map
@@ -62,10 +67,10 @@ WaterHeight= X_Grid*0;
 % - cost due to street type (paved, unpaved)
 % - add up all costs
 
-[X,Y,Z,PathVec,Distance,Gradient] = GenerateRectangularGraph(XRoad,YRoad,ZRoad);
+[X,Y,Z,PathVec,Distance,Gradient,GradientFactor] = GenerateRectangularGraph(XRoad,YRoad,ZRoad);
 
 % delete paths at locations where there are buildings covering the nodes
-[PathVec,Distance,Gradient] = RemovePaths(X_Grid,Y_Grid,BuildingMap,X,Y,PathVec,Distance,Gradient);
+[PathVec,Distance,Gradient,GradientFactor] = RemovePaths(X_Grid,Y_Grid,BuildingMap,X,Y,PathVec,Distance,Gradient,GradientFactor);
 
 %==========================================================================
 % initialize agents in buildings and on streets
@@ -80,37 +85,50 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).num]       = cell_array{:};
 [AGENT(1:nagent).VzMax]     = deal(5);
 [AGENT(1:nagent).BoxSize]   = deal(8);
-[AGENT(1:nagent).Size]   = deal(0.3);
 
+cell_array = num2cell((rand(nagent,1)+1)/2);
+[AGENT(1:nagent).Size]   = cell_array{:};
 
 % get the indices in BuildingMap that correspond to a road
 [iy,ix] = find(BuildingMap==0);
 NoRoad  = length(iy);
 % create random indices (make sure that there are no duplicates)
-A=[1:NoRoad]';
-B=rand(size(A));
-C=[B A];
-D=sortrows(C,1);
-E=D(:,2);
+indices = randperm(NoRoad);
 
-iyStart = iy(E(1:nagent));
-ixStart = ix(E(1:nagent));
+iyStart = iy(indices(1:nagent));
+ixStart = ix(indices(1:nagent));
 
-StartLocX = X_Grid(iyStart,ixStart);
-StartLocY = Y_Grid(iyStart,ixStart);
+indices = sub2ind(size(X_Grid),iyStart,ixStart);
 
-cellX = num2cell(ixStart);
-cellY = num2cell(iyStart);
-[AGENT(1:nagent).StartX]       = cellX{:};
-[AGENT(1:nagent).StartY]       = cellY{:};
+StartLocX = X_Grid(indices);
+StartLocY = Y_Grid(indices);
+
+cellX = num2cell(StartLocX);
+cellY = num2cell(StartLocY);
+[AGENT(1:nagent).LocX]       = cellX{:};
+[AGENT(1:nagent).LocY]       = cellY{:};
+
+% find the road each agents is on and create an initial exit strategy
+
+for iagent = 1:nagent
+   AGENT = DecideOnPath(AGENT,PathVec,GradientFactor,Distance); 
+end
 
 
 % plot setup
 figure(1),clf
-scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
 hold on
-for i = 1:nagent,indy = [AGENT(i).StartY]; indx =[AGENT(i).StartX];plot(X_Grid(indy,indx),Y_Grid(indy,indx),'y.'),end
-for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'w-'),end
+%scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
+axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
+
+% plot buildings
+PlotBuildings(BuildingList,'r');
+% plot agents
+PlotAgents(nagent,AGENT,'y');
+
+for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'k-'),end
+axis equal, axis tight
+
 %==========================================================================
 % time loop
 time = 0;
@@ -132,7 +150,7 @@ for itime = 1:nt
     %----------------------------------------------------
     % delete paths at locations where water is covering the roads more than
     % the critical water level
-    [PathVec,Distance,Gradient] = RemovePaths(X_Grid,Y_Grid,CriticalWaterLevel,X,Y,PathVec,Distance,Gradient);
+    [PathVec,Distance,Gradient,GradientFactor] = RemovePaths(X_Grid,Y_Grid,CriticalWaterLevel,X,Y,PathVec,Distance,Gradient,GradientFactor);
     
     %----------------------------------------------------
     % compute kdtree of agents for later use
@@ -211,74 +229,35 @@ for itime = 1:nt
         if Decision
             
             switch DecisionCause
-                case 1 % slowdown
-                    % compute the weights (= estimated time) of all paths due to topography
-                    PathWeights = Distance./(AGENT(iagent).VelMax*GradientFactor);
+                case 1 % slowdown -> turn around and take another path or keep going?
+                    AGENT(iagent) = DecideOnPath(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
                     
+                case 2 % reached destination point -> look in adjacent paths and decide on new exit stategy
+                    AGENT(iagent) = DecideOnPathOnCrossing(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
                     
-                    % add the paths between the agent and the next crossings (nodes)
-                    % to the path vector
-                    maxNode   = max(PathVec(:));
-                    NodeAgent = maxNode+1;
-                    NodeEnd   = PathVec(AGENT(iagent).PresentPath,2);
-                    NodeStart = PathVec(AGENT(iagent).PresentPath,1);
-                    
-                    NewPathVec       = [PathVec;[NodeAgent NodeEnd];[NodeAgent NodeStart]];
-                    %DistanceEnd      = ;
-                    %DistanceStart    = ;
-                    %NewWeightVec     =
-                    
-                    % compute the additional cost due to people in the way
-                    
-                    
-                    
-                    % set the starting and ending node
-                    StartNode = NodeAgent;
-                    EndNode   = AGENT(iagent).ExitNode;
-                    
-                case 2 % reached destination point
-                    StartNode = AGENT(iagent).DestinationNode;
-                    EndNode   = AGENT(iagent).ExitNode;
-                    
-                    NewPathVec = PathVec;
-                    
-                    % compute additional cost due to people on roads
-                    % find paths that 
-                    [iz,ix] = find(PathVec==AGENT(iagent).DestinationNode);
-                    
-                    indNumberPeople = find([AGENT(iagent).PresentPath]==iz);
-                    NumberPeople    = length(indNumberPeople);
-                    
-                    
-                    NewWeightVec = WeightVec+AddWeight;
-                    
-                case 3 % destination point is flooded
-                    maxNode   = max(PathVec(:));
-                    NodeAgent = maxNode+1;
-                    NodeStart = PathVec(AGENT(iagent).PresentPath,1);
-                    NewPathVec       = [PathVec;[NodeAgent NodeStart]];
-                    %NewWeightVec     = ;
-                    
-                    
+                case 3 % destination point is flooded -> node and adjacent paths have been removed from PathVec
+                       %                              -> turn around to last node (if this node is also flooded, the agent is deactivated)
+                    if ~isempty(find(PathVec==AGENT(iagent).LastDestinationPoint)) % last destination point still exists
+                        AGENT(iagent).DestinationPoint =  AGENT(iagent).LastDestinationPoint; % go back
+                    else
+                        AGENT(iagent).Trapped = true; % agent is trapped -> game over
+                    end
             end
-            % Find the shortest path via a MATLAB function
-            % Using the Bioinformatics Toolbox? function graphshortestpath the shortest
-            % path between [S = Starting Node] and [T = Final Node] can be found using
-            %[dist, path, pred] = graphshortestpath(G, S, T)
-            PathMat            = sparse(NewPathVec(:,1),NewPathVec(:,2),NewWeightVec(:));
-            [time_est, path, pred] = graphshortestpath(PathMat,StartNode,EndNode,'directed',true);
-            
-            % set the next destination node for the agent
-            AGENT(iagent).DestinationNode = path(2);
             
         end
-
-        %----------------------------------------------------
-        % compute velocity of agents
-        % add up forces and compute vx and vy velocity
-        %----------------------------------------------------
         
-        % limit velocity to max velocity if it is bigger
+        if AGENT(iagent).Trapped
+            % set agent velocity to 0
+            
+            
+        else
+            %----------------------------------------------------
+            % compute velocity of agents
+            % add up forces and compute vx and vy velocity
+            %----------------------------------------------------
+            
+            % limit velocity to max velocity if it is bigger
+        end
     end
     
     
