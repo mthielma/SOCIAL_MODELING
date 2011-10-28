@@ -3,25 +3,73 @@ clear;
 
 %%%% FABIO SUPERSTAR !!!!!!!!!!!!!!
 Debug = 0;
-RiseVelocity = 0.001; %water rising velocity in m/s
+RiseVelocity = 0.01; %water rising velocity in m/s
 dt           = 1; %time step in s
-nt           = 3600*6; % number of timesteps
-nagent       = 100; % number of agents
+nt           = 100; % number of timesteps
+nagent       = 1000; % number of agents
+
+
+% physical forces parameters (Helbing,2000)
+k       = 1.2e5;
+kappa   = 2.4e5;
+
+% social force parameters
+A = 2e3;
+B = 0.08;
 
 addpath ./DecisionStrategy/
 addpath ./WallForces/
 addpath ./Plotting/
+addpath ./kdtree_alg_OSX/
 %==========================================================================
 % initialize fine grid (if not given as argument)
+xmin = 0;
+xmax = 100;
+ymin = 0;
+ymax = 100;
 
-xvec = 0:100;
-yvec = 0:100;
+
+xvec = xmin:1:xmax;
+yvec = ymin:1:ymax;
 [X_Grid,Y_Grid] = meshgrid(xvec,yvec);
-Z_Grid = 0*X_Grid; % no topography
+%Z_Grid = 0*X_Grid; % no topography
+%Z_Grid = 0.02.*X_Grid;
+%Z_Grid(Z_Grid>10) = 10;
+%Z_Grid(Z_Grid<0) = 0;
+
+Z_Grid = -100./([(X_Grid+100)])+10;
+Z_add = 0.1.*abs(Y_Grid-85)-0.5*fliplr(X_Grid)./([fliplr(X_Grid)/10]+20);
+Z_Grid = Z_Grid+Z_add*0.25;
+Z_Grid(Z_Grid<0) = 0;
+% 
+% Z_add = 0.1.*abs(Y_Grid);
+% Z_Grid = Z_Grid+Z_add;
+% 
+% 
+% Z_Grid(Z_Grid>20) = 20;
+% 
+% 
+% 
+% 
+% 
+% set min to 0
+Z_Grid = Z_Grid-min(Z_Grid(:));
+
+% scale to max 5 m height
+Z_Grid = 3*(Z_Grid./max(Z_Grid(:)));
+
+% add some sinusoidal perturbations
+%Z_add = 0.1*sin(0.05*(X_Grid+Y_Grid))+cos(0.01*Y_Grid);
+%Z_Grid = Z_Grid-Z_add/min(Z_add(:));
+
+% figure(99),clf
+% surf(X_Grid,Y_Grid,Z_Grid),shading interp, colorbar
+% hold on
+% contour3(X_Grid,Y_Grid,Z_Grid,[0.5 0.5],'k-')
 
 % initialize coarse grid for road network
-xRoad = 0:5:100;
-yRoad = 0:5:100;
+xRoad = xmin:5:xmax;
+yRoad = ymin:5:ymax;
 [XRoad,YRoad] = meshgrid(xRoad,yRoad);
 ZRoad = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 
@@ -43,7 +91,11 @@ BuildingList = [45 50 40 50;...
                 70 95 60 80;...
                 70 80 50 60;...
                 60 85 10 40;...
-                45 55 20 35]; % coordinates of building xmin xmax ymin ymax
+                45 55 20 35;...
+                
+                 0 28 92 97;...
+                 32 97 92 97;...
+                 102 197 92 97]; % coordinates of building xmin xmax ymin ymax
 
 BuildingMap = X_Grid*0;
 % add buildings to map
@@ -83,7 +135,7 @@ WaterHeight= X_Grid*0;
 % - helping factor --> later
 cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).num]       = cell_array{:};
-[AGENT(1:nagent).VzMax]     = deal(5);
+[AGENT(1:nagent).VMax]     = deal(5);
 [AGENT(1:nagent).BoxSize]   = deal(8);
 
 cell_array = num2cell((rand(nagent,1)+1)/2);
@@ -110,99 +162,139 @@ cellY = num2cell(StartLocY);
 
 % find the road each agents is on and create an initial exit strategy
 
-for iagent = 1:nagent
-   AGENT = DecideOnPath(AGENT,PathVec,GradientFactor,Distance); 
-end
+% for iagent = 1:nagent
+%     
+%     % get the path
+%     
+%     
+%     % is the agent in the proximity of a node?
+%     
+%     
+%     
+%     switch DecisionCause
+%         case 1 % slowdown -> turn around and take another path or keep going?
+%             AGENT(iagent) = DecideOnPath(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
+%             
+%         case 2 % reached destination point -> look in adjacent paths and decide on new exit stategy
+%             AGENT(iagent) = DecideOnPathOnCrossing(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
+%     end
+% end
 
 
 % plot setup
-figure(1),clf
-hold on
-%scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
-axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
-
-% plot buildings
-PlotBuildings(BuildingList,'r');
-% plot agents
-PlotAgents(nagent,AGENT,'y');
-
-for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'k-'),end
-axis equal, axis tight
+% figure(1),clf
+% hold on
+% %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
+% axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
+% % plot topo
+% contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
+% % plot buildings
+% PlotBuildings(BuildingList,'r');
+% % plot agents
+% PlotAgents(nagent,AGENT,'y');
+%
+% % plot roads
+% for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
+% axis equal, axis tight
 
 %==========================================================================
 % time loop
 time = 0;
 for itime = 1:nt
-    
+    disp('*****************************************')
+    disp(['timestep ',num2str(itime)])
     %----------------------------------------------------
     % compute water rise
     %----------------------------------------------------
     WaterHeight = WaterHeight + RiseVelocity*dt;
     % compute water level above ground
-    WaterLevel  = WaterHeight - Z_grid;
+    WaterLevel  = WaterHeight - Z_Grid;
     WaterLevel(WaterLevel<0) = 0;
     
     % compute critical water level
     CriticalWaterLevel = WaterLevel - 0.5;
-    
     %----------------------------------------------------
     % get the roads/nodes that are being flooded
     %----------------------------------------------------
     % delete paths at locations where water is covering the roads more than
     % the critical water level
-    [PathVec,Distance,Gradient,GradientFactor] = RemovePaths(X_Grid,Y_Grid,CriticalWaterLevel,X,Y,PathVec,Distance,Gradient,GradientFactor);
     
+    if max(CriticalWaterLevel(:))>0
+        [PathVec,Distance,Gradient,GradientFactor] = RemovePaths(X_Grid,Y_Grid,CriticalWaterLevel,X,Y,PathVec,Distance,Gradient,GradientFactor);
+    end
     %----------------------------------------------------
     % compute kdtree of agents for later use
     %----------------------------------------------------
-    ReferencePoints(:,1)    = [AGENTS(:).LocX];
-    ReferencePoints(:,2)    = [AGENTS(:).LocY];
+    ReferencePoints(:,1)    = [AGENT(:).LocX];
+    ReferencePoints(:,2)    = [AGENT(:).LocY];
     
     % generate tree
     tree =   kdtree(ReferencePoints);
     
-    % generate the Boxes per Agent
-    BoxXmin      = [AGENTS(:).LocX]-[AGENTS(:).BoxSize]./2;
-    BoxXmax      = [AGENTS(:).LocX]+[AGENTS(:).BoxSize]./2;
-    BoxYmin      = [AGENTS(:).LocY]-[AGENTS(:).BoxSize]./2;
-    BoxYmax      = [AGENTS(:).LocY]+[AGENTS(:).BoxSize]./2;
-    
-    Boxes        = zeros(nagents,2,2);
-    Boxes(:,1,1) = BoxXmin;       
-    Boxes(:,2,1) = BoxYmin;
-    Boxes(:,1,2) = BoxXmax;       
-    Boxes(:,2,2) = BoxYmax;
-    
-    pointsidx    = kdtree_range(tree,Boxes);
-    
-    % get the agents indices of agents surrounding each agent (individual box)
-    
-    
     
     %----------------------------------------------------
-    % compute forces from flood (on the same grid as the building forces are
-    % computed) on all agents
+    % building locations
     %----------------------------------------------------
-    
-    
-    %----------------------------------------------------
-    % compute forces from buildings on all agents (just interpolate the
-    % precomputed force field to the agents
-    %----------------------------------------------------
-    
-    
-    
+    x_Buildings = X_Grid(BuildingMap==1);
+    y_Buildings = Y_Grid(BuildingMap==1);
+
+    %     %----------------------------------------------------
+    %     % compute forces from flood (on the same grid as the building forces are
+    %     % computed) on all agents
+    %     %----------------------------------------------------
+    %
+    %
+    %     %----------------------------------------------------
+    %     % compute forces from buildings on all agents (just interpolate the
+    %     % precomputed force field to the agents
+    %     %----------------------------------------------------
+    %
+    %
+    %
     % agent loop
     for iagent = 1:nagent
         
-        %----------------------------------------------------
-        % get the agents in a certain range using the kdtree
-        %
-        % Alternative: use agents that are on the same road
-        % since we track this anyway, we do not need kdtree
-        %----------------------------------------------------
+        x_agent = AGENT(iagent).LocX;
+        y_agent = AGENT(iagent).LocY;
         
+        %-------------------------------------------------
+        % get the agents that are in the "individual box" and compute the
+        % distance to them
+        %-------------------------------------------------
         
+        % generate the Boxes per Agent
+        Boxes        = zeros(2,2);
+        Boxes(1,1) = [AGENT(iagent).LocX]-[AGENT(iagent).BoxSize]./2;
+        Boxes(2,1) = [AGENT(iagent).LocY]-[AGENT(iagent).BoxSize]./2;
+        Boxes(1,2) = [AGENT(iagent).LocX]+[AGENT(iagent).BoxSize]./2;
+        Boxes(2,2) = [AGENT(iagent).LocY]+[AGENT(iagent).BoxSize]./2;
+        
+        pointsidx    = kdtree_range(tree,Boxes);
+        % remove the agent itself
+        pointsidx(pointsidx==AGENT(iagent).num) = [];
+        AGENT(iagent).SurroundingAgents = pointsidx;
+        
+        % Compute the distance to the other agents in the box
+        x_others = [AGENT(AGENT(iagent).SurroundingAgents).LocX];
+        y_others = [AGENT(AGENT(iagent).SurroundingAgents).LocY];
+        
+        DistanceToAgents = sqrt((x_others-x_agent).^2+(y_others-y_agent).^2)-AGENT(iagent).Size;
+        indTooClose                    = find(DistanceToAgents<=0);
+        if ~isempty(indTooClose)
+            TooClose = true;
+        else
+            TooClose = false;
+        end
+        %-------------------------------------------------
+        % get the distance to the closest wall
+        %-------------------------------------------------
+        WallDist    = sqrt((x_Buildings-x_agent).^2+(y_Buildings-y_agent).^2);
+        WallDist = min(WallDist)-AGENT(iagent).Size;
+        if WallDist<=0
+            AtWall = true;
+        else
+             AtWall = false;
+        end
         
         %----------------------------------------------------
         % compute social forces from other agents and apply a weighting
@@ -210,9 +302,19 @@ for itime = 1:nt
         % vision
         %----------------------------------------------------
         
+        
         %----------------------------------------------------
-        % compute physical forces from walls and other agents
+        % compute physical forces from other agents
         %----------------------------------------------------
+        if TooClose
+            F_physAgents_normal = k*DistanceToAgents(indTooClose);
+        end
+        %----------------------------------------------------
+        % compute physical forces from walls 
+        %----------------------------------------------------
+        if AtWall
+            F_physWall_normal = k*WallDist;
+        end
         
         %----------------------------------------------------
         % compute force from destination point
@@ -225,46 +327,98 @@ for itime = 1:nt
         % - the agent has reached the destination point
         % - the destination point or a part of the path are flooded
         %----------------------------------------------------
-        
-        if Decision
-            
-            switch DecisionCause
-                case 1 % slowdown -> turn around and take another path or keep going?
-                    AGENT(iagent) = DecideOnPath(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
-                    
-                case 2 % reached destination point -> look in adjacent paths and decide on new exit stategy
-                    AGENT(iagent) = DecideOnPathOnCrossing(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
-                    
-                case 3 % destination point is flooded -> node and adjacent paths have been removed from PathVec
-                       %                              -> turn around to last node (if this node is also flooded, the agent is deactivated)
-                    if ~isempty(find(PathVec==AGENT(iagent).LastDestinationPoint)) % last destination point still exists
-                        AGENT(iagent).DestinationPoint =  AGENT(iagent).LastDestinationPoint; % go back
-                    else
-                        AGENT(iagent).Trapped = true; % agent is trapped -> game over
-                    end
-            end
-            
-        end
-        
-        if AGENT(iagent).Trapped
-            % set agent velocity to 0
-            
-            
-        else
-            %----------------------------------------------------
-            % compute velocity of agents
-            % add up forces and compute vx and vy velocity
-            %----------------------------------------------------
-            
-            % limit velocity to max velocity if it is bigger
-        end
+%         
+%         DistanceDestinationPoint
+%         % has the agent reached the destination point?
+%         
+%         
+%         % is the destination point flooded?
+%         
+%         
+%         % see if slowdown causes agent to rethink his exit strategy
+%         if AGENT(iagent).Velocity/AGENT(iagent).VMax < AGENT(iagent).MaxSlowdown
+%             AGENT(iagent).SlowdownSteps = AGENT(iagent).SlowdownSteps+1;
+%             if AGENT(iagent).SlowdownSteps > AGENT(iagent).MaxSlowdownSteps % agent is fed up because of slowdown
+%                 Decision        = true;
+%                 DecisionCause   = 1;
+%             else
+%                 Decision = false;
+%             end
+%         else
+%             AGENT(iagent).SlowdownSteps = 0; % reset if the agent can move with a satifying velocity
+%             Decision = false;
+%         end
+%         
+%         
+%         
+%         
+%         if Decision
+%             
+%             switch DecisionCause
+%                 case 1 % slowdown -> turn around and take another path or keep going?
+%                     AGENT(iagent) = DecideOnPath(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
+%                     
+%                 case 2 % reached destination point -> look in adjacent paths and decide on new exit stategy
+%                     AGENT(iagent) = DecideOnPathOnCrossing(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
+%                     
+%                 case 3 % destination point is flooded -> node and adjacent paths have been removed from PathVec
+%                        %                              -> turn around to last node (if this node is also flooded, the agent is deactivated)
+%                     if ~isempty(find(PathVec==AGENT(iagent).LastDestinationPoint)) % last destination point still exists
+%                         AGENT(iagent).DestinationPoint =  AGENT(iagent).LastDestinationPoint; % go back
+%                     else
+%                         AGENT(iagent).Trapped = true; % agent is trapped -> game over
+%                     end
+%             end
+%             
+%         end
+%         
+%         if AGENT(iagent).Trapped
+%             % set agent velocity to 0
+%             
+%             
+%         else
+%             %----------------------------------------------------
+%             % compute velocity of agents
+%             % add up forces and compute vx and vy velocity
+%             %----------------------------------------------------
+%             
+%             % limit velocity to max velocity if it is bigger
+%         end
     end
-    
+%     
+%     
+%     %----------------------------------------------------
+%     % move agents
+%     %----------------------------------------------------
     
     %----------------------------------------------------
-    % move agents
+    % plot
     %----------------------------------------------------
     
+    if mod(itime,10)==0
     
+        figure(1),clf
+        hold on
+        %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
+        axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
+        % plot topo
+        contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
+        h = contourf(X_Grid,Y_Grid,WaterLevel,[0.1 0.5],'EdgeColor','none');
+        caxis([0 0.5])
+        colormap('Bone')
+        colormap(flipud(colormap))
+        
+        % plot buildings
+        PlotBuildings(BuildingList,'r');
+        % plot agents
+        PlotAgents(nagent,AGENT,'y');
+        
+        % plot roads
+%         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
+        axis equal, axis tight
+        
+        title(['max water = ',num2str(max(WaterLevel(:)))])
+        
+    end
 end
 %==========================================================================
