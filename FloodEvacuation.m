@@ -138,7 +138,7 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).VMax]     = deal(5);
 [AGENT(1:nagent).BoxSize]   = deal(8);
 
-cell_array = num2cell((rand(nagent,1)+1)/2);
+cell_array = num2cell(0.5+ (rand(nagent,1))*0.2);
 [AGENT(1:nagent).Size]   = cell_array{:};
 
 % get the indices in BuildingMap that correspond to a road
@@ -182,20 +182,20 @@ cellY = num2cell(StartLocY);
 
 
 % plot setup
-% figure(1),clf
-% hold on
-% %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
-% axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
-% % plot topo
-% contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
-% % plot buildings
-% PlotBuildings(BuildingList,'r');
-% % plot agents
-% PlotAgents(nagent,AGENT,'y');
-%
-% % plot roads
-% for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
-% axis equal, axis tight
+figure(1),clf
+hold on
+%scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
+axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
+% plot topo
+contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
+% plot buildings
+PlotBuildings(BuildingList,'r');
+% plot agents
+PlotAgents(nagent,AGENT,'y');
+
+% plot roads
+for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
+axis equal, axis tight
 
 %==========================================================================
 % time loop
@@ -238,19 +238,19 @@ for itime = 1:nt
     x_Buildings = X_Grid(BuildingMap==1);
     y_Buildings = Y_Grid(BuildingMap==1);
 
-    %     %----------------------------------------------------
-    %     % compute forces from flood (on the same grid as the building forces are
-    %     % computed) on all agents
-    %     %----------------------------------------------------
-    %
-    %
-    %     %----------------------------------------------------
-    %     % compute forces from buildings on all agents (just interpolate the
-    %     % precomputed force field to the agents
-    %     %----------------------------------------------------
-    %
-    %
-    %
+    %----------------------------------------------------
+    % compute forces from flood (on the same grid as the building forces are
+    % computed) on all agents
+    %----------------------------------------------------
+    
+    
+    %----------------------------------------------------
+    % compute forces from buildings on all agents (just interpolate the
+    % precomputed force field to the agents
+    %----------------------------------------------------
+    
+    
+    %----------------------------------------------------
     % agent loop
     for iagent = 1:nagent
         
@@ -275,10 +275,23 @@ for itime = 1:nt
         AGENT(iagent).SurroundingAgents = pointsidx;
         
         % Compute the distance to the other agents in the box
-        x_others = [AGENT(AGENT(iagent).SurroundingAgents).LocX];
-        y_others = [AGENT(AGENT(iagent).SurroundingAgents).LocY];
+        x_others = [AGENT(AGENT(iagent).SurroundingAgents).LocX]';
+        y_others = [AGENT(AGENT(iagent).SurroundingAgents).LocY]';
+        DistanceToAgents = sqrt((x_others-x_agent).^2+(y_others-y_agent).^2)-(AGENT(iagent).Size+[AGENT(pointsidx).Size]');
         
-        DistanceToAgents = sqrt((x_others-x_agent).^2+(y_others-y_agent).^2)-AGENT(iagent).Size;
+        % compute normal vector
+        VecNormal       = zeros(size(pointsidx,2),2);
+        VecNormal(:,1)  = (x_agent - x_others)./DistanceToAgents;
+        VecNormal(:,2)  = (y_agent - y_others)./DistanceToAgents;
+        
+        % compute tangential vector
+        VecTangent      = 0*VecNormal;
+        VecTangent(:,1) = -VecNormal(:,2)./DistanceToAgents;
+        VecTangent(:,2) = VecNormal(:,1)./DistanceToAgents;
+        
+        
+        
+        % find agents that are too close
         indTooClose                    = find(DistanceToAgents<=0);
         if ~isempty(indTooClose)
             TooClose = true;
@@ -290,7 +303,8 @@ for itime = 1:nt
         %-------------------------------------------------
         WallDist    = sqrt((x_Buildings-x_agent).^2+(y_Buildings-y_agent).^2);
         WallDist = min(WallDist)-AGENT(iagent).Size;
-        if WallDist<=0
+        indWallDist = find(WallDist<0);
+        if ~isempty(indWallDist)
             AtWall = true;
         else
              AtWall = false;
@@ -302,17 +316,23 @@ for itime = 1:nt
         % vision
         %----------------------------------------------------
         
+        F_socAgents = A*exp(DistanceToAgents)/B;
+        F_socAgents = F_socAgents(:,ones(1,2)).*VecNormal;
         
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
         if TooClose
-            F_physAgents_normal = k*DistanceToAgents(indTooClose);
+            % normal force
+            F_physAgents_normal  = k*DistanceToAgents(indTooClose,ones(1,2)).*VecNormal(indTooClose,:);
+            % tangential force
+            
         end
         %----------------------------------------------------
         % compute physical forces from walls 
         %----------------------------------------------------
         if AtWall
+            % normal force
             F_physWall_normal = k*WallDist;
         end
         
