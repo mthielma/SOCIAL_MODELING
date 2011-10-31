@@ -1,25 +1,29 @@
 
-%========================
-% repulsive walls
-% fabiocrameri 2011.1026
-%========================
+% function f_RepWalls.m
 
-clear
-display('*******')
+function [xArchForces, yArchForces] = f_RepWalls (nx, ny, Arch)
+
+%=============================
+% function for repulsive walls
+% fabiocrameri 2011.1027
+%=============================
+
+plotFields = logical(0);
+
+
+display('******* calculate wall forces ******')
 %---------------------------------------------
 %input ---------------------------------------
 
-runName     = 'test';
-saveMovie   = logical(1);
-
-nx          = 40;
-ny          = 40;
 
 attrSpread  = {'exp' 'linear' 'const'};
 attrSpread  = attrSpread{3};
 
 attrForce   = 0.2; %1 is the same as wall force
 
+
+nx = 40;
+ny = 40;
 %Architecture position
 % X-POSITION(left right) / Y-POSITION(bottom top) / TYPE(1:repulsive 2:attractor)
 Arch = [
@@ -65,16 +69,16 @@ for i=1:nx
 end
 GRIDarch = GRIDwall+GRIDattr;
 
-
-figure(1),clf
-subplot(3,3,1)
-imagesc(GRIDarch')
-title('walls')
-xlabel('x')
-ylabel('y')
-colorbar
-axis equal; axis tight
-
+if plotFields
+    figure(1),clf
+    subplot(3,3,1)
+    imagesc(GRIDarch')
+    title('walls')
+    xlabel('x')
+    ylabel('y')
+    colorbar
+    axis equal; axis tight
+end
 
 %---------------------------------------------
 %distance to wall ----------------------------
@@ -82,8 +86,6 @@ display('calculating distance to architecture and architecture force')
 
 distToWall = ones(nx,ny)*nx*ny; %make sure it is big enough
 distToAttr = ones(nx,ny)*nx*ny; %make sure it is big enough
-F_wall = zeros(nx,ny);
-F_attr = zeros(nx,ny);
 for i=1:nx
     for j=1:ny
         
@@ -117,30 +119,31 @@ end
 F_arch = F_wall+F_attr;
 
 
-subplot(3,3,3)
-imagesc(distToWall')
-title('distance to wall')
-xlabel('x')
-ylabel('y')
-colorbar
-axis equal; axis tight
-
-subplot(3,3,2)
-imagesc(distToAttr')
-title('distance to attractor')
-xlabel('x')
-ylabel('y')
-colorbar
-axis equal; axis tight
-
-subplot(3,3,4)
-imagesc(F_arch')
-title('architecture force magnitude')
-xlabel('x')
-ylabel('y')
-colorbar
-axis equal; axis tight
-
+if plotFields
+    subplot(3,3,3)
+    imagesc(distToWall')
+    title('distance to wall')
+    xlabel('x')
+    ylabel('y')
+    colorbar
+    axis equal; axis tight
+    
+    subplot(3,3,2)
+    imagesc(distToAttr')
+    title('distance to attractor')
+    xlabel('x')
+    ylabel('y')
+    colorbar
+    axis equal; axis tight
+    
+    subplot(3,3,4)
+    imagesc(F_arch')
+    title('architecture force magnitude')
+    xlabel('x')
+    ylabel('y')
+    colorbar
+    axis equal; axis tight
+end
 
 %---------------------------------------------
 %force direction -----------------------------
@@ -190,115 +193,50 @@ xgradF_arch = xgradF_wall + xgradF_attr;
 ygradF_arch = ygradF_wall + ygradF_attr;
 
 
-subplot(3,3,6)
-quiver(grid(:,:,1),grid(:,:,2),xgradWall,ygradWall)
-axis ij
-title('wall force direction')
-xlabel('x')
-ylabel('y')
-axis equal; axis tight
-
-subplot(3,3,5)
-quiver(grid(:,:,1),grid(:,:,2),xgradAttr,ygradAttr)
-axis ij
-title('attractors force direction')
-xlabel('x')
-ylabel('y')
-axis equal; axis tight
-
-subplot(3,3,9)
-quiver(grid(:,:,1),grid(:,:,2),xgradF_wall,ygradF_wall)
-axis ij
-title('wall force')
-xlabel('x')
-ylabel('y')
-axis equal; axis tight
-
-subplot(3,3,8)
-quiver(grid(:,:,1),grid(:,:,2),xgradF_attr,ygradF_attr)
-axis ij
-title('attractor force')
-xlabel('x')
-ylabel('y')
-axis equal; axis tight
-
-subplot(3,3,7)
-quiver(grid(:,:,1),grid(:,:,2),xgradF_arch,ygradF_arch)
-axis ij
-title('architecture force')
-xlabel('x')
-ylabel('y')
-axis equal; axis tight
-
-
-
-
-
-%---------------------------------------------
-%let's move! ---------------------------------
-display('run Don, run! ...')
-
-t_max = 1000;
-
-%initial position
-Don = [ 4 5 ];  %x y
-
-DonPath = zeros(t_max,2).*NaN;
-
-for t=1:t_max
-    DonPath(t,:) = Don;
-    
-    %move Don
-    Don = Don + [xgradF_arch(round(Don(1,1)),round(Don(1,2))) ygradF_arch(round(Don(1,1)),round(Don(1,2)))];
-    
-%     Donx = interp2( grid(:,:,1),grid(:,:,2),xgradF_arch,Don(1,1),Don(1,2) ); %interpolate x gradient
-
-    
-    
-       
-    figure(2)
-    imagesc(GRIDarch')
-    hold on
-    plot(Don(1,1),Don(1,2),'ok','MarkerFaceColor','k')
-    
-    plot(DonPath(:,1),DonPath(:,2),'k')
+if plotFields
+    subplot(3,3,6)
+    quiver(grid(:,:,1),grid(:,:,2),xgradWall,ygradWall)
     axis ij
+    title('wall force direction')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight
     
+    subplot(3,3,5)
+    quiver(grid(:,:,1),grid(:,:,2),xgradAttr,ygradAttr)
+    axis ij
+    title('attractors force direction')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight
     
+    subplot(3,3,9)
+    quiver(grid(:,:,1),grid(:,:,2),xgradF_wall,ygradF_wall)
+    axis ij
+    title('wall force')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight
     
+    subplot(3,3,8)
+    quiver(grid(:,:,1),grid(:,:,2),xgradF_attr,ygradF_attr)
+    axis ij
+    title('attractor force')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight
     
-    if saveMovie
-        Mov(t) = getframe; %save frames for movie
-    end
-    
-    
-    if ( Don(1,1)>nx-5 && Don(1,2)>ny-5 )
-        break
-    end
+    subplot(3,3,7)
+    quiver(grid(:,:,1),grid(:,:,2),xgradF_arch,ygradF_arch)
+    axis ij
+    title('architecture force')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight
 end
 
-
-if saveMovie
-    movie(Mov)  %show movie    
-    movie2avi(Mov,[runName]);  %save movie
-    display(['Movie ',runName,'.avi was saved to ',pwd])
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+xArchForces = xgradF_arch;
+yArchForces = ygradF_arch;
 
 
 
