@@ -85,27 +85,63 @@ ZRoad = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 %---------------------------------------
 % create building list (if not given)
 %---------------------------------------
-BuildingList = [45 50 40 50;...
-                20 40 12 30;...
-                10 16 70 80;...
-                70 95 60 80;...
-                70 80 50 60;...
-                60 85 10 40;...
-                45 55 20 35;...
-                
-                 0 28 92 97;...
-                 32 97 92 97;...
+BuildingList = [45 50 40 50
+                20 40 12 30
+                10 16 70 80
+                70 95 60 80
+                70 80 50 60
+                60 85 10 40
+                45 55 20 35
+                ...
+                 0 28 92 97
+                 32 97 92 97
                  102 197 92 97]; % coordinates of building xmin xmax ymin ymax
 
 BuildingMap = X_Grid*0;
 % add buildings to map
-for i = 1:size(BuildingList,1)
+for i=1:size(BuildingList,1)
     BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = 1;
 end
+
+BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
+BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside domain: remove it!
+
+BuildingList(find(BuildingList(:,2)>xmax),2) = xmax; %adjust building to domain boundary
+BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain boundary
+
+
 
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
+nx          = size(xvec,2);
+ny          = size(yvec,2);
+Type        = 1;                        %1: repulsive / 2: attractive
+Spreading   = {'exp' 'linear' 'const'};
+Spreading   = Spreading{1};
+Force       = 1.0;                      %1 is the same as wall force
+
+xArchForces=zeros(nx,ny);
+yArchForces=zeros(nx,ny);
+% for i=1:size(BuildingList,1)  %For adding seperately
+%     Arch = BuildingList(i,:);
+    Arch = BuildingList;        %For adding all together
+    [xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (nx, ny, Arch, Type, Spreading, Force);
+    
+    %add contribution building
+    xArchForces = xArchForces + xArchForces_single;  
+    yArchForces = yArchForces + yArchForces_single;
+% end
+
+checkFigure = logical(1);
+if checkFigure
+    figure(11)
+    quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
+    title('architecture force')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight 
+end
 
 
 %==========================================================================
