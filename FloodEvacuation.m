@@ -95,7 +95,7 @@ BuildingList = [45 50 40 50
                 ...
                  0 28 92 97
                  32 97 92 97
-                 102 197 92 97]; % coordinates of building xmin xmax ymin ymax
+                 102 197 92 97]; % coordinates of building: xmin xmax ymin ymax
 
 BuildingMap = X_Grid*0;
 % add buildings to map
@@ -105,10 +105,20 @@ end
 
 BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
 BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside domain: remove it!
-
 BuildingList(find(BuildingList(:,2)>xmax),2) = xmax; %adjust building to domain boundary
 BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain boundary
 
+
+%---------------------------------------
+% create exit list (if not given)
+%---------------------------------------
+ExitList = [28 32 97 100
+             97 100 97 100]; % coordinates of exits: xmin xmax ymin ymax
+
+ExitList(find(ExitList(:,1)>=xmax),:) = []; %if exit fully outside domain: remove it!
+ExitList(find(ExitList(:,3)>=ymax),:) = []; %if exit fully outside domain: remove it!
+ExitList(find(ExitList(:,2)>xmax),2) = xmax; %adjust exit to domain boundary
+ExitList(find(ExitList(:,4)>ymax),2) = ymax; %adjust exit to domain boundary
 
 
 %----------------------------------------------------
@@ -145,6 +155,29 @@ end
 %----------------------------------------------------
 % compute forces from exits (static)
 %----------------------------------------------------
+Arch        = ExitList;
+ArchFormat  = 'list';                    %'list' or 'map'
+Type        = 2;                        %1: repulsive / 2: attractive
+Spreading   = {'exp' 'linear' 'const'};
+Spreading   = Spreading{3};
+Force       = 0.2;                      %1 is the same as wall force
+
+[xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force);
+
+%add contribution of object(s)
+xArchForces = xArchForces + xArchForces_single;
+yArchForces = yArchForces + yArchForces_single;
+
+checkFigure = logical(0);
+if checkFigure
+    figure(11)
+    quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
+    title('architecture force')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight 
+end
+
 
 
 %==========================================================================
