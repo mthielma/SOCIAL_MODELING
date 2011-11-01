@@ -97,17 +97,16 @@ BuildingList = [45 50 40 50
                  32 97 92 97
                  102 197 92 97]; % coordinates of building: xmin xmax ymin ymax
 
-BuildingMap = X_Grid*0;
-% add buildings to map
-for i=1:size(BuildingList,1)
-    BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = 1;
-end
-
 BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
 BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside domain: remove it!
 BuildingList(find(BuildingList(:,2)>xmax),2) = xmax; %adjust building to domain boundary
 BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain boundary
 
+BuildingMap = X_Grid*0;
+% add buildings to map
+for i=1:size(BuildingList,1)
+    BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = 1;
+end
 
 %---------------------------------------
 % create exit list (if not given)
@@ -120,6 +119,11 @@ ExitList(find(ExitList(:,3)>=ymax),:) = []; %if exit fully outside domain: remov
 ExitList(find(ExitList(:,2)>xmax),2) = xmax; %adjust exit to domain boundary
 ExitList(find(ExitList(:,4)>ymax),2) = ymax; %adjust exit to domain boundary
 
+ExitMap = X_Grid*0;
+% add exits to map
+for i=1:size(ExitList,1)
+    ExitMap(X_Grid>=ExitList(i,1) & X_Grid<=ExitList(i,2) & Y_Grid>=ExitList(i,3) & Y_Grid<=ExitList(i,4)) = 1;
+end
 
 %----------------------------------------------------
 % compute forces from buildings (static)
@@ -262,6 +266,7 @@ axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
 % plot buildings
 PlotBuildings(BuildingList,'r');
+PlotBuildings(ExitList,'g');
 % plot agents
 PlotAgents(nagent,AGENT,'y');
 
