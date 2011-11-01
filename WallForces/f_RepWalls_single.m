@@ -11,7 +11,7 @@
 % nx = 40;
 % ny = 40;
 % % Architecture position
-% % X-POSITION(left right) / Y-POSITION(bottom top) / TYPE(1:repulsive 2:attractor)
+% % X-POSITION(left right) / Y-POSITION(bottom top)
 % Arch = [ 10 30      30 35 ];
 % Type = 1; %1: repulsive / 2: attractive
 % Spreading  = {'exp' 'linear' 'const'};
