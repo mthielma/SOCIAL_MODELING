@@ -132,15 +132,22 @@ display('calculating force direction')
 
 xgradWall = zeros(nx,ny); xgradAttr = zeros(nx,ny);
 ygradWall = zeros(nx,ny); ygradAttr = zeros(nx,ny);
-for i=2:nx-1
-    for j=2:ny-1
-        xgradWall(i,j) = distToWall(i+1,j)-distToWall(i-1,j);
-        ygradWall(i,j) = distToWall(i,j+1)-distToWall(i,j-1);
-        
-        xgradAttr(i,j) = -(distToAttr(i+1,j)-distToAttr(i-1,j));
-        ygradAttr(i,j) = -(distToAttr(i,j+1)-distToAttr(i,j-1));
-    end
-end
+% for i=2:nx-1
+%     for j=2:ny-1
+%         xgradWall(i,j) = distToWall(i+1,j)-distToWall(i-1,j);
+%         ygradWall(i,j) = distToWall(i,j+1)-distToWall(i,j-1);
+%         
+%         xgradAttr(i,j) = -(distToAttr(i+1,j)-distToAttr(i-1,j));
+%         ygradAttr(i,j) = -(distToAttr(i,j+1)-distToAttr(i,j-1));
+%     end
+% end
+
+xgradWall(2:nx-1,2:ny-1) = distToWall(3:nx,2:ny-1) - distToWall(1:nx-2,2:ny-1);
+ygradWall(2:nx-1,2:ny-1) = distToWall(2:nx-1,3:ny) - distToWall(2:nx-1,1:ny-2);
+
+xgradAttr(2:nx-1,2:ny-1) = -( distToAttr(3:nx,2:ny-1) - distToAttr(1:nx-2,2:ny-1) );
+ygradAttr(2:nx-1,2:ny-1) = -( distToAttr(2:nx-1,3:ny) - distToAttr(2:nx-1,1:ny-2) );
+
 
 %boundary conditions -----------------------------
 xgradWall(1,:)  = 0;   ygradWall(1,:)  = 0; %open boundaries
