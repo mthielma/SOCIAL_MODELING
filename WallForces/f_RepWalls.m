@@ -1,7 +1,7 @@
 
 % function f_RepWalls.m
 
-function [xArchForces, yArchForces] = f_RepWalls (nx, ny, Arch)
+function [xArchForces, yArchForces, grid] = f_RepWalls (nx, ny, Arch)
 
 %=============================
 % function for repulsive walls
@@ -22,21 +22,21 @@ attrSpread  = attrSpread{3};
 attrForce   = 0.2; %1 is the same as wall force
 
 
-nx = 40;
-ny = 40;
-%Architecture position
-% X-POSITION(left right) / Y-POSITION(bottom top) / TYPE(1:repulsive 2:attractor)
-Arch = [
-    10 30       30 35   1
-    35 40       36 40   2
-    30 34       15 20   1
-    18 20       10 25 	1
-    10 15       10 15   1
-    10 15       20 25   1
-    23 28       10 15   1
-    23 28       20 25   1
-    ...%26 27       28 30   1
-];
+% nx = 40;
+% ny = 40;
+% %Architecture position
+% % X-POSITION(left right) / Y-POSITION(bottom top) / TYPE(1:repulsive 2:attractor)
+% Arch = [
+%     10 30       30 35   1
+%     35 40       36 40   2
+%     30 34       15 20   1
+%     18 20       10 25 	1
+%     10 15       10 15   1
+%     10 15       20 25   1
+%     23 28       10 15   1
+%     23 28       20 25   1
+%     ...%26 27       28 30   1
+% ];
 
 
 
