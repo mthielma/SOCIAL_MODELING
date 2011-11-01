@@ -12,23 +12,19 @@
 % ny = 40;
 % % Architecture position
 % % X-POSITION(left right) / Y-POSITION(bottom top) / TYPE(1:repulsive 2:attractor)
-% Arch = [ 10 30       30 35   1 ];
+% Arch = [ 10 30      30 35 ];
+% Type = 1; %1: repulsive / 2: attractive
 % Spreading  = {'exp' 'linear' 'const'};
-% Spreading  = attrSpread{3};
+% Spreading  = Spreading{3};
 % Force   = 0.2; %1 is the same as wall force
 % 
-% [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, Spreading, Force)
+% [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, Type, Spreading, Force)
 % ********************
 
-function [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, Spreading, Force)
+function [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, Type, Spreading, Force)
 plotFields = logical(0);
 
 display('******* calculate wall forces ******')
-%---------------------------------------------
-%input ---------------------------------------
-
-attrSpread  = Spreading;
-attrForce   = Force;
 
 %---------------------------------------------
 %describe wall -------------------------------
@@ -46,9 +42,9 @@ for i=1:nx
         for k=1:size(Arch,1)
             if ( i>=Arch(k,1) && i<=Arch(k,2)...
                     && j>=Arch(k,3) && j<=Arch(k,4) )
-                if (Arch(k,5)==1)
+                if (Type==1)
                     GRIDwall(i,j) = 1;  %is wall
-                elseif (Arch(k,5)==2)
+                elseif (Type==2)
                     GRIDattr(i,j) = -1; %is attractor
                 end
             end
@@ -95,12 +91,12 @@ end
 %wall force ----------------------------------
 % f =  %from Helbing2000
 F_wall = exp(-distToWall);    %max. force value should be 1.0
-if strcmp(attrSpread,'exp')
+if strcmp(Spreading,'exp')
     F_attr = -exp(-distToAttr);
-elseif strcmp(attrSpread,'linear')    
-    F_attr = attrForce*(-1+distToAttr./max(max(distToAttr)));
-elseif strcmp(attrSpread,'const')
-    F_attr = -attrForce;
+elseif strcmp(Spreading,'linear')    
+    F_attr = Force*(-1+distToAttr./max(max(distToAttr)));
+elseif strcmp(Spreading,'const')
+    F_attr = -Force;
 end
 F_arch = F_wall+F_attr;
 
