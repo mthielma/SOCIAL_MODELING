@@ -12,16 +12,17 @@
 % ny = 40;
 % % Architecture position
 % % X-POSITION(left right) / Y-POSITION(bottom top)
-% Arch = [ 10 30      30 35 ];
+% Arch = [ 10 30     30 35 ];  or   size(nx+1,ny+1)
+% Arch = 'list'                or 	'map'
 % Type = 1; %1: repulsive / 2: attractive
 % Spreading  = {'exp' 'linear' 'const'};
 % Spreading  = Spreading{3};
 % Force   = 0.2; %1 is the same as wall force
 % 
-% [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, Type, Spreading, Force)
+% [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force)
 % ********************
 
-function [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, Type, Spreading, Force)
+function [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force)
 plotFields = logical(0);
 
 display('******* calculate wall forces ******')
@@ -30,28 +31,41 @@ display('******* calculate wall forces ******')
 %describe wall -------------------------------
 display('describing walls')
 
-GRIDwall = zeros(nx,ny);
-GRIDattr = zeros(nx,ny);
 grid = zeros(nx,ny,2);
 
-for i=1:nx
-    for j=1:ny
-        grid(i,j,:) = [i j];
-        
-        %loop all architecture
-        for k=1:size(Arch,1)
-            if ( i>=Arch(k,1) && i<=Arch(k,2)...
-                    && j>=Arch(k,3) && j<=Arch(k,4) )
-                if (Type==1)
-                    GRIDwall(i,j) = 1;  %is wall
-                elseif (Type==2)
-                    GRIDattr(i,j) = -1; %is attractor
+if strcmp(ArchFormat,'list')
+    GRIDwall = zeros(nx,ny);
+    GRIDattr = zeros(nx,ny);
+    for i=1:nx
+        for j=1:ny
+            grid(i,j,:) = [i j];
+            
+            %loop all architecture
+            for k=1:size(Arch,1)
+                if ( i>=Arch(k,1) && i<=Arch(k,2)...
+                        && j>=Arch(k,3) && j<=Arch(k,4) )
+                    if (Type==1)
+                        GRIDwall(i,j) = 1;  %is wall
+                    elseif (Type==2)
+                        GRIDattr(i,j) = -1; %is attractor
+                    end
                 end
             end
         end
     end
+    GRIDarch = GRIDwall+GRIDattr;
+    
+elseif strcmp(ArchFormat,'map')
+    for i=1:nx
+        for j=1:ny
+            grid(i,j,:) = [i j];
+        end
+    end
+   GRIDarch = Arch';
+   
+else
+    error('Hei stupid: insert correct ArchFormat!')
 end
-GRIDarch = GRIDwall+GRIDattr;
 
 if plotFields
     figure(1),clf
@@ -107,7 +121,7 @@ if plotFields
     xlabel('x')
     ylabel('y')
     colorbar
-    axis equal; axis tight
+    axis equal; axis tight, axis ij
     
     subplot(3,3,2)
     imagesc(distToAttr')
@@ -115,7 +129,7 @@ if plotFields
     xlabel('x')
     ylabel('y')
     colorbar
-    axis equal; axis tight
+    axis equal; axis tight, axis ij
     
     subplot(3,3,4)
     imagesc(F_arch')
@@ -123,7 +137,7 @@ if plotFields
     xlabel('x')
     ylabel('y')
     colorbar
-    axis equal; axis tight
+    axis equal; axis tight, axis ij
 end
 
 %---------------------------------------------
@@ -181,7 +195,7 @@ if plotFields
     title('wall force direction')
     xlabel('x')
     ylabel('y')
-    axis equal; axis tight
+    axis equal; axis tight, axis ij
     
     subplot(3,3,5)
     quiver(grid(:,:,1),grid(:,:,2),xgradAttr,ygradAttr)
@@ -189,7 +203,7 @@ if plotFields
     title('attractors force direction')
     xlabel('x')
     ylabel('y')
-    axis equal; axis tight
+    axis equal; axis tight, axis ij
     
     subplot(3,3,9)
     quiver(grid(:,:,1),grid(:,:,2),xgradF_wall,ygradF_wall)
@@ -197,7 +211,7 @@ if plotFields
     title('wall force')
     xlabel('x')
     ylabel('y')
-    axis equal; axis tight
+    axis equal; axis tight, axis ij
     
     subplot(3,3,8)
     quiver(grid(:,:,1),grid(:,:,2),xgradF_attr,ygradF_attr)
@@ -205,7 +219,7 @@ if plotFields
     title('attractor force')
     xlabel('x')
     ylabel('y')
-    axis equal; axis tight
+    axis equal; axis tight, axis ij
     
     subplot(3,3,7)
     quiver(grid(:,:,1),grid(:,:,2),xgradF_arch,ygradF_arch)
@@ -213,7 +227,7 @@ if plotFields
     title('architecture force')
     xlabel('x')
     ylabel('y')
-    axis equal; axis tight
+    axis equal; axis tight, axis ij
 end
 
 xArchForces = xgradF_arch;
