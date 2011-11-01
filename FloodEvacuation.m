@@ -114,26 +114,25 @@ BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain 
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
+xArchForces=zeros(size(xvec,2),size(yvec,2));  %initialise force field x-direction (nx*ny)
+yArchForces=zeros(size(xvec,2),size(yvec,2));  %initialise force field y-direction (nx*ny)
+
 nx          = size(xvec,2);
 ny          = size(yvec,2);
+Arch        = BuildingMap;
+ArchFormat  = 'map';                    %'list' or 'map'
 Type        = 1;                        %1: repulsive / 2: attractive
 Spreading   = {'exp' 'linear' 'const'};
 Spreading   = Spreading{1};
 Force       = 1.0;                      %1 is the same as wall force
 
-xArchForces=zeros(nx,ny);
-yArchForces=zeros(nx,ny);
-% for i=1:size(BuildingList,1)  %For adding seperately
-%     Arch = BuildingList(i,:);
-    Arch = BuildingList;        %For adding all together
-    [xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (nx, ny, Arch, Type, Spreading, Force);
-    
-    %add contribution building
-    xArchForces = xArchForces + xArchForces_single;  
-    yArchForces = yArchForces + yArchForces_single;
-% end
+[xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force);
 
-checkFigure = logical(1);
+%add contribution of object(s)
+xArchForces = xArchForces + xArchForces_single;
+yArchForces = yArchForces + yArchForces_single;
+
+checkFigure = logical(0);
 if checkFigure
     figure(11)
     quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
@@ -142,6 +141,10 @@ if checkFigure
     ylabel('y')
     axis equal; axis tight 
 end
+
+%----------------------------------------------------
+% compute forces from exits (static)
+%----------------------------------------------------
 
 
 %==========================================================================
