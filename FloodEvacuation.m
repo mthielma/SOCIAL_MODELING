@@ -6,7 +6,7 @@ Debug = 0;
 RiseVelocity = 0.01; %water rising velocity in m/s
 dt           = 1; %time step in s
 nt           = 100; % number of timesteps
-nagent       = 1000; % number of agents
+nagent       = 2000; % number of agents
 
 
 % physical forces parameters (Helbing,2000)
@@ -16,6 +16,12 @@ kappa   = 2.4e5;
 % social force parameters
 A = 2e3;
 B = 0.08;
+
+% agent parameters
+m           = 80; % mass in kg
+v           = 5; % maximal velocity
+t_acc       = 0.5; % acceleration itme in s
+
 
 addpath ./DecisionStrategy/
 addpath ./WallForces/
@@ -85,16 +91,17 @@ ZRoad = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 %---------------------------------------
 % create building list (if not given)
 %---------------------------------------
-BuildingList = [45 50 40 50;...
-                20 40 12 30;...
-                10 16 70 80;...
-                70 95 60 80;...
-                70 80 50 60;...
-                60 85 10 40;...
-                45 55 20 35;...
-                
-                 0 28 92 97;...
-                 32 97 92 97;...
+BuildingList = [42 53 42 53;...
+                22 38 12 33;...
+                12 16 72 83;...
+                72 95 58 86;...
+                72 83 48 58;...
+                53 67 62 88;...
+                22 48 56 78;...
+                62 85  8 43;...
+                42 57 23 35;...
+                 0 28 92 100;...
+                 32 97 92 100;...
                  102 197 92 97]; % coordinates of building xmin xmax ymin ymax
 
 BuildingMap = X_Grid*0;
@@ -135,10 +142,13 @@ WaterHeight= X_Grid*0;
 % - helping factor --> later
 cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).num]       = cell_array{:};
-[AGENT(1:nagent).VMax]     = deal(5);
-[AGENT(1:nagent).BoxSize]   = deal(8);
+[AGENT(1:nagent).VMax]      = deal(5);
+[AGENT(1:nagent).BoxSize]   = deal(10); % the agent is only influenced by 
+[AGENT(1:nagent).Vel]       = deal(1); % initial velocity (to be randomized)
+[AGENT(1:nagent).DirX]      = deal(1./sqrt(2)); % x-direction vector
+[AGENT(1:nagent).DirY]      = deal(1./sqrt(2)); % y-direction vector
 
-cell_array = num2cell(0.5+ (rand(nagent,1))*0.2);
+cell_array = num2cell((0.5+ (rand(nagent,1))*0.2)./2);
 [AGENT(1:nagent).Size]   = cell_array{:};
 
 % get the indices in BuildingMap that correspond to a road
@@ -281,15 +291,9 @@ for itime = 1:nt
         
         % compute normal vector
         VecNormal       = zeros(size(pointsidx,2),2);
-        VecNormal(:,1)  = (x_agent - x_others)./DistanceToAgents;
-        VecNormal(:,2)  = (y_agent - y_others)./DistanceToAgents;
         
-        % compute tangential vector
-        VecTangent      = 0*VecNormal;
-        VecTangent(:,1) = -VecNormal(:,2)./DistanceToAgents;
-        VecTangent(:,2) = VecNormal(:,1)./DistanceToAgents;
-        
-        
+        NormalX         = (x_agent - x_others)./DistanceToAgents;
+        NormalY         = (y_agent - y_others)./DistanceToAgents;
         
         % find agents that are too close
         indTooClose                    = find(DistanceToAgents<=0);
@@ -302,7 +306,7 @@ for itime = 1:nt
         % get the distance to the closest wall
         %-------------------------------------------------
         WallDist    = sqrt((x_Buildings-x_agent).^2+(y_Buildings-y_agent).^2);
-        WallDist = min(WallDist)-AGENT(iagent).Size;
+        WallDist    = WallDist-AGENT(iagent).Size;
         indWallDist = find(WallDist<0);
         if ~isempty(indWallDist)
             AtWall = true;
@@ -315,30 +319,65 @@ for itime = 1:nt
         % function to simulate that agents only have a reduced field of
         % vision
         %----------------------------------------------------
-        
         F_socAgents = A*exp(DistanceToAgents)/B;
-        F_socAgents = F_socAgents(:,ones(1,2)).*VecNormal;
+        F_socAgentsX = F_socAgents.*NormalX;
+        F_socAgentsY = F_socAgents.*NormalY;
         
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
         if TooClose
             % normal force
-            F_physAgents_normal  = k*DistanceToAgents(indTooClose,ones(1,2)).*VecNormal(indTooClose,:);
+            F_physAgents_normalX = k*DistanceToAgents(indTooClose).*NormalX(indTooClose);
+            F_physAgents_normalY = k*DistanceToAgents(indTooClose).*NormalY(indTooClose);
             % tangential force
+            % compute tangential vector
+            TangentX        = -NormalY(indTooClose);
+            TangentY        = NormalX(indTooClose);
             
+            VelOthers   = [AGENT(pointsidx(indTooClose)).Vel];
+            DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
+            DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
+            
+            DeltaV      = (VelOthers.*DirXOthers-AGENT(iagent).Vel.*AGENT(iagent).DirX).*TangentX + (VelOthers.*DirYOthers-AGENT(iagent).Vel.*AGENT(iagent).DirY).*TangentY;            
+            F_physAgents_tangentX = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
+            F_physAgents_tangentY = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
         end
         %----------------------------------------------------
         % compute physical forces from walls 
         %----------------------------------------------------
         if AtWall
+            
+            % compute normal vector
+            x_wall = X(indWallDist);
+            y_wall = Y(indWallDist);
+            
+            % compute normal vector
+            NormalX  = (x_agent - x_wall)./WallDist(indWallDist);
+            NormalY  = (y_agent - y_wall)./WallDist(indWallDist);
+            
+            % compute tangential vector
+            TangentX = -NormalY;
+            TangentY = NormalX;
+            
             % normal force
-            F_physWall_normal = k*WallDist;
+            F_physWall_normalX = k*WallDist(indWallDist).*NormalX;
+            F_physWall_normalY = k*WallDist(indWallDist).*NormalY;
+            
+            % tangential force
+            DeltaV      = (-AGENT(iagent).Vel.*AGENT(iagent).DirX).*TangentX + (-AGENT(iagent).Vel.*AGENT(iagent).DirY).*TangentY;
+            F_physAgents_tangentX = kappa*WallDist(indWallDist).*DeltaV.*TangentX;
+            F_physAgents_tangentY = kappa*WallDist(indWallDist).*DeltaV.*TangentY;
         end
         
         %----------------------------------------------------
         % compute force from destination point
         %----------------------------------------------------
+        
+        x_dest = X(AGENT(iagent).DestinationPoint);
+        y_dest = Y(AGENT(iagent).DestinationPoint);
+        
+        
         
         
         %----------------------------------------------------
@@ -402,6 +441,9 @@ for itime = 1:nt
 %             % add up forces and compute vx and vy velocity
 %             %----------------------------------------------------
 %             
+%               
+%           
+%
 %             % limit velocity to max velocity if it is bigger
 %         end
     end
