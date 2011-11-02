@@ -1,14 +1,14 @@
 %function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,FLOOD,GRID,TOPOGRAPHY)
 clear;
 
-Debug = 0;
-RiseVelocity = 0.01; %water rising velocity in m/s
-dt           = 1; %time step in s
-nt           = 100; % number of timesteps
-nagent       = 100; % number of agents
+Debug           = 0;
+RiseVelocity    = 0.01; %water rising velocity in m/s
+dt              = 1; %time step in s
+nt              = 100; % number of timesteps
+nagent          = 100; % number of agents
 criticalDepth   = 0.5;      %critical water depth
 
-
+noUSEatPresent = logical(0);
 
 % physical forces parameters (Helbing,2000)
 k       = 1.2e5;
@@ -33,7 +33,7 @@ addpath ./kdtree_alg_OSX/
 xmin = 0;
 xmax = 50;
 ymin = 0;
-ymax = 50;
+ymax = 10;
 
 
 xvec = xmin:1:xmax;
@@ -70,18 +70,12 @@ ZRoad = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 %---------------------------------------
 % create building list (if not given)
 %---------------------------------------
-BuildingList = [42 53 42 53;...
-                22 38 12 33;...
-                12 16 72 83;...
-                72 95 58 86;...
-                72 83 48 58;...
-                53 67 62 88;...
-                22 48 56 78;...
-                62 85  8 43;...
-                42 57 23 35;...
-                 0 28 92 100;...
-                 32 97 92 100;...
-                 102 197 92 97]; % coordinates of building xmin xmax ymin ymax
+BuildingList = [
+                0 50 0 1    %boundary wall
+                0 50 9 10   %boundary wall
+                30 32 1 4   %top barriere
+                30 32 6 9   %bottom barriere
+                ]; % coordinates of building xmin xmax ymin ymax
 
 BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
 BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside domain: remove it!
@@ -97,8 +91,9 @@ end
 %---------------------------------------
 % create exit list (if not given)
 %---------------------------------------
-ExitList = [28 32 97 100
-             97 100 97 100]; % coordinates of exits: xmin xmax ymin ymax
+ExitList = [
+            49 50 4 6
+           ]; % coordinates of exits: xmin xmax ymin ymax
 
 ExitList(find(ExitList(:,1)>=xmax),:) = []; %if exit fully outside domain: remove it!
 ExitList(find(ExitList(:,3)>=ymax),:) = []; %if exit fully outside domain: remove it!
@@ -135,7 +130,7 @@ yArchForces = yArchForces + yArchForces_single;
 checkFigure = logical(1);
 if checkFigure
     figure(11)
-    quiver(X_Grid,Y_Grid,xArchForces,yArchForces)
+    quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
     title('architecture force')
     xlabel('x')
     ylabel('y')
@@ -158,7 +153,7 @@ Force       = 0.2;                      %1 is the same as wall force
 xArchForces = xArchForces + xArchForces_single;
 yArchForces = yArchForces + yArchForces_single;
 
-checkFigure = logical(0);
+checkFigure = logical(1);
 if checkFigure
     figure(11)
     quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
@@ -292,13 +287,14 @@ for itime = 1:nt
     % precomputed force field to the agents
     %----------------------------------------------------
     
-    FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces,[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
-    FyArchAgents = interp2(X_Grid,Y_Grid,yArchForces,[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
+    FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
+    FyArchAgents = interp2(X_Grid,Y_Grid,yArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
     
     dummy = num2cell(FxArchAgents);
     [AGENT(1:nagent).FxArch]       = dummy{:};
     dummy = num2cell(FyArchAgents);
     [AGENT(1:nagent).FyArch]       = dummy{:};
+    
     %----------------------------------------------------
     % agent loop
     for iagent = 1:nagent
@@ -312,7 +308,7 @@ for itime = 1:nt
         %-------------------------------------------------
         
         % generate the Boxes per Agent
-        Boxes        = zeros(2,2);
+        Boxes      = zeros(2,2);
         Boxes(1,1) = [AGENT(iagent).LocX]-[AGENT(iagent).BoxSize]./2;
         Boxes(2,1) = [AGENT(iagent).LocY]-[AGENT(iagent).BoxSize]./2;
         Boxes(1,2) = [AGENT(iagent).LocX]+[AGENT(iagent).BoxSize]./2;
@@ -365,6 +361,7 @@ for itime = 1:nt
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
+        if noUSEatPresent
         if TooClose
             % normal force
             F_physAgents_normalX = k*DistanceToAgents(indTooClose).*NormalX(indTooClose);
@@ -381,6 +378,7 @@ for itime = 1:nt
             DeltaV      = (VelOthers.*DirXOthers-AGENT(iagent).Vel.*AGENT(iagent).DirX).*TangentX + (VelOthers.*DirYOthers-AGENT(iagent).Vel.*AGENT(iagent).DirY).*TangentY;            
             F_physAgents_tangentX = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
             F_physAgents_tangentY = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
+        end
         end
         %----------------------------------------------------
         % compute physical forces from walls 
@@ -415,6 +413,24 @@ for itime = 1:nt
     %----------------------------------------------------
     % move agents
     %----------------------------------------------------
+    dummy = num2cell([AGENT.LocX] + [AGENT.FxArch]);
+    [AGENT(1:nagent).LocX] = dummy{:}; 
+    
+    dummy = num2cell([AGENT.LocY] + [AGENT.FyArch]);
+    [AGENT(1:nagent).LocY] = dummy{:};
+    
+    
+    %----------------------------------------------------
+    % remove successfull agents
+    %----------------------------------------------------
+    
+    
+%     find( [AGENT(find( [AGENT.LocX]>=ExitList(1,1) ) ).LocX]<=ExitList(1,2) )
+%     find( [AGENT.LocY]>=ExitList(1,3) )
+%     find( [AGENT.LocY]<=ExitList(1,4) );
+    
+    
+    
     
     %----------------------------------------------------
     % plot
@@ -428,13 +444,13 @@ for itime = 1:nt
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         % plot topo
         contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
-        h = contourf(X_Grid,Y_Grid,WaterLevel,[0.1 0.5],'EdgeColor','none');
         caxis([0 0.5])
         colormap('Bone')
         colormap(flipud(colormap))
         
         % plot buildings
         PlotBuildings(BuildingList,'r');
+        PlotBuildings(ExitList,'g');
         % plot agents
         PlotAgents(nagent,AGENT,'y');
         
@@ -442,7 +458,6 @@ for itime = 1:nt
 %         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
         axis equal, axis tight
         
-        title(['max water = ',num2str(max(WaterLevel(:)))])
         
     end
 end
