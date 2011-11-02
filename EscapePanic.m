@@ -4,7 +4,7 @@ clear;
 Debug           = 0;
 RiseVelocity    = 0.01; %water rising velocity in m/s
 dt              = 1; %time step in s
-nt              = 100; % number of timesteps
+nt              = 200; % number of timesteps
 nagent          = 100; % number of agents
 criticalDepth   = 0.5;      %critical water depth
 
@@ -36,8 +36,8 @@ ymin = 0;
 ymax = 10;
 
 
-xvec = xmin:0.1:xmax;
-yvec = ymin:0.1:ymax;
+xvec = xmin:0.5:xmax;
+yvec = ymin:0.5:ymax;
 [X_Grid,Y_Grid] = meshgrid(xvec,yvec);
 
 Z_Grid = -100./([(X_Grid+100)])+10;
@@ -119,7 +119,7 @@ Spreading   = {'exp' 'linear' 'const'};
 Spreading   = Spreading{1};
 Force       = 1.0;                      %1 is the same as wall force
 
-[xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (xvec, yvec, Arch, ArchFormat, Type, Spreading, Force);
+[xArchForces_single, yArchForces_single] = f_RepWalls_single (X_Grid, Y_Grid, Arch, ArchFormat, Type, Spreading, Force);
 
 %add contribution of object(s)
 xArchForces = xArchForces + xArchForces_single;
@@ -128,7 +128,7 @@ yArchForces = yArchForces + yArchForces_single;
 checkFigure = logical(1);
 if checkFigure
     figure(11)
-    quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
+    quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
     title('architecture force')
     xlabel('x')
     ylabel('y')
@@ -145,7 +145,7 @@ Spreading   = {'exp' 'linear' 'const'};
 Spreading   = Spreading{3};
 Force       = 0.2;                      %1 is the same as wall force
 
-[xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (xvec, yvec, Arch, ArchFormat, Type, Spreading, Force);
+[xArchForces_single, yArchForces_single] = f_RepWalls_single (X_Grid, Y_Grid, Arch, ArchFormat, Type, Spreading, Force);
 
 %add contribution of object(s)
 xArchForces = xArchForces + xArchForces_single;
@@ -154,7 +154,7 @@ yArchForces = yArchForces + yArchForces_single;
 checkFigure = logical(1);
 if checkFigure
     figure(11)
-    quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
+    quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
     title('architecture force')
     xlabel('x')
     ylabel('y')
@@ -263,8 +263,6 @@ time = 0;
 for itime = 1:nt
     disp('*****************************************')
     disp(['timestep ',num2str(itime)])
-
-    nagent = size([AGENT.LocX],2); %update number of agents after removing some of them
     
     
     %----------------------------------------------------
@@ -432,6 +430,7 @@ for itime = 1:nt
         & [AGENT.LocY]>=ExitList(1,3) & [AGENT.LocY]<=ExitList(1,4)  ) = [];
     
     
+    nagent = size([AGENT.LocX],2); %update number of agents after removing some of them
     
     
     
@@ -440,7 +439,7 @@ for itime = 1:nt
     % plot
     %----------------------------------------------------
     
-    if mod(itime,10)==0
+    if mod(itime,2)==0
     
         figure(1),clf
         hold on
