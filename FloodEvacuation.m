@@ -1,12 +1,13 @@
 %function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,FLOOD,GRID,TOPOGRAPHY)
 clear;
 
-%%%% FABIO SUPERSTAR !!!!!!!!!!!!!!
 Debug = 0;
 RiseVelocity = 0.01; %water rising velocity in m/s
 dt           = 1; %time step in s
 nt           = 100; % number of timesteps
 nagent       = 2000; % number of agents
+criticalDepth   = 0.5;      %critical water depth
+
 
 
 % physical forces parameters (Helbing,2000)
@@ -104,15 +105,91 @@ BuildingList = [42 53 42 53;...
                  32 97 92 100;...
                  102 197 92 97]; % coordinates of building xmin xmax ymin ymax
 
+BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
+BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside domain: remove it!
+BuildingList(find(BuildingList(:,2)>xmax),2) = xmax; %adjust building to domain boundary
+BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain boundary
+
 BuildingMap = X_Grid*0;
 % add buildings to map
-for i = 1:size(BuildingList,1)
+for i=1:size(BuildingList,1)
     BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = 1;
+end
+
+%---------------------------------------
+% create exit list (if not given)
+%---------------------------------------
+ExitList = [28 32 97 100
+             97 100 97 100]; % coordinates of exits: xmin xmax ymin ymax
+
+ExitList(find(ExitList(:,1)>=xmax),:) = []; %if exit fully outside domain: remove it!
+ExitList(find(ExitList(:,3)>=ymax),:) = []; %if exit fully outside domain: remove it!
+ExitList(find(ExitList(:,2)>xmax),2) = xmax; %adjust exit to domain boundary
+ExitList(find(ExitList(:,4)>ymax),2) = ymax; %adjust exit to domain boundary
+
+ExitMap = X_Grid*0;
+% add exits to map
+for i=1:size(ExitList,1)
+    ExitMap(X_Grid>=ExitList(i,1) & X_Grid<=ExitList(i,2) & Y_Grid>=ExitList(i,3) & Y_Grid<=ExitList(i,4)) = 1;
 end
 
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
+xArchForces=zeros(size(xvec,2),size(yvec,2));  %initialise force field x-direction (nx*ny)
+yArchForces=zeros(size(xvec,2),size(yvec,2));  %initialise force field y-direction (nx*ny)
+
+nx          = size(xvec,2);
+ny          = size(yvec,2);
+Arch        = BuildingMap;
+ArchFormat  = 'map';                    %'list' or 'map'
+Type        = 1;                        %1: repulsive / 2: attractive
+Spreading   = {'exp' 'linear' 'const'};
+Spreading   = Spreading{1};
+Force       = 1.0;                      %1 is the same as wall force
+
+[xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force);
+
+%add contribution of object(s)
+xArchForces = xArchForces + xArchForces_single;
+yArchForces = yArchForces + yArchForces_single;
+
+checkFigure = logical(0);
+if checkFigure
+    figure(11)
+    quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
+    title('architecture force')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight 
+end
+
+%----------------------------------------------------
+% compute forces from exits (static)
+%----------------------------------------------------
+Arch        = ExitList;
+ArchFormat  = 'list';                    %'list' or 'map'
+Type        = 2;                        %1: repulsive / 2: attractive
+Spreading   = {'exp' 'linear' 'const'};
+Spreading   = Spreading{3};
+Force       = 0.2;                      %1 is the same as wall force
+
+[xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force);
+
+%add contribution of object(s)
+xArchForces = xArchForces + xArchForces_single;
+yArchForces = yArchForces + yArchForces_single;
+
+checkFigure = logical(0);
+if checkFigure
+    figure(11)
+    quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
+    title('architecture force')
+    xlabel('x')
+    ylabel('y')
+    axis equal; axis tight 
+end
+
 
 
 %==========================================================================
@@ -200,6 +277,7 @@ axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
 % plot buildings
 PlotBuildings(BuildingList,'r');
+PlotBuildings(ExitList,'g');
 % plot agents
 PlotAgents(nagent,AGENT,'y');
 
@@ -222,7 +300,7 @@ for itime = 1:nt
     WaterLevel(WaterLevel<0) = 0;
     
     % compute critical water level
-    CriticalWaterLevel = WaterLevel - 0.5;
+    CriticalWaterLevel = WaterLevel - criticalDepth;
     %----------------------------------------------------
     % get the roads/nodes that are being flooded
     %----------------------------------------------------
@@ -252,7 +330,40 @@ for itime = 1:nt
     % compute forces from flood (on the same grid as the building forces are
     % computed) on all agents
     %----------------------------------------------------
+    WaterMap = zeros(size(xvec,2),size(yvec,2));
+    WaterMap(WaterLevel>criticalDepth) = 1;
     
+    if ~isempty(find(WaterMap==1)) %only run if there is water
+        Arch        = WaterMap;
+        ArchFormat  = 'map';                    %'list' or 'map'
+        Type        = 1;                        %1: repulsive / 2: attractive
+        Spreading   = {'exp' 'linear' 'const'};
+        Spreading   = Spreading{1};
+        Force       = 1;                      %1 is the same as wall force
+        
+        [xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force);
+        
+        %add contribution of object(s)
+        xArchForces = xArchForces + xArchForces_single;
+        yArchForces = yArchForces + yArchForces_single;
+    end
+    
+    checkFigure = logical(1);
+    if checkFigure
+        figure(11)
+        subplot(1,2,1)
+        pcolor(grid(:,:,1),grid(:,:,2),WaterMap')
+        title('water extend')
+        xlabel('x')
+        ylabel('y')
+        axis equal; axis tight
+        subplot(1,2,2)
+        quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
+        title('architecture force')
+        xlabel('x')
+        ylabel('y')
+        axis equal; axis tight
+    end
     
     %----------------------------------------------------
     % compute forces from buildings on all agents (just interpolate the
@@ -369,65 +480,22 @@ for itime = 1:nt
             F_physAgents_tangentX = kappa*WallDist(indWallDist).*DeltaV.*TangentX;
             F_physAgents_tangentY = kappa*WallDist(indWallDist).*DeltaV.*TangentY;
         end
-        
         %----------------------------------------------------
-        % compute force from destination point
+        % compute decisions with Graph
         %----------------------------------------------------
+        AGENT = ComputeDecisionOfAgents();
         
+        
+        %--------------------------------------------------------
+        % compute force from destination point (if there is one)
+        %--------------------------------------------------------
         x_dest = X(AGENT(iagent).DestinationPoint);
         y_dest = Y(AGENT(iagent).DestinationPoint);
         
         
         
         
-        %----------------------------------------------------
-        % compute decisions of agents
-        % - in case of extreme slowdown
-        % - the agent has reached the destination point
-        % - the destination point or a part of the path are flooded
-        %----------------------------------------------------
-%         
-%         DistanceDestinationPoint
-%         % has the agent reached the destination point?
-%         
-%         
-%         % is the destination point flooded?
-%         
-%         
-%         % see if slowdown causes agent to rethink his exit strategy
-%         if AGENT(iagent).Velocity/AGENT(iagent).VMax < AGENT(iagent).MaxSlowdown
-%             AGENT(iagent).SlowdownSteps = AGENT(iagent).SlowdownSteps+1;
-%             if AGENT(iagent).SlowdownSteps > AGENT(iagent).MaxSlowdownSteps % agent is fed up because of slowdown
-%                 Decision        = true;
-%                 DecisionCause   = 1;
-%             else
-%                 Decision = false;
-%             end
-%         else
-%             AGENT(iagent).SlowdownSteps = 0; % reset if the agent can move with a satifying velocity
-%             Decision = false;
-%         end
-%         
-%         
-%         
-%         
-%         if Decision
-%             
-%             switch DecisionCause
-%                 case 1 % slowdown -> turn around and take another path or keep going?
-%                     AGENT(iagent) = DecideOnPath(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
-%                     
-%                 case 2 % reached destination point -> look in adjacent paths and decide on new exit stategy
-%                     AGENT(iagent) = DecideOnPathOnCrossing(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
-%                     
-%                 case 3 % destination point is flooded -> node and adjacent paths have been removed from PathVec
-%                        %                              -> turn around to last node (if this node is also flooded, the agent is deactivated)
-%                     if ~isempty(find(PathVec==AGENT(iagent).LastDestinationPoint)) % last destination point still exists
-%                         AGENT(iagent).DestinationPoint =  AGENT(iagent).LastDestinationPoint; % go back
-%                     else
-%                         AGENT(iagent).Trapped = true; % agent is trapped -> game over
-%                     end
-%             end
+
 %             
 %         end
 %         
