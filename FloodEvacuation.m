@@ -1,7 +1,6 @@
 %function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,FLOOD,GRID,TOPOGRAPHY)
 clear;
 
-%%%% FABIO SUPERSTAR !!!!!!!!!!!!!!
 Debug = 0;
 RiseVelocity = 0.01; %water rising velocity in m/s
 dt           = 1; %time step in s
