@@ -1,11 +1,12 @@
 %function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,FLOOD,GRID,TOPOGRAPHY)
 clear;
 
-Debug = 0;
-RiseVelocity = 0.01; %water rising velocity in m/s
-dt           = 1; %time step in s
-nt           = 100; % number of timesteps
-nagent       = 1000; % number of agents
+Debug           = 0;
+RiseVelocity    = 0.01;     %water rising velocity in m/s
+criticalDepth   = 0.5;      %critical water depth
+dt              = 1;        %time step in s
+nt              = 100;      %number of timesteps
+nagent          = 1000;     %number of agents
 
 
 % physical forces parameters (Helbing,2000)
@@ -288,7 +289,7 @@ for itime = 1:nt
     WaterLevel(WaterLevel<0) = 0;
     
     % compute critical water level
-    CriticalWaterLevel = WaterLevel - 0.5;
+    CriticalWaterLevel = WaterLevel - criticalDepth;
     %----------------------------------------------------
     % get the roads/nodes that are being flooded
     %----------------------------------------------------
@@ -318,7 +319,40 @@ for itime = 1:nt
     % compute forces from flood (on the same grid as the building forces are
     % computed) on all agents
     %----------------------------------------------------
+    WaterMap = zeros(size(xvec,2),size(yvec,2));
+    WaterMap(WaterLevel>criticalDepth) = 1;
     
+    if ~isempty(find(WaterMap==1)) %only run if there is water
+        Arch        = WaterMap;
+        ArchFormat  = 'map';                    %'list' or 'map'
+        Type        = 1;                        %1: repulsive / 2: attractive
+        Spreading   = {'exp' 'linear' 'const'};
+        Spreading   = Spreading{1};
+        Force       = 1;                      %1 is the same as wall force
+        
+        [xArchForces_single, yArchForces_single, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force);
+        
+        %add contribution of object(s)
+        xArchForces = xArchForces + xArchForces_single;
+        yArchForces = yArchForces + yArchForces_single;
+    end
+    
+    checkFigure = logical(1);
+    if checkFigure
+        figure(11)
+        subplot(1,2,1)
+        pcolor(grid(:,:,1),grid(:,:,2),WaterMap')
+        title('water extend')
+        xlabel('x')
+        ylabel('y')
+        axis equal; axis tight
+        subplot(1,2,2)
+        quiver(grid(:,:,1),grid(:,:,2),xArchForces,yArchForces)
+        title('architecture force')
+        xlabel('x')
+        ylabel('y')
+        axis equal; axis tight
+    end
     
     %----------------------------------------------------
     % compute forces from buildings on all agents (just interpolate the
