@@ -266,6 +266,9 @@ for itime = 1:nt
     disp('*****************************************')
     disp(['timestep ',num2str(itime)])
 
+    nagent = size([AGENT.LocX],2); %update number of agents after removing some of them
+    
+    
     %----------------------------------------------------
     % compute kdtree of agents for later use
     %----------------------------------------------------
@@ -275,6 +278,7 @@ for itime = 1:nt
     % generate tree
     tree =   kdtree(ReferencePoints);
     
+    clearvars ReferencePoints
     
     %----------------------------------------------------
     % building locations
@@ -299,18 +303,6 @@ for itime = 1:nt
     %----------------------------------------------------
     % agent loop
     for iagent = 1:nagent
-            
-%         %----------------------------------------------------
-%         % remove successfull agents
-%         %----------------------------------------------------
-%         if ( AGENT(iagent).LocX>=ExitList(1,1) && AGENT(iagent).LocX<=ExitList(1,2) ... %if in exit area no.1
-%            && AGENT(iagent).LocY>=ExitList(1,3)  && AGENT(iagent).LocY<=ExitList(1,4) )
-%             AGENT(iagent)=[];                                                           %remove it
-%             iagent=iagent-1; 
-%             nagent=nagent-1;
-%             continue                                                                    %and pass control to the next iteration of the loop
-%         end
-        
         
         x_agent = AGENT(iagent).LocX;
         y_agent = AGENT(iagent).LocY;
@@ -437,10 +429,11 @@ for itime = 1:nt
     % remove successfull agents
     %----------------------------------------------------
     
+    %those who arrived in the first exit
+    AGENT(   [AGENT.LocX]>=ExitList(1,1) & [AGENT.LocX]<=ExitList(1,2) ...
+        & [AGENT.LocY]>=ExitList(1,3) & [AGENT.LocY]<=ExitList(1,4)  ) = [];
     
-%     find( [AGENT(find( [AGENT.LocX]>=ExitList(1,1) ) ).LocX]<=ExitList(1,2) )
-%     find( [AGENT.LocY]>=ExitList(1,3) )
-%     find( [AGENT.LocY]<=ExitList(1,4) );
+    
     
     
     
