@@ -4,12 +4,10 @@
 % function f_RepWalls_single.m
 % 
 %=============================
-% Fabio Crameri 2011-11-01
+% Fabio Crameri 2011-11-02
 
 % % EXAMPLE INPUT:
 % *******************
-% nx = 40;
-% ny = 40;
 % % Architecture position
 % % X-POSITION(left right) / Y-POSITION(bottom top)
 % Arch = [ 10 30     30 35 ];  or   size(nx+1,ny+1)
@@ -19,31 +17,33 @@
 % Spreading  = Spreading{3};
 % Force   = 0.2; %1 is the same as wall force
 % 
-% [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force)
+% [xArchForces, yArchForces] = f_RepWalls_single (X_Grid, Y_Grid, Arch, ArchFormat, Type, Spreading, Force)
 % ********************
 
-function [xArchForces, yArchForces, grid] = f_RepWalls_single (nx, ny, Arch, ArchFormat, Type, Spreading, Force)
+function [xArchForces, yArchForces] = f_RepWalls_single (X_Grid, Y_Grid, Arch, ArchFormat, Type, Spreading, Force)
 plotFields = logical(0);
 
 display('******* calculate wall forces ******')
+
+X_Grid = X_Grid';  %convert grid
+Y_Grid = Y_Grid';
 
 %---------------------------------------------
 %describe wall -------------------------------
 display('describing walls')
 
-grid = zeros(nx,ny,2);
+nx   	= size(X_Grid,1);
+ny   	= size(Y_Grid,2);
 
 if strcmp(ArchFormat,'list')
     GRIDwall = zeros(nx,ny);
     GRIDattr = zeros(nx,ny);
     for i=1:nx
         for j=1:ny
-            grid(i,j,:) = [i j];
-            
             %loop all architecture
             for k=1:size(Arch,1)
-                if ( i>=Arch(k,1) && i<=Arch(k,2)...
-                        && j>=Arch(k,3) && j<=Arch(k,4) )
+                if ( X_Grid(i,j)>=Arch(k,1) && X_Grid(i,j)<=Arch(k,2)...
+                        && Y_Grid(i,j)>=Arch(k,3) && Y_Grid(i,j)<=Arch(k,4) )
                     if (Type==1)
                         GRIDwall(i,j) = 1;  %is wall
                     elseif (Type==2)
@@ -56,19 +56,13 @@ if strcmp(ArchFormat,'list')
     GRIDarch = GRIDwall+GRIDattr;
     
 elseif strcmp(ArchFormat,'map')
-    for i=1:nx
-        for j=1:ny
-            grid(i,j,:) = [i j];
-        end
-    end
    GRIDarch = Arch';
-   
 else
     error('Hei stupid: insert correct ArchFormat!')
 end
 
 if plotFields
-    figure(1),clf
+    figure(12),clf
     subplot(3,3,1)
     imagesc(GRIDarch')
     title('walls')
@@ -82,24 +76,25 @@ end
 %distance to wall ----------------------------
 display('calculating distance to architecture and architecture force')
 
-distToWall = ones(nx,ny)*nx*ny; %make sure it is big enough
-distToAttr = ones(nx,ny)*nx*ny; %make sure it is big enough
-for i=1:nx
-    for j=1:ny
-        %find distance to wall
-        %loop architecture
-        for ii=1:nx
-            for jj=1:ny
-                if ( sqrt((ii-i)^2+(jj-j)^2)<distToWall(i,j) && GRIDarch(ii,jj)==1 )  %get shortest distance to walls
-                    distToWall(i,j) = sqrt( (ii-i)^2 + (jj-j)^2 );
-                end
-                if( sqrt((ii-i)^2+(jj-j)^2)<distToAttr(i,j) && GRIDarch(ii,jj)==-1 )  %get shortest distance to attractors
-                    distToAttr(i,j) = sqrt( (ii-i)^2 + (jj-j)^2 );
-                end
-            end
-        end
-    end
+X_Grid_Wall = X_Grid(GRIDarch==1);  X_Grid_Attr = X_Grid(GRIDarch==-1);
+Y_Grid_Wall = Y_Grid(GRIDarch==1);  Y_Grid_Attr = Y_Grid(GRIDarch==-1);
+
+distToWall = ones(nx,ny)*max(max(X_Grid))*max(max(Y_Grid)); %make sure it is big enough
+distToAttr = distToWall; %make sure it is big enough
+
+%find distance to architecture of each grid point
+%loop only through architecture
+for ii=1:size(X_Grid_Wall,1)
+    distToWall = min( distToWall, sqrt( (X_Grid-X_Grid_Wall(ii)).^2 + (Y_Grid-Y_Grid_Wall(ii)).^2 )  );
 end
+for ii=1:size(X_Grid_Attr,1)
+    distToAttr = min( distToAttr, sqrt( (X_Grid-X_Grid_Attr(ii)).^2 + (Y_Grid-Y_Grid_Attr(ii)).^2 )  );
+end
+
+
+
+
+
 
 %---------------------------------------------
 %wall force ----------------------------------
@@ -146,15 +141,6 @@ display('calculating force direction')
 
 xgradWall = zeros(nx,ny); xgradAttr = zeros(nx,ny);
 ygradWall = zeros(nx,ny); ygradAttr = zeros(nx,ny);
-% for i=2:nx-1
-%     for j=2:ny-1
-%         xgradWall(i,j) = distToWall(i+1,j)-distToWall(i-1,j);
-%         ygradWall(i,j) = distToWall(i,j+1)-distToWall(i,j-1);
-%         
-%         xgradAttr(i,j) = -(distToAttr(i+1,j)-distToAttr(i-1,j));
-%         ygradAttr(i,j) = -(distToAttr(i,j+1)-distToAttr(i,j-1));
-%     end
-% end
 
 xgradWall(2:nx-1,2:ny-1) = distToWall(3:nx,2:ny-1) - distToWall(1:nx-2,2:ny-1);
 ygradWall(2:nx-1,2:ny-1) = distToWall(2:nx-1,3:ny) - distToWall(2:nx-1,1:ny-2);
@@ -190,7 +176,7 @@ ygradF_arch = ygradF_wall + ygradF_attr;
 
 if plotFields
     subplot(3,3,6)
-    quiver(grid(:,:,1),grid(:,:,2),xgradWall,ygradWall)
+    quiver(X_Grid,Y_Grid,xgradWall,ygradWall)
     axis ij
     title('wall force direction')
     xlabel('x')
@@ -198,7 +184,7 @@ if plotFields
     axis equal; axis tight, axis ij
     
     subplot(3,3,5)
-    quiver(grid(:,:,1),grid(:,:,2),xgradAttr,ygradAttr)
+    quiver(X_Grid,Y_Grid,xgradAttr,ygradAttr)
     axis ij
     title('attractors force direction')
     xlabel('x')
@@ -206,7 +192,7 @@ if plotFields
     axis equal; axis tight, axis ij
     
     subplot(3,3,9)
-    quiver(grid(:,:,1),grid(:,:,2),xgradF_wall,ygradF_wall)
+    quiver(X_Grid,Y_Grid,xgradF_wall,ygradF_wall)
     axis ij
     title('wall force')
     xlabel('x')
@@ -214,7 +200,7 @@ if plotFields
     axis equal; axis tight, axis ij
     
     subplot(3,3,8)
-    quiver(grid(:,:,1),grid(:,:,2),xgradF_attr,ygradF_attr)
+    quiver(X_Grid,Y_Grid,xgradF_attr,ygradF_attr)
     axis ij
     title('attractor force')
     xlabel('x')
@@ -222,7 +208,7 @@ if plotFields
     axis equal; axis tight, axis ij
     
     subplot(3,3,7)
-    quiver(grid(:,:,1),grid(:,:,2),xgradF_arch,ygradF_arch)
+    quiver(X_Grid,Y_Grid,xgradF_arch,ygradF_arch)
     axis ij
     title('architecture force')
     xlabel('x')
