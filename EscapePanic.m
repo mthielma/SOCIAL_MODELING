@@ -92,7 +92,7 @@ end
 % create exit list (if not given)
 %---------------------------------------
 ExitList = [
-            49 50 4 6
+            48 50 4 6
            ]; % coordinates of exits: xmin xmax ymin ymax
 
 ExitList(find(ExitList(:,1)>=xmax),:) = []; %if exit fully outside domain: remove it!
@@ -245,18 +245,19 @@ cellY = num2cell(StartLocY);
 figure(1),clf
 hold on
 %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
-axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 % plot topo
-contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
+% contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
 % plot buildings
 PlotBuildings(BuildingList,'r');
 PlotBuildings(ExitList,'g');
 % plot agents
 PlotAgents(nagent,AGENT,'y');
-
 % plot roads
 for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
-axis equal, axis tight
+axis equal
+axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
+
+
 
 %==========================================================================
 % time loop
@@ -298,6 +299,18 @@ for itime = 1:nt
     %----------------------------------------------------
     % agent loop
     for iagent = 1:nagent
+            
+%         %----------------------------------------------------
+%         % remove successfull agents
+%         %----------------------------------------------------
+%         if ( AGENT(iagent).LocX>=ExitList(1,1) && AGENT(iagent).LocX<=ExitList(1,2) ... %if in exit area no.1
+%            && AGENT(iagent).LocY>=ExitList(1,3)  && AGENT(iagent).LocY<=ExitList(1,4) )
+%             AGENT(iagent)=[];                                                           %remove it
+%             iagent=iagent-1; 
+%             nagent=nagent-1;
+%             continue                                                                    %and pass control to the next iteration of the loop
+%         end
+        
         
         x_agent = AGENT(iagent).LocX;
         y_agent = AGENT(iagent).LocY;
@@ -441,9 +454,8 @@ for itime = 1:nt
         figure(1),clf
         hold on
         %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
-        axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         % plot topo
-        contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
+%         contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
         caxis([0 0.5])
         colormap('Bone')
         colormap(flipud(colormap))
@@ -456,7 +468,8 @@ for itime = 1:nt
         
         % plot roads
 %         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
-        axis equal, axis tight
+        axis equal
+        axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         
         
     end
