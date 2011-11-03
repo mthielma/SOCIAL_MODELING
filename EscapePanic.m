@@ -1,27 +1,37 @@
-%function [STATISTICS, AGENTS] = FloodEvacuation(INPUT,AGENTS,BUILDINGS,STREETS,FLOOD,GRID,TOPOGRAPHY)
+%=================================
+% 
+%          Escape Panic
+% 
+%=================================
+% Marcel Thielmann & Fabio Crameri
+
 clear;
 
+%numerical parameter
 Debug           = 0;
-RiseVelocity    = 0.01; %water rising velocity in m/s
-dt              = 1; %time step in s
-nt              = 200; % number of timesteps
-nagent          = 100; % number of agents
-criticalDepth   = 0.5;      %critical water depth
+resolution      = 0.5;      % resolution in [?m?]
+dt              = 1;        % time step in [s]
+nt              = 200;      % number of timesteps
 
-noUSEatPresent = logical(0);
+%physical parameter
+RiseVelocity    = 0.01;     % water rising velocity in [m/s]
+nagent          = 100;      % number of agents
+criticalDepth   = 0.5;      % critical water depth
+
+noUSEatPresent  = logical(0);
 
 % physical forces parameters (Helbing,2000)
-k       = 1.2e5;
-kappa   = 2.4e5;
+k               = 1.2e5;
+kappa           = 2.4e5;
 
 % social force parameters
-A = 2e3;
-B = 0.08;
+A               = 2e3;
+B               = 0.08;
 
 % agent parameters
-m           = 80; % mass in kg
-v           = 5; % maximal velocity
-t_acc       = 0.5; % acceleration itme in s
+m               = 80;       % mass in kg
+v               = 5;        % maximal velocity
+t_acc           = 0.5;      % acceleration itme in [s]
 
 
 addpath ./DecisionStrategy/
@@ -30,33 +40,33 @@ addpath ./Plotting/
 addpath ./kdtree_alg_OSX/
 %==========================================================================
 % initialize fine grid (if not given as argument)
-xmin = 0;
-xmax = 50;
-ymin = 0;
-ymax = 10;
+xmin            = 0;
+xmax            = 50;
+ymin            = 0;
+ymax            = 10;
 
 
-xvec = xmin:0.5:xmax;
-yvec = ymin:0.5:ymax;
+xvec    = xmin:resolution:xmax;
+yvec    = ymin:resolution:ymax;
 [X_Grid,Y_Grid] = meshgrid(xvec,yvec);
 
-Z_Grid = -100./([(X_Grid+100)])+10;
-Z_add = 0.1.*abs(Y_Grid-85)-0.5*fliplr(X_Grid)./([fliplr(X_Grid)/10]+20);
-Z_Grid = Z_Grid+Z_add*0.25;
+Z_Grid  = -100./([(X_Grid+100)])+10;
+Z_add   = 0.1.*abs(Y_Grid-85)-0.5*fliplr(X_Grid)./([fliplr(X_Grid)/10]+20);
+Z_Grid  = Z_Grid+Z_add*0.25;
 Z_Grid(Z_Grid<0) = 0;
 % 
 
 % set min to 0
-Z_Grid = Z_Grid-min(Z_Grid(:));
+Z_Grid  = Z_Grid-min(Z_Grid(:));
 
 % scale to max 5 m height
-Z_Grid = 3*(Z_Grid./max(Z_Grid(:)));
+Z_Grid  = 3*(Z_Grid./max(Z_Grid(:)));
 
 % initialize coarse grid for road network
-xRoad = xmin:5:xmax;
-yRoad = ymin:5:ymax;
+xRoad   = xmin:5:xmax;
+yRoad   = ymin:5:ymax;
 [XRoad,YRoad] = meshgrid(xRoad,yRoad);
-ZRoad = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
+ZRoad   = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 
 
 
