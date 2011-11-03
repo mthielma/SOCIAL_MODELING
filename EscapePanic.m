@@ -5,6 +5,11 @@
 %=================================
 % Marcel Thielmann & Fabio Crameri
 
+% Comments:
+% 
+% Do not place agents on the model boundary! (no force field defined there)
+% 
+
 clear;
 
 %numerical parameter
@@ -46,27 +51,27 @@ ymin            = 0;
 ymax            = 10;
 
 
-xvec    = xmin:resolution:xmax;
-yvec    = ymin:resolution:ymax;
+xvec            = xmin:resolution:xmax;
+yvec            = ymin:resolution:ymax;
 [X_Grid,Y_Grid] = meshgrid(xvec,yvec);
 
-Z_Grid  = -100./([(X_Grid+100)])+10;
-Z_add   = 0.1.*abs(Y_Grid-85)-0.5*fliplr(X_Grid)./([fliplr(X_Grid)/10]+20);
-Z_Grid  = Z_Grid+Z_add*0.25;
-Z_Grid(Z_Grid<0) = 0;
+Z_Grid          = -100./([(X_Grid+100)])+10;
+Z_add           = 0.1.*abs(Y_Grid-85)-0.5*fliplr(X_Grid)./([fliplr(X_Grid)/10]+20);
+Z_Grid          = Z_Grid+Z_add*0.25;
+Z_Grid(Z_Grid<0)= 0;
 % 
 
 % set min to 0
-Z_Grid  = Z_Grid-min(Z_Grid(:));
+Z_Grid          = Z_Grid-min(Z_Grid(:));
 
 % scale to max 5 m height
-Z_Grid  = 3*(Z_Grid./max(Z_Grid(:)));
+Z_Grid          = 3*(Z_Grid./max(Z_Grid(:)));
 
 % initialize coarse grid for road network
-xRoad   = xmin:5:xmax;
-yRoad   = ymin:5:ymax;
-[XRoad,YRoad] = meshgrid(xRoad,yRoad);
-ZRoad   = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
+xRoad           = xmin:5:xmax;
+yRoad           = ymin:5:ymax;
+[XRoad,YRoad]   = meshgrid(xRoad,yRoad);
+ZRoad           = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 
 
 
@@ -105,10 +110,10 @@ ExitList = [
             48 50 4 6
            ]; % coordinates of exits: xmin xmax ymin ymax
 
-ExitList(find(ExitList(:,1)>=xmax),:) = []; %if exit fully outside domain: remove it!
-ExitList(find(ExitList(:,3)>=ymax),:) = []; %if exit fully outside domain: remove it!
-ExitList(find(ExitList(:,2)>xmax),2) = xmax; %adjust exit to domain boundary
-ExitList(find(ExitList(:,4)>ymax),2) = ymax; %adjust exit to domain boundary
+ExitList(find(ExitList(:,1)>=xmax),:)   = []; %if exit fully outside domain: remove it!
+ExitList(find(ExitList(:,3)>=ymax),:)   = []; %if exit fully outside domain: remove it!
+ExitList(find(ExitList(:,2)>xmax),2)    = xmax; %adjust exit to domain boundary
+ExitList(find(ExitList(:,4)>ymax),2)    = ymax; %adjust exit to domain boundary
 
 ExitMap = X_Grid*0;
 % add exits to map
@@ -119,8 +124,8 @@ end
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-xArchForces=zeros(size(xvec,2),size(yvec,2));  %initialise force field x-direction (nx*ny)
-yArchForces=zeros(size(xvec,2),size(yvec,2));  %initialise force field y-direction (nx*ny)
+xArchForces = zeros(size(xvec,2),size(yvec,2));  %initialise force field x-direction (nx*ny)
+yArchForces = zeros(size(xvec,2),size(yvec,2));  %initialise force field y-direction (nx*ny)
 
 Arch        = BuildingMap;
 ArchFormat  = 'map';                    %'list' or 'map'
@@ -348,6 +353,7 @@ for itime = 1:nt
         else
             TooClose = false;
         end
+        
         %-------------------------------------------------
         % get the distance to the closest wall
         %-------------------------------------------------
@@ -391,11 +397,11 @@ for itime = 1:nt
             F_physAgents_tangentY = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
         end
         end
+        
         %----------------------------------------------------
         % compute physical forces from walls 
         %----------------------------------------------------
         if AtWall
-            
             % compute normal vector
             x_wall = X(indWallDist);
             y_wall = Y(indWallDist);
@@ -424,10 +430,10 @@ for itime = 1:nt
     %----------------------------------------------------
     % move agents
     %----------------------------------------------------
-    dummy = num2cell([AGENT.LocX] + [AGENT.FxArch]);
+    dummy = num2cell([AGENT.LocX] + [AGENT.FxArch]);  %need to add physical part (e.g. A and B)
     [AGENT(1:nagent).LocX] = dummy{:}; 
     
-    dummy = num2cell([AGENT.LocY] + [AGENT.FyArch]);
+    dummy = num2cell([AGENT.LocY] + [AGENT.FyArch]);  %need to add physical part (e.g. A and B)
     [AGENT(1:nagent).LocY] = dummy{:};
     
     
@@ -435,14 +441,14 @@ for itime = 1:nt
     % remove successfull agents
     %----------------------------------------------------
     
-    %those who arrived in the first exit
-    AGENT(   [AGENT.LocX]>=ExitList(1,1) & [AGENT.LocX]<=ExitList(1,2) ...
-        & [AGENT.LocY]>=ExitList(1,3) & [AGENT.LocY]<=ExitList(1,4)  ) = [];
-    
+    %those who arrived in the exits
+    for i=1:size(ExitList,1)
+        AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
+            & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4)  ) = [];
+        
+    end
     
     nagent = size([AGENT.LocX],2); %update number of agents after removing some of them
-    
-    
     
     
     %----------------------------------------------------
