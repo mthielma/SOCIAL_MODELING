@@ -30,8 +30,8 @@ k               = 1.2e5;
 kappa           = 2.4e5;
 
 % social force parameters
-A               = 2e3;
-B               = 0.08;
+Parameter.A               = 2e3;
+Parameter.B               = 0.08;
 
 % agent parameters
 m               = 80;       % mass in kg
@@ -127,14 +127,14 @@ end
 xArchForces = zeros(size(xvec,2),size(yvec,2));  %initialise force field x-direction (nx*ny)
 yArchForces = zeros(size(xvec,2),size(yvec,2));  %initialise force field y-direction (nx*ny)
 
-Arch        = BuildingMap;
-ArchFormat  = 'map';                    %'list' or 'map'
-Type        = 1;                        %1: repulsive / 2: attractive
-Spreading   = {'exp' 'linear' 'const'};
-Spreading   = Spreading{1};
-Force       = 1.0;                      %1 is the same as wall force
+ArchGeometry	= BuildingMap;
+ARCH.format     = 'map';                    %'list' or 'map'
+ARCH.type       = 1;                        %1: repulsive / 2: attractive
+Spreading       = {'exp' 'linear' 'const'};
+ARCH.spreading	= Spreading{1};
+ARCH.force      = 1.0;                      %1 is the same as wall force
 
-[xArchForces_single, yArchForces_single] = f_RepWalls_single (X_Grid, Y_Grid, Arch, ArchFormat, Type, Spreading, Force);
+[xArchForces_single, yArchForces_single] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
 xArchForces = xArchForces + xArchForces_single;
@@ -153,14 +153,14 @@ end
 %----------------------------------------------------
 % compute forces from exits (static)
 %----------------------------------------------------
-Arch        = ExitList;
-ArchFormat  = 'list';                    %'list' or 'map'
-Type        = 2;                        %1: repulsive / 2: attractive
-Spreading   = {'exp' 'linear' 'const'};
-Spreading   = Spreading{3};
-Force       = 0.2;                      %1 is the same as wall force
+ArchGeometry	= ExitList;
+ARCH.format     = 'list';                   %'list' or 'map'
+ARCH.type    	= 2;                        %1: repulsive / 2: attractive
+Spreading       = {'exp' 'linear' 'const'};
+ARCH.spreading  = Spreading{3};
+ARCH.force      = 0.2;                      %1 is the same as wall force
 
-[xArchForces_single, yArchForces_single] = f_RepWalls_single (X_Grid, Y_Grid, Arch, ArchFormat, Type, Spreading, Force);
+[xArchForces_single, yArchForces_single] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
 xArchForces = xArchForces + xArchForces_single;
@@ -371,7 +371,7 @@ for itime = 1:nt
         % function to simulate that agents only have a reduced field of
         % vision
         %----------------------------------------------------
-        F_socAgents = A*exp(DistanceToAgents)/B;
+        F_socAgents = Parameter.A*exp(DistanceToAgents)/Parameter.B;
         F_socAgentsX = F_socAgents.*NormalX;
         F_socAgentsY = F_socAgents.*NormalY;
         
