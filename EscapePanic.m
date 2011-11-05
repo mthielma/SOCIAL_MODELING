@@ -15,8 +15,9 @@ clear;
 %numerical parameter
 Debug           = 0;
 resolution      = 0.5;      % resolution in [?m?]
-dt              = 1;        % time step in [s]
-nt              = 200;      % number of timesteps
+dt              = 5;        % time step in [s]
+% nt              = 200;      % number of timesteps
+maxtime         = 30;      % maximum time to run in [min]
 
 %physical parameter
 RiseVelocity    = 0.01;     % water rising velocity in [m/s]
@@ -73,7 +74,8 @@ yRoad           = ymin:5:ymax;
 [XRoad,YRoad]   = meshgrid(xRoad,yRoad);
 ZRoad           = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 
-
+%convert time
+maxtime = maxtime*60; %[min => s]
 
 %==========================================================================
 % initialize buildings
@@ -270,15 +272,19 @@ for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)
 axis equal
 axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 
-
+title('time = 0.00 min')
+xlabel('x [m]')
+ylabel('y [m]')
 
 %==========================================================================
 % time loop
-time = 0;
-for itime = 1:nt
+time=0; itime=0;
+% for itime=1:nt
+while (time <= maxtime)
+    time = time+dt;     %actual time
+    itime = itime+1;    %nr. timesteps
     disp('*****************************************')
     disp(['timestep ',num2str(itime)])
-    
     
     %----------------------------------------------------
     % compute kdtree of agents for later use
@@ -430,11 +436,30 @@ for itime = 1:nt
     %----------------------------------------------------
     % move agents
     %----------------------------------------------------
-    dummy = num2cell([AGENT.LocX] + [AGENT.FxArch]);  %need to add physical part (e.g. A and B)
+    % v = F*dt/m
+    % s = v*t = F*dt^2/m
+    
+    dummy       = num2cell([AGENT.FxArch].*dt./80);  %insert [AGENT.mass]);
+    [AGENT(1:nagent).VelX] = dummy{:};
+    dummy       = num2cell([AGENT.VelX].*dt);
+    [AGENT.dx]   = dummy{:};
+    
+    dummy       = num2cell([AGENT.FyArch].*dt./80);  %insert [AGENT.mass]);
+    [AGENT(1:nagent).VelY] = dummy{:};
+    dummy       = num2cell([AGENT.VelY].*dt);
+    [AGENT.dy]   = dummy{:};
+    
+    dummy = num2cell([AGENT.LocX] + [AGENT.dx]);
     [AGENT(1:nagent).LocX] = dummy{:}; 
     
-    dummy = num2cell([AGENT.LocY] + [AGENT.FyArch]);  %need to add physical part (e.g. A and B)
+    dummy = num2cell([AGENT.LocY] + [AGENT.dy]);
     [AGENT(1:nagent).LocY] = dummy{:};
+    
+%     dummy = num2cell([AGENT.LocX] + [AGENT.FxArch]);  %need to add physical part (e.g. A and B)
+%     [AGENT(1:nagent).LocX] = dummy{:}; 
+%     
+%     dummy = num2cell([AGENT.LocY] + [AGENT.FyArch]);  %need to add physical part (e.g. A and B)
+%     [AGENT(1:nagent).LocY] = dummy{:};
     
     
     %----------------------------------------------------
@@ -455,7 +480,7 @@ for itime = 1:nt
     % plot
     %----------------------------------------------------
     
-    if mod(itime,2)==0
+    if mod(itime,10)==0
     
         figure(1),clf
         hold on
@@ -477,6 +502,9 @@ for itime = 1:nt
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         
+        title(['time = ',num2str(time/60,3),' min'])
+        xlabel('x [m]')
+        ylabel('y [m]')
         
     end
 end
