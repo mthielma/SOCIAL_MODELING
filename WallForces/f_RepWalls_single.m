@@ -10,23 +10,33 @@
 % *******************
 % % Architecture position
 % % X-POSITION(left right) / Y-POSITION(bottom top)
-% Arch = [ 10 30     30 35 ];  or   size(nx+1,ny+1)
-% Arch = 'list'                or 	'map'
-% Type = 1; %1: repulsive / 2: attractive
-% Spreading  = {'exp' 'linear' 'const'};
-% Spreading  = Spreading{3};
-% Force   = 0.2; %1 is the same as wall force
+% ARCH.geometry     = [ 10 30     30 35 ];  or   size(nx+1,ny+1)
+% ARCH.format       = 'list'                or 	'map'
+% ARCH.type         = 1; %1: repulsive / 2: attractive
+% Spreading         = {'exp' 'linear' 'const'};
+% ARCH.spreading    = Spreading{3};
+% ARCH.force        = 0.2; %1 is the same as wall force
 % 
-% [xArchForces, yArchForces] = f_RepWalls_single (X_Grid, Y_Grid, Arch, ArchFormat, Type, Spreading, Force)
+% [xArchForces, yArchForces] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
 % ********************
 
-function [xArchForces, yArchForces] = f_RepWalls_single (X_Grid, Y_Grid, Arch, ArchFormat, Type, Spreading, Force)
+function [xArchForces, yArchForces] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
 plotFields = logical(0);
 
-display('******* calculate wall forces ******')
 
-X_Grid = X_Grid';  %convert grid
-Y_Grid = Y_Grid';
+X_Grid  = X_Grid';  %convert grid
+Y_Grid  = Y_Grid';
+
+Arch        = ArchGeometry;
+ArchFormat  = ARCH.format;
+Type        = ARCH.type;
+Spreading   = ARCH.spreading;
+Force       = ARCH.force;
+
+A           = Parameter.A;
+B           = Parameter.B;
+
+display('******* calculate wall forces ******')
 
 %---------------------------------------------
 %describe wall -------------------------------
@@ -101,11 +111,17 @@ end
 % f =  %from Helbing2000
 F_wall = exp(-distToWall);    %max. force value should be 1.0
 if strcmp(Spreading,'exp')
-    F_attr = -exp(-distToAttr);
+    %--------------------------------------------------------
+    F_attr = - A .* exp(-distToAttr ./ B);  %from Helbing2000
+    %--------------------------------------------------------
 elseif strcmp(Spreading,'linear')    
-    F_attr = Force*(-1+distToAttr./max(max(distToAttr)));
+    %--------------------------------------------------------
+    F_attr = Force.*(-1+distToAttr./max(max(distToAttr)));
+    %--------------------------------------------------------
 elseif strcmp(Spreading,'const')
+    %--------------------------------------------------------
     F_attr = -Force;
+    %--------------------------------------------------------
 end
 F_arch = F_wall+F_attr;
 
