@@ -55,8 +55,8 @@ xvec            = xmin:resolution:xmax;
 yvec            = ymin:resolution:ymax;
 [X_Grid,Y_Grid] = meshgrid(xvec,yvec);
 
-Z_Grid          = -100./([(X_Grid+100)])+10;
-Z_add           = 0.1.*abs(Y_Grid-85)-0.5*fliplr(X_Grid)./([fliplr(X_Grid)/10]+20);
+Z_Grid          = -100./(X_Grid+100)+10;
+Z_add           = 0.1.*abs(Y_Grid-85)-0.5*fliplr(X_Grid)./(fliplr(X_Grid)./10+20);
 Z_Grid          = Z_Grid+Z_add*0.25;
 Z_Grid(Z_Grid<0)= 0;
 % 
@@ -65,7 +65,7 @@ Z_Grid(Z_Grid<0)= 0;
 Z_Grid          = Z_Grid-min(Z_Grid(:));
 
 % scale to max 5 m height
-Z_Grid          = 3*(Z_Grid./max(Z_Grid(:)));
+Z_Grid          = 3.*(Z_Grid./max(Z_Grid(:)));
 
 % initialize coarse grid for road network
 xRoad           = xmin:5:xmax;
@@ -74,7 +74,7 @@ yRoad           = ymin:5:ymax;
 ZRoad           = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 
 %convert time
-maxtime = maxtime*60; %[min => s]
+maxtime = maxtime*60; %[min] => [s]
 
 %==========================================================================
 % initialize buildings
@@ -337,13 +337,13 @@ while (time <= maxtime)
         
         pointsidx    = kdtree_range(tree,Boxes);
         % remove the agent itself
-        pointsidx(pointsidx==AGENT(iagent).num) = [];
+        pointsidx(pointsidx==[AGENT(iagent).num]) = [];
         AGENT(iagent).SurroundingAgents = pointsidx;
         
         % Compute the distance to the other agents in the box
-        x_others = [AGENT(AGENT(iagent).SurroundingAgents).LocX]';
-        y_others = [AGENT(AGENT(iagent).SurroundingAgents).LocY]';
-        DistanceToAgents = sqrt((x_others-x_agent).^2+(y_others-y_agent).^2)-(AGENT(iagent).Size+[AGENT(pointsidx).Size]');
+        x_others = [AGENT([AGENT(iagent).SurroundingAgents]).LocX]';
+        y_others = [AGENT([AGENT(iagent).SurroundingAgents]).LocY]';
+        DistanceToAgents = sqrt((x_others-x_agent).^2+(y_others-y_agent).^2)-([AGENT(iagent).Size]+[AGENT(pointsidx).Size]');
         
         % compute normal vector
         VecNormal       = zeros(size(pointsidx,2),2);
@@ -363,12 +363,12 @@ while (time <= maxtime)
         % get the distance to the closest wall
         %-------------------------------------------------
         WallDist    = sqrt((x_Buildings-x_agent).^2+(y_Buildings-y_agent).^2);
-        WallDist    = WallDist-AGENT(iagent).Size;
+        WallDist    = WallDist-[AGENT(iagent).Size];
         indWallDist = find(WallDist<0);
         if ~isempty(indWallDist)
             AtWall = true;
         else
-             AtWall = false;
+            AtWall = false;
         end
         
         %----------------------------------------------------
@@ -376,7 +376,7 @@ while (time <= maxtime)
         % function to simulate that agents only have a reduced field of
         % vision
         %----------------------------------------------------
-        F_socAgents = Parameter.A*exp(DistanceToAgents)/Parameter.B;
+        F_socAgents = Parameter.A.*exp(DistanceToAgents)./Parameter.B;
         F_socAgentsX = F_socAgents.*NormalX;
         F_socAgentsY = F_socAgents.*NormalY;
         
@@ -386,20 +386,22 @@ while (time <= maxtime)
         if noUSEatPresent
         if TooClose
             % normal force
-            F_physAgents_normalX = k*DistanceToAgents(indTooClose).*NormalX(indTooClose);
-            F_physAgents_normalY = k*DistanceToAgents(indTooClose).*NormalY(indTooClose);
+            F_physAgents_normalX = k.*DistanceToAgents(indTooClose).*NormalX(indTooClose);
+            F_physAgents_normalY = k.*DistanceToAgents(indTooClose).*NormalY(indTooClose);
             % tangential force
             % compute tangential vector
-            TangentX        = -NormalY(indTooClose);
+            TangentX        = -NormalY(v);
             TangentY        = NormalX(indTooClose);
             
             VelOthers   = [AGENT(pointsidx(indTooClose)).Vel];
             DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
             
-            DeltaV      = (VelOthers.*DirXOthers-AGENT(iagent).Vel.*AGENT(iagent).DirX).*TangentX + (VelOthers.*DirYOthers-AGENT(iagent).Vel.*AGENT(iagent).DirY).*TangentY;            
-            F_physAgents_tangentX = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
-            F_physAgents_tangentY = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
+            DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX ...
+                        + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY;    
+                    
+            F_physAgents_tangentX = kappa.*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
+            F_physAgents_tangentY = kappa.*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
         end
         end
         
@@ -424,9 +426,10 @@ while (time <= maxtime)
             F_physWall_normalY = k*WallDist(indWallDist).*NormalY;
             
             % tangential force
-            DeltaV      = (-AGENT(iagent).Vel.*AGENT(iagent).DirX).*TangentX + (-AGENT(iagent).Vel.*AGENT(iagent).DirY).*TangentY;
-            F_physAgents_tangentX = kappa*WallDist(indWallDist).*DeltaV.*TangentX;
-            F_physAgents_tangentY = kappa*WallDist(indWallDist).*DeltaV.*TangentY;
+            DeltaV      = (-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX ...
+                + (-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY;
+            F_physAgents_tangentX = kappa.*WallDist(indWallDist).*DeltaV.*TangentX;
+            F_physAgents_tangentY = kappa.*WallDist(indWallDist).*DeltaV.*TangentY;
         end
 
 
