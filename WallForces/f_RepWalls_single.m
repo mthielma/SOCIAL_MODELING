@@ -71,6 +71,10 @@ else
     error('Hei stupid: insert correct ArchFormat!')
 end
 
+% %Domain Boundaries
+% GRIDarch(1,:) = 3;  GRIDarch(nx,:) = 3;
+% GRIDarch(:,1) = 3;  GRIDarch(:,ny) = 3;
+
 if plotFields
     figure(12),clf
     subplot(3,3,1)
@@ -164,17 +168,50 @@ ygradWall(2:nx-1,2:ny-1) = distToWall(2:nx-1,3:ny) - distToWall(2:nx-1,1:ny-2);
 xgradAttr(2:nx-1,2:ny-1) = -( distToAttr(3:nx,2:ny-1) - distToAttr(1:nx-2,2:ny-1) );
 ygradAttr(2:nx-1,2:ny-1) = -( distToAttr(2:nx-1,3:ny) - distToAttr(2:nx-1,1:ny-2) );
 
+% -------------------------------------------------
+%BOUNDARIES
+% xgradWall(1,:)      = distToWall(2,:)       - distToWall(1,:);
+% xgradWall(nx,:)     = distToWall(nx,:)      - distToWall(nx-1,:);
+% xgradWall(2:nx-1,1) = distToWall(2:nx-1,2)  - distToWall(2:nx-1,1);
+% xgradWall(2:nx-1,ny)= distToWall(2:nx-1,ny) - distToWall(2:nx-1,ny-1);
+% ygradWall(:,1)      = distToWall(:,2)       - distToWall(:,1);
+% ygradWall(:,ny)     = distToWall(:,ny)      - distToWall(:,ny-1);
+% ygradWall(1,2:ny-1) = distToWall(2,2:ny-1)  - distToWall(1,2:ny-1);
+% ygradWall(nx,2:ny-1)= distToWall(nx,2:ny-1) - distToWall(nx-1,2:ny-1);
+% 
+% xgradAttr(1,:)      = distToAttr(2,:)       - distToAttr(1,:);
+% xgradAttr(nx,:)     = distToAttr(nx,:)      - distToAttr(nx-1,:);
+% xgradAttr(2:nx-1,1) = distToAttr(2:nx-1,2)  - distToAttr(2:nx-1,1);
+% xgradAttr(2:nx-1,ny)= distToAttr(2:nx-1,ny) - distToAttr(2:nx-1,ny-1);
+% ygradAttr(:,1)      = distToAttr(:,2)       - distToAttr(:,1);
+% ygradAttr(:,ny)     = distToAttr(:,ny)      - distToAttr(:,ny-1);
+% ygradAttr(1,2:ny-1) = distToAttr(2,2:ny-1)  - distToAttr(1,2:ny-1);
+% ygradAttr(nx,2:ny-1)= distToAttr(nx,2:ny-1) - distToAttr(nx-1,2:ny-1);
+% -------------------------------------------------
+
+
 
 %boundary conditions -----------------------------
-xgradWall(1,:)  = 0;   ygradWall(1,:)  = 0; %open boundaries
-xgradWall(nx,:) = 0;   ygradWall(nx,:) = 0;
-xgradWall(:,1)  = 0;   ygradWall(:,1)  = 0;
-xgradWall(:,ny) = 0;   ygradWall(:,ny) = 0;
+% xgradWall(1,:)  = 0;   ygradWall(1,:)  = 0; %open boundaries
+% xgradWall(nx,:) = 0;   ygradWall(nx,:) = 0;
+% xgradWall(:,1)  = 0;   ygradWall(:,1)  = 0;
+% xgradWall(:,ny) = 0;   ygradWall(:,ny) = 0;
+% 
+% xgradAttr(1,:)  = 0;   ygradAttr(1,:)  = 0; %open boundaries
+% xgradAttr(nx,:) = 0;   ygradAttr(nx,:) = 0;
+% xgradAttr(:,1)  = 0;   ygradAttr(:,1)  = 0;
+% xgradAttr(:,ny) = 0;   ygradAttr(:,ny) = 0;
+% -------------------------------------------------
+%boundary conditions -----------------------------
+xgradWall(1,:)  = xgradWall(2,:);       ygradWall(1,:)  = ygradWall(2,:); %constant boundaries
+xgradWall(nx,:) = xgradWall(nx-1,:);    ygradWall(nx,:) = ygradWall(nx-1,:);
+xgradWall(:,1)  = xgradWall(:,2);       ygradWall(:,1)  = ygradWall(:,2);
+xgradWall(:,ny) = xgradWall(:,ny-1);    ygradWall(:,ny) = ygradWall(:,ny-1);
 
-xgradAttr(1,:)  = 0;   ygradAttr(1,:)  = 0; %open boundaries
-xgradAttr(nx,:) = 0;   ygradAttr(nx,:) = 0;
-xgradAttr(:,1)  = 0;   ygradAttr(:,1)  = 0;
-xgradAttr(:,ny) = 0;   ygradAttr(:,ny) = 0;
+xgradAttr(1,:)  = xgradAttr(2,:);       ygradAttr(1,:)  = ygradAttr(2,:); %constant boundaries
+xgradAttr(nx,:) = xgradAttr(nx-1,:);    ygradAttr(nx,:) = ygradAttr(nx-1,:);
+xgradAttr(:,1)  = xgradAttr(:,2);       ygradAttr(:,1)  = ygradAttr(:,2);
+xgradAttr(:,ny) = xgradAttr(:,ny-1);    ygradAttr(:,ny) = ygradAttr(:,ny-1);
 % -------------------------------------------------
 
 %---------------------------------------------
