@@ -7,7 +7,6 @@
 
 % Comments:
 % 
-% Do not place agents on the model boundary! (no force field defined there)
 % 
 
 clear;
@@ -217,7 +216,7 @@ cell_array = num2cell((0.5+ (rand(nagent,1))*0.2)./2);
 [AGENT(1:nagent).Size]   = cell_array{:};
 
 % get the indices in BuildingMap that correspond to a road
-[iy,ix] = find(BuildingMap==0);
+[iy,ix] = find(BuildingMap==0 & ExitMap==0);
 NoRoad  = length(iy);
 % create random indices (make sure that there are no duplicates)
 indices = randperm(NoRoad);
@@ -480,7 +479,7 @@ while (time <= maxtime)
     % plot
     %----------------------------------------------------
     
-    if mod(itime,10)==0
+    if mod(itime,1)==0
     
         figure(1),clf
         hold on
