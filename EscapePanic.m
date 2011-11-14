@@ -6,19 +6,18 @@
 % Marcel Thielmann & Fabio Crameri
 
 % Comments:
-% 
+% - B, i.e. spread out of wall forces needs to be larger ...fc
 % 
 
 clear;
 
 %numerical parameter
-resolution      = 0.5;      % resolution in [?m?]
-dt              = 0.1;        % time step in [s]
-% nt              = 200;      % number of timesteps
-maxtime         = 30;      % maximum time to run in [min]
+resolution      = 0.1;      % resolution in [m]
+dt              = 0.1;    	% time step in [s]
+maxtime         = 30;       % maximum time to run in [min]
 
 %physical parameter
-nagent          = 10;      % number of agents
+nagent          = 100;      % number of agents
 
 noUSEatPresent  = logical(0);
 
@@ -27,8 +26,8 @@ k               = 1.2e5;
 kappa           = 2.4e5;
 
 % social force parameters
-Parameter.A  	= 2e3;      %[N]
-Parameter.B  	= 0.08;     %[m]
+Parameter.A  	= 2e3;   	%[N]  [2e3 Helbing 2000]
+Parameter.B  	= 0.1;      %[m]  [0.08 Helbing 2000]
 
 % agent parameters
 m               = 80;       % mass in kg
@@ -125,8 +124,8 @@ if checkFigure
     figure(11)
     quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
     title('architecture force')
-    xlabel('x')
-    ylabel('y')
+    xlabel('x [m]')
+    ylabel('y [m]')
     axis equal; axis tight 
 end
 
@@ -151,8 +150,8 @@ if checkFigure
     figure(11)
     quiver(X_Grid',Y_Grid',xArchForces2,yArchForces2)
     title('architecture force')
-    xlabel('x')
-    ylabel('y')
+    xlabel('x [m]')
+    ylabel('y [m]')
     axis equal; axis tight 
 end
 
@@ -402,7 +401,7 @@ while (time <= maxtime)
     % move agents
     %----------------------------------------------------
     
-    
+    % according to [Helbing 2000]:
     % a = dvi/dt = (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m + [AGENT.FxPedestrians]./m
     v0_x                    = v0 .* [AGENT(1:nagent).xExitDir];
     dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m ) .*dt;	%change of velocity
@@ -419,25 +418,6 @@ while (time <= maxtime)
     [AGENT(1:nagent).LocY]  = dummy{:};                                                     %update position
         
     
-    
-%     % v = F*dt/m
-%     % s = v*t = F*dt^2/m
-%     
-%     dummy       = num2cell([AGENT.FxArch].*dt./80);  %insert [AGENT.mass]);
-%     [AGENT(1:nagent).VelX] = dummy{:};
-%     dummy       = num2cell([AGENT.VelX].*dt);
-%     [AGENT.dx]   = dummy{:};
-%     
-%     dummy       = num2cell([AGENT.FyArch].*dt./80);  %insert [AGENT.mass]);
-%     [AGENT(1:nagent).VelY] = dummy{:};
-%     dummy       = num2cell([AGENT.VelY].*dt);
-%     [AGENT.dy]   = dummy{:};
-%     
-%     dummy = num2cell([AGENT.LocX] + [AGENT.dx]);
-%     [AGENT(1:nagent).LocX] = dummy{:}; 
-%     
-%     dummy = num2cell([AGENT.LocY] + [AGENT.dy]);
-%     [AGENT(1:nagent).LocY] = dummy{:};
 
     
     
