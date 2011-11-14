@@ -17,11 +17,11 @@
 % ARCH.spreading    = Spreading{3};
 % ARCH.force        = 0.2; %1 is the same as wall force
 % 
-% [xArchForces, yArchForces] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
+% [xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
 % ********************
 
-function [xArchForces, yArchForces] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
-plotFields = logical(0);
+function [xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
+plotFields = logical(1);
 
 
 X_Grid  = X_Grid';  %convert grid
@@ -108,22 +108,21 @@ end
 
 
 
-
-
 %---------------------------------------------
-%wall force ----------------------------------
-% f =  %from Helbing2000
-F_wall = exp(-distToWall);    %max. force value should be 1.0
+%arch force ----------------------------------
 if strcmp(Spreading,'exp')
     %--------------------------------------------------------
-    F_attr = - A .* exp(-distToAttr ./ B);  %from Helbing2000
+    F_wall = + A .* exp(-distToWall ./ B);	%from Helbing2000
+    F_attr = - A .* exp(-distToAttr ./ B);  
     %--------------------------------------------------------
 elseif strcmp(Spreading,'linear')    
     %--------------------------------------------------------
+    F_wall = Force.*(+1-distToWall./max(max(distToWall)));  %check!
     F_attr = Force.*(-1+distToAttr./max(max(distToAttr)));
     %--------------------------------------------------------
 elseif strcmp(Spreading,'const')
     %--------------------------------------------------------
+    F_wall = +Force;  %check!
     F_attr = -Force;
     %--------------------------------------------------------
 end
@@ -225,6 +224,10 @@ xgradAttr(:,1)  = xgradAttr(:,2);       ygradAttr(:,1)  = ygradAttr(:,2);
 xgradAttr(:,ny) = xgradAttr(:,ny-1);    ygradAttr(:,ny) = ygradAttr(:,ny-1);
 % -------------------------------------------------
 
+%combine both:
+xgrad_arch = xgradWall + xgradAttr;
+ygrad_arch = ygradWall + ygradAttr;
+
 %---------------------------------------------
 %wall force direction  -----------------------
 display('calculating architecture force direction')
@@ -280,7 +283,10 @@ if plotFields
     axis equal; axis tight, axis ij
 end
 
-xArchForces = xgradF_arch;
+xArchDir = xgrad_arch; %direction field normalized to 1 (xArchDir^2+yArchDir^2 = 1)
+yArchDir = ygrad_arch;
+
+xArchForces = xgradF_arch; %force field dimensional [N]
 yArchForces = ygradF_arch;
 
 
