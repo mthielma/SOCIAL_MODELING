@@ -219,7 +219,7 @@ ylabel('y [m]')
 %==========================================================================
 % time loop
 time=0; itime=0;
-while (time <= maxtime)
+while (time <= maxtime && size(AGENT,2)>0)
     time = time+dt;     %actual time
     itime = itime+1;    %nr. timesteps
     disp('*****************************************')
