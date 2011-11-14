@@ -12,16 +12,13 @@
 clear;
 
 %numerical parameter
-Debug           = 0;
 resolution      = 0.5;      % resolution in [?m?]
-dt              = 5;        % time step in [s]
+dt              = 0.1;        % time step in [s]
 % nt              = 200;      % number of timesteps
 maxtime         = 30;      % maximum time to run in [min]
 
 %physical parameter
-RiseVelocity    = 0.01;     % water rising velocity in [m/s]
-nagent          = 100;      % number of agents
-criticalDepth   = 0.5;      % critical water depth
+nagent          = 10;      % number of agents
 
 noUSEatPresent  = logical(0);
 
@@ -30,13 +27,13 @@ k               = 1.2e5;
 kappa           = 2.4e5;
 
 % social force parameters
-Parameter.A               = 2e3;
-Parameter.B               = 0.08;
+Parameter.A  	= 2e3;      %[N]
+Parameter.B  	= 0.08;     %[m]
 
 % agent parameters
 m               = 80;       % mass in kg
-v               = 5;        % maximal velocity
-t_acc           = 0.5;      % acceleration itme in [s]
+v0              = 1;        % maximal/desired velocity [m/s]
+t_acc           = 0.5;      % acceleration time in [s]
 
 
 addpath ./DecisionStrategy/
@@ -50,28 +47,10 @@ xmax            = 50;
 ymin            = 0;
 ymax            = 10;
 
-
 xvec            = xmin:resolution:xmax;
 yvec            = ymin:resolution:ymax;
 [X_Grid,Y_Grid] = meshgrid(xvec,yvec);
 
-Z_Grid          = -100./(X_Grid+100)+10;
-Z_add           = 0.1.*abs(Y_Grid-85)-0.5*fliplr(X_Grid)./(fliplr(X_Grid)./10+20);
-Z_Grid          = Z_Grid+Z_add*0.25;
-Z_Grid(Z_Grid<0)= 0;
-% 
-
-% set min to 0
-Z_Grid          = Z_Grid-min(Z_Grid(:));
-
-% scale to max 5 m height
-Z_Grid          = 3.*(Z_Grid./max(Z_Grid(:)));
-
-% initialize coarse grid for road network
-xRoad           = xmin:5:xmax;
-yRoad           = ymin:5:ymax;
-[XRoad,YRoad]   = meshgrid(xRoad,yRoad);
-ZRoad           = interp2(X_Grid,Y_Grid,Z_Grid,XRoad,YRoad,'linear');
 
 %convert time
 maxtime = maxtime*60; %[min] => [s]
@@ -135,11 +114,11 @@ Spreading       = {'exp' 'linear' 'const'};
 ARCH.spreading	= Spreading{1};
 ARCH.force      = 1.0;                      %1 is the same as wall force
 
-[xArchForces_single, yArchForces_single] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
+[xArchForces_walls, yArchForces_walls, xArchDir_walls, yArchDir_walls] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
-xArchForces = xArchForces + xArchForces_single;
-yArchForces = yArchForces + yArchForces_single;
+xArchForces = xArchForces + xArchForces_walls;
+yArchForces = yArchForces + yArchForces_walls;
 
 checkFigure = logical(1);
 if checkFigure
@@ -161,39 +140,22 @@ Spreading       = {'exp' 'linear' 'const'};
 ARCH.spreading  = Spreading{3};
 ARCH.force      = 0.2;                      %1 is the same as wall force
 
-[xArchForces_single, yArchForces_single] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
+[xArchForces_exits, yArchForces_exits, xArchDir_exits, yArchDir_exits] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
-xArchForces = xArchForces + xArchForces_single;
-yArchForces = yArchForces + yArchForces_single;
+xArchForces2 = xArchForces + xArchForces_exits;
+yArchForces2 = yArchForces + yArchForces_exits;
 
 checkFigure = logical(1);
 if checkFigure
     figure(11)
-    quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
+    quiver(X_Grid',Y_Grid',xArchForces2,yArchForces2)
     title('architecture force')
     xlabel('x')
     ylabel('y')
     axis equal; axis tight 
 end
 
-
-
-%==========================================================================
-% initialize water height to 0
-WaterHeight= X_Grid*0;
-
-%==========================================================================
-% initialize graph with nodes, paths between them and cost per path
-% - cost due to topography
-% - cost due to street width
-% - cost due to street type (paved, unpaved)
-% - add up all costs
-
-[X,Y,Z,PathVec,Distance,Gradient,GradientFactor] = GenerateRectangularGraph(XRoad,YRoad,ZRoad);
-
-% delete paths at locations where there are buildings covering the nodes
-[PathVec,Distance,Gradient,GradientFactor] = RemovePaths(X_Grid,Y_Grid,BuildingMap,X,Y,PathVec,Distance,Gradient,GradientFactor);
 
 %==========================================================================
 % initialize agents in buildings and on streets
@@ -209,6 +171,10 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).VMax]      = deal(5);
 [AGENT(1:nagent).BoxSize]   = deal(10); % the agent is only influenced by 
 [AGENT(1:nagent).Vel]       = deal(1); % initial velocity (to be randomized)
+
+[AGENT(1:nagent).VelX]      = deal(0); % initial velocity X
+[AGENT(1:nagent).VelY]      = deal(0); % initial velocity Y
+
 [AGENT(1:nagent).DirX]      = deal(1./sqrt(2)); % x-direction vector
 [AGENT(1:nagent).DirY]      = deal(1./sqrt(2)); % y-direction vector
 
@@ -234,40 +200,16 @@ cellY = num2cell(StartLocY);
 [AGENT(1:nagent).LocX]       = cellX{:};
 [AGENT(1:nagent).LocY]       = cellY{:};
 
-% find the road each agents is on and create an initial exit strategy
-
-% for iagent = 1:nagent
-%     
-%     % get the path
-%     
-%     
-%     % is the agent in the proximity of a node?
-%     
-%     
-%     
-%     switch DecisionCause
-%         case 1 % slowdown -> turn around and take another path or keep going?
-%             AGENT(iagent) = DecideOnPath(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
-%             
-%         case 2 % reached destination point -> look in adjacent paths and decide on new exit stategy
-%             AGENT(iagent) = DecideOnPathOnCrossing(AGENT(iagent),PathVec,GradientFactor,Distance,X,Y,Z);
-%     end
-% end
 
 
 % plot setup
 figure(1),clf
 hold on
-%scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
-% plot topo
-% contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
 % plot buildings
 PlotBuildings(BuildingList,'r');
 PlotBuildings(ExitList,'g');
 % plot agents
 PlotAgents(nagent,AGENT,'y');
-% plot roads
-for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
 axis equal
 axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 
@@ -278,12 +220,11 @@ ylabel('y [m]')
 %==========================================================================
 % time loop
 time=0; itime=0;
-% for itime=1:nt
 while (time <= maxtime)
     time = time+dt;     %actual time
     itime = itime+1;    %nr. timesteps
     disp('*****************************************')
-    disp(['timestep ',num2str(itime)])
+    disp(['timestep ',num2str(itime),':    time = ',num2str(time/60),' min'])
     
     %----------------------------------------------------
     % compute kdtree of agents for later use
@@ -305,7 +246,7 @@ while (time <= maxtime)
     
     %----------------------------------------------------
     % compute forces from buildings on all agents (just interpolate the
-    % precomputed force field to the agents
+    % precomputed force field to the agents)
     %----------------------------------------------------
     
     FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
@@ -315,6 +256,21 @@ while (time <= maxtime)
     [AGENT(1:nagent).FxArch]       = dummy{:};
     dummy = num2cell(FyArchAgents);
     [AGENT(1:nagent).FyArch]       = dummy{:};
+    
+    %----------------------------------------------------
+    % compute direction field to exits on all agents 
+    % (just interpolate the precomputed field to the agents)
+    %----------------------------------------------------
+    
+    xExitDirAgents = interp2(X_Grid,Y_Grid,xArchDir_exits',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
+    yExitDirAgents = interp2(X_Grid,Y_Grid,yArchDir_exits',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
+    
+    dummy = num2cell(xExitDirAgents);
+    [AGENT(1:nagent).xExitDir]       = dummy{:};
+    dummy = num2cell(yExitDirAgents);
+    [AGENT(1:nagent).yExitDir]       = dummy{:};
+    
+    
     
     %----------------------------------------------------
     % agent loop
@@ -390,7 +346,7 @@ while (time <= maxtime)
             F_physAgents_normalY = k.*DistanceToAgents(indTooClose).*NormalY(indTooClose);
             % tangential force
             % compute tangential vector
-            TangentX        = -NormalY(v);
+            TangentX        = -NormalY(v0);
             TangentY        = NormalX(indTooClose);
             
             VelOthers   = [AGENT(pointsidx(indTooClose)).Vel];
@@ -408,6 +364,7 @@ while (time <= maxtime)
         %----------------------------------------------------
         % compute physical forces from walls 
         %----------------------------------------------------
+        if noUSEatPresent
         if AtWall
             % compute normal vector
             x_wall = X(indWallDist);
@@ -431,37 +388,57 @@ while (time <= maxtime)
             F_physAgents_tangentX = kappa.*WallDist(indWallDist).*DeltaV.*TangentX;
             F_physAgents_tangentY = kappa.*WallDist(indWallDist).*DeltaV.*TangentY;
         end
-
+        end
 
     end
+    %----------------------------------------------------
+    % wall forces
+    %----------------------------------------------------
+    
+%     f_iW = -[AGENT.FxArch]+k*g...
+    
    
     %----------------------------------------------------
     % move agents
     %----------------------------------------------------
-    % v = F*dt/m
-    % s = v*t = F*dt^2/m
     
-    dummy       = num2cell([AGENT.FxArch].*dt./80);  %insert [AGENT.mass]);
-    [AGENT(1:nagent).VelX] = dummy{:};
-    dummy       = num2cell([AGENT.VelX].*dt);
-    [AGENT.dx]   = dummy{:};
     
-    dummy       = num2cell([AGENT.FyArch].*dt./80);  %insert [AGENT.mass]);
-    [AGENT(1:nagent).VelY] = dummy{:};
-    dummy       = num2cell([AGENT.VelY].*dt);
-    [AGENT.dy]   = dummy{:};
+    % a = dvi/dt = (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m + [AGENT.FxPedestrians]./m
+    v0_x                    = v0 .* [AGENT(1:nagent).xExitDir];
+    dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m ) .*dt;	%change of velocity
+    dummy                   = num2cell([AGENT.VelX]+dvi_x);
+    [AGENT(1:nagent).VelX]  = dummy{:};                                                     %update velocity
+    dummy                   = num2cell([AGENT.LocX] + [AGENT.VelX].*dt);
+    [AGENT(1:nagent).LocX]  = dummy{:};                                                     %update position
     
-    dummy = num2cell([AGENT.LocX] + [AGENT.dx]);
-    [AGENT(1:nagent).LocX] = dummy{:}; 
+    v0_y                    = v0 .* [AGENT(1:nagent).yExitDir];
+    dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FyArch]./m ) .*dt;	%change of velocity
+    dummy                   = num2cell([AGENT.VelY]+dvi_y);
+    [AGENT(1:nagent).VelY]  = dummy{:};                                                     %update velocity
+    dummy                   = num2cell([AGENT.LocY] + [AGENT.VelY].*dt);
+    [AGENT(1:nagent).LocY]  = dummy{:};                                                     %update position
+        
     
-    dummy = num2cell([AGENT.LocY] + [AGENT.dy]);
-    [AGENT(1:nagent).LocY] = dummy{:};
     
-%     dummy = num2cell([AGENT.LocX] + [AGENT.FxArch]);  %need to add physical part (e.g. A and B)
+%     % v = F*dt/m
+%     % s = v*t = F*dt^2/m
+%     
+%     dummy       = num2cell([AGENT.FxArch].*dt./80);  %insert [AGENT.mass]);
+%     [AGENT(1:nagent).VelX] = dummy{:};
+%     dummy       = num2cell([AGENT.VelX].*dt);
+%     [AGENT.dx]   = dummy{:};
+%     
+%     dummy       = num2cell([AGENT.FyArch].*dt./80);  %insert [AGENT.mass]);
+%     [AGENT(1:nagent).VelY] = dummy{:};
+%     dummy       = num2cell([AGENT.VelY].*dt);
+%     [AGENT.dy]   = dummy{:};
+%     
+%     dummy = num2cell([AGENT.LocX] + [AGENT.dx]);
 %     [AGENT(1:nagent).LocX] = dummy{:}; 
 %     
-%     dummy = num2cell([AGENT.LocY] + [AGENT.FyArch]);  %need to add physical part (e.g. A and B)
+%     dummy = num2cell([AGENT.LocY] + [AGENT.dy]);
 %     [AGENT(1:nagent).LocY] = dummy{:};
+
     
     
     %----------------------------------------------------
