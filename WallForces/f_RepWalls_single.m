@@ -21,7 +21,7 @@
 % ********************
 
 function [xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
-plotFields = logical(1);
+plotFields = logical(0);
 
 
 X_Grid  = X_Grid';  %convert grid
