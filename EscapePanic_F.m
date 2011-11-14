@@ -356,11 +356,17 @@ while (time <= maxtime)
             DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
             
-            DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX ...
-                        + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY;    
-                    
-            F_physAgents_tangentX = kappa.*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
-            F_physAgents_tangentY = kappa.*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
+            DeltaV      = (VelOthers.*DirXOthers-AGENT(iagent).Vel.*AGENT(iagent).DirX).*TangentX + (VelOthers.*DirYOthers-AGENT(iagent).Vel.*AGENT(iagent).DirY).*TangentY;            
+            %F_physAgents_tangentX = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
+            %F_physAgents_tangentY = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
+            
+            F_physAgents_tangentX = 0;
+            F_physAgents_tangentY = 0;
+        else
+            F_physAgents_normalX = 0;
+            F_physAgents_normalY = 0;
+            F_physAgents_tangentX = 0;
+            F_physAgents_tangentY = 0;
         end
         end
         
