@@ -161,12 +161,23 @@ display('calculating force direction')
 
 xgradWall = zeros(nx,ny); xgradAttr = zeros(nx,ny);
 ygradWall = zeros(nx,ny); ygradAttr = zeros(nx,ny);
-
+%--
 xgradWall(2:nx-1,2:ny-1) = distToWall(3:nx,2:ny-1) - distToWall(1:nx-2,2:ny-1);
 ygradWall(2:nx-1,2:ny-1) = distToWall(2:nx-1,3:ny) - distToWall(2:nx-1,1:ny-2);
 
+xgradWall2  = xgradWall./sqrt(xgradWall.^2+ygradWall.^2);   %normalized to 1
+ygradWall2  = ygradWall./sqrt(xgradWall.^2+ygradWall.^2);   %normalized to 1
+xgradWall   = xgradWall2; xgradWall(isnan(xgradWall))=0;    %replace NaN values with 0 
+ygradWall   = ygradWall2; ygradWall(isnan(ygradWall))=0;    %replace NaN values with 0
+%--
 xgradAttr(2:nx-1,2:ny-1) = -( distToAttr(3:nx,2:ny-1) - distToAttr(1:nx-2,2:ny-1) );
 ygradAttr(2:nx-1,2:ny-1) = -( distToAttr(2:nx-1,3:ny) - distToAttr(2:nx-1,1:ny-2) );
+
+xgradAttr2  = xgradAttr./sqrt(xgradAttr.^2+ygradAttr.^2);   %normalized to 1
+ygradAttr2  = ygradAttr./sqrt(xgradAttr.^2+ygradAttr.^2);   %normalized to 1
+xgradAttr   = xgradAttr2; xgradAttr(isnan(xgradAttr))=0;    %replace NaN values with 0
+ygradAttr   = ygradAttr2; ygradAttr(isnan(ygradAttr))=0;    %replace NaN values with 0
+%--
 
 % -------------------------------------------------
 %BOUNDARIES
