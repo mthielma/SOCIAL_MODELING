@@ -11,5 +11,5 @@ for i = 1:size(BuildingList,1)
     y = BuildingList(i,3);
     w = BuildingList(i,2)-BuildingList(i,1);
     h = BuildingList(i,4)-BuildingList(i,3);
-    rectangle('Position',[x y w h],'FaceColor',Color);
+    rectangle('Position',[x y w h],'FaceColor',Color,'EdgeColor',Color);
 end
