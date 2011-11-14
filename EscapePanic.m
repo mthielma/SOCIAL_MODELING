@@ -116,8 +116,8 @@ ARCH.force      = 1.0;                      %1 is the same as wall force
 [xArchForces_walls, yArchForces_walls, xArchDir_walls, yArchDir_walls] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 % compute the actual force
-xArchForces_single = A.*xArchForces_single.^(1./B);
-yArchForces_single = A.*yArchForces_single.^(1./B);
+xArchForces_single = Parameter.A.*xArchForces_walls.^(1./Parameter.B);
+yArchForces_single = Parameter.A.*yArchForces_walls.^(1./Parameter.B);
 
 %add contribution of object(s)
 xArchForces = xArchForces + xArchForces_walls;
@@ -345,7 +345,7 @@ while (time <= maxtime)
         %-------------------------------------------------
         % compute force from wall
         %-------------------------------------------------
-        F_socWalls = A*exp(AGENT(iagent).Size-min(WallDist(:)))/B;
+        F_socWalls = Parameter.A*exp(AGENT(iagent).Size-min(WallDist(:)))/Parameter.B;
         
         AGENT(iagent).FxArch = F_socWalls*NormalX;
         AGENT(iagent).FyArch = F_socWalls*NormalY;
