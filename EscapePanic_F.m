@@ -406,7 +406,10 @@ while (time <= maxtime && size(AGENT,2)>0)
     
     %     f_iW = -[AGENT.FxArch]+k*g...
     
+    % k.*g.*([AGENT(iagent).Size]-WallDist(indWallDist))
+    
     % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]
+    % this is  exp[r/B] :
     dummy = num2cell([AGENT.FxArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
     [AGENT(1:nagent).FxArch] = dummy{:};
     dummy = num2cell([AGENT.FyArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
