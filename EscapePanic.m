@@ -115,6 +115,10 @@ ARCH.force      = 1.0;                      %1 is the same as wall force
 
 [xArchForces_walls, yArchForces_walls, xArchDir_walls, yArchDir_walls] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
+% compute the actual force
+xArchForces_single = A.*xArchForces_single.^(1./B);
+yArchForces_single = A.*yArchForces_single.^(1./B);
+
 %add contribution of object(s)
 xArchForces = xArchForces + xArchForces_walls;
 yArchForces = yArchForces + yArchForces_walls;
@@ -144,6 +148,9 @@ ARCH.force      = 0.2;                      %1 is the same as wall force
 %add contribution of object(s)
 xArchForces2 = xArchForces + xArchForces_exits;
 yArchForces2 = yArchForces + yArchForces_exits;
+
+
+
 
 checkFigure = logical(1);
 if checkFigure
@@ -223,11 +230,15 @@ while (time <= maxtime)
     time = time+dt;     %actual time
     itime = itime+1;    %nr. timesteps
     disp('*****************************************')
-    disp(['timestep ',num2str(itime),':    time = ',num2str(time/60),' min'])
+    disp(['timestep ',num2str(itime)])
+
+    % update the number of agents
+    nagent = size(AGENT,2);
     
     %----------------------------------------------------
     % compute kdtree of agents for later use
     %----------------------------------------------------
+    ReferencePoints         = zeros(nagent,2);
     ReferencePoints(:,1)    = [AGENT(:).LocX];
     ReferencePoints(:,2)    = [AGENT(:).LocY];
     
@@ -248,13 +259,13 @@ while (time <= maxtime)
     % precomputed force field to the agents)
     %----------------------------------------------------
     
-    FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
-    FyArchAgents = interp2(X_Grid,Y_Grid,yArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
-    
-    dummy = num2cell(FxArchAgents);
-    [AGENT(1:nagent).FxArch]       = dummy{:};
-    dummy = num2cell(FyArchAgents);
-    [AGENT(1:nagent).FyArch]       = dummy{:};
+%     FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
+%     FyArchAgents = interp2(X_Grid,Y_Grid,yArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
+%     
+%     dummy = num2cell(FxArchAgents);
+%     [AGENT(1:nagent).FxArch]       = dummy{:};
+%     dummy = num2cell(FyArchAgents);
+%     [AGENT(1:nagent).FyArch]       = dummy{:};
     
     %----------------------------------------------------
     % compute direction field to exits on all agents 
@@ -277,6 +288,11 @@ while (time <= maxtime)
         
         x_agent = AGENT(iagent).LocX;
         y_agent = AGENT(iagent).LocY;
+        %-------------------------------------------------
+        % compute the destination vector
+        %-------------------------------------------------
+        
+        
         
         %-------------------------------------------------
         % get the agents that are in the "individual box" and compute the
@@ -326,6 +342,14 @@ while (time <= maxtime)
             AtWall = false;
         end
         
+        %-------------------------------------------------
+        % compute force from wall
+        %-------------------------------------------------
+        F_socWalls = A*exp(AGENT(iagent).Size-min(WallDist(:)))/B;
+        
+        AGENT(iagent).FxArch = F_socWalls*NormalX;
+        AGENT(iagent).FyArch = F_socWalls*NormalY;
+        
         %----------------------------------------------------
         % compute social forces from other agents and apply a weighting
         % function to simulate that agents only have a reduced field of
@@ -338,7 +362,7 @@ while (time <= maxtime)
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
-        if noUSEatPresent
+        
         if TooClose
             % normal force
             F_physAgents_normalX = k.*DistanceToAgents(indTooClose).*NormalX(indTooClose);
@@ -352,12 +376,17 @@ while (time <= maxtime)
             DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
             
-            DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX ...
-                        + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY;    
-                    
-            F_physAgents_tangentX = kappa.*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
-            F_physAgents_tangentY = kappa.*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
-        end
+            DeltaV      = (VelOthers.*DirXOthers-AGENT(iagent).Vel.*AGENT(iagent).DirX).*TangentX + (VelOthers.*DirYOthers-AGENT(iagent).Vel.*AGENT(iagent).DirY).*TangentY;            
+            %F_physAgents_tangentX = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
+            %F_physAgents_tangentY = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
+            
+            F_physAgents_tangentX = 0;
+            F_physAgents_tangentY = 0;
+        else
+            F_physAgents_normalX = 0;
+            F_physAgents_normalY = 0;
+            F_physAgents_tangentX = 0;
+            F_physAgents_tangentY = 0;
         end
         
         %----------------------------------------------------
@@ -471,5 +500,16 @@ while (time <= maxtime)
         ylabel('y [m]')
         
     end
+    %----------------------------------------------------
+    % remove successfull agents
+    %----------------------------------------------------
+    
+    ind = find([AGENT.LocX]>ExitList(1));
+    AGENT(ind) = [];
+    
+    
+%     find( [AGENT(find( [AGENT.LocX]>=ExitList(1,1) ) ).LocX]<=ExitList(1,2) )
+%     find( [AGENT.LocY]>=ExitList(1,3) )
+%     find( [AGENT.LocY]<=ExitList(1,4) );
 end
 %==========================================================================
