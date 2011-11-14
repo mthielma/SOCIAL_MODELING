@@ -12,12 +12,12 @@
 clear;
 
 %numerical parameter
-resolution      = 0.1;      % resolution in [m]
+resolution      = 0.2;      % resolution in [m]
 dt              = 0.1;    	% time step in [s]
 maxtime         = 30;       % maximum time to run in [min]
 
 %physical parameter
-nagent          = 100;      % number of agents
+nagent          = 30;      % number of agents
 
 noUSEatPresent  = logical(0);
 
@@ -366,16 +366,16 @@ while (time <= maxtime)
         if noUSEatPresent
         if AtWall
             % compute normal vector
-            x_wall = X(indWallDist);
-            y_wall = Y(indWallDist);
+            x_wall      = X(indWallDist);
+            y_wall      = Y(indWallDist);
             
             % compute normal vector
-            NormalX  = (x_agent - x_wall)./WallDist(indWallDist);
-            NormalY  = (y_agent - y_wall)./WallDist(indWallDist);
+            NormalX     = (x_agent - x_wall)./WallDist(indWallDist);
+            NormalY     = (y_agent - y_wall)./WallDist(indWallDist);
             
             % compute tangential vector
-            TangentX = -NormalY;
-            TangentY = NormalX;
+            TangentX    = -NormalY;
+            TangentY    = NormalX;
             
             % normal force
             F_physWall_normalX = k*WallDist(indWallDist).*NormalX;
@@ -394,8 +394,13 @@ while (time <= maxtime)
     % wall forces
     %----------------------------------------------------
     
-%     f_iW = -[AGENT.FxArch]+k*g...
+    %     f_iW = -[AGENT.FxArch]+k*g...
     
+    % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]
+    dummy = num2cell([AGENT.FxArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
+    [AGENT(1:nagent).FxArch] = dummy{:};
+    dummy = num2cell([AGENT.FyArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
+    [AGENT(1:nagent).FyArch] = dummy{:};
    
     %----------------------------------------------------
     % move agents
