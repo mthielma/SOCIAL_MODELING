@@ -294,6 +294,9 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
     for iagent2 = 1:nagent2
         iagent = iagent+1;
         
+        % set variable to default value
+        TooClose = false;
+        
         x_agent = AGENT(iagent).LocX;
         y_agent = AGENT(iagent).LocY;
         %-------------------------------------------------
@@ -462,12 +465,12 @@ if isnan([AGENT(iagent).FxArch]); error('fc: NaN!'); end
     dummy                   = num2cell([AGENT.LocY] + [AGENT.VelY].*dt);
     [AGENT(1:nagent).LocY]  = dummy{:};
     %update direction of agent
-    Vtot                    = num2cell([AGENT.VelX].^2+[AGENT.VelY].^2);
-    
-    dummy                   = num2cell([AGENT.VelX]./Vtot);
-    [AGENT(1:nagent).DirX]  = dummy{:};
-    dummy                   = num2cell([AGENT.VelY]./Vtot);
-    [AGENT(1:nagent).DirY]  = dummy{:};
+%     Vtot                    = num2cell([AGENT.VelX].^2+[AGENT.VelY].^2);
+%     
+%     dummy                   = num2cell([AGENT.VelX]./Vtot);
+%     [AGENT(1:nagent).DirX]  = dummy{:};
+%     dummy                   = num2cell([AGENT.VelY]./Vtot);
+%     [AGENT(1:nagent).DirY]  = dummy{:};
         
 
     %----------------------------------------------------
