@@ -14,5 +14,9 @@ for i = 1:nagent
     radius = AGENT(i).Size;
     x      = AGENT(i).LocX;
     y      = AGENT(i).LocY;
+    try
     rectangle('position',[x-radius, y-radius, 2*radius, 2*radius],'curvature',[1 1],'FaceColor',Color);
+    catch
+        bla =1;
+    end
 end

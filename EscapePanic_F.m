@@ -17,7 +17,7 @@ dt              = 0.1;    	% time step in [s]
 maxtime         = 30;       % maximum time to run in [min]
 
 %physical parameter
-nagent          = 30;      % number of agents
+nagent          = 20;      % number of agents
 
 noUSEatPresent  = logical(0);
 
@@ -169,13 +169,22 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).num]       = cell_array{:};
 [AGENT(1:nagent).VMax]      = deal(v0);
 [AGENT(1:nagent).BoxSize]   = deal(10); % the agent is only influenced by 
-[AGENT(1:nagent).Vel]       = deal(1); % initial velocity (to be randomized)
+[AGENT(1:nagent).Vel]       = deal(0); % initial velocity (to be randomized)
 
 [AGENT(1:nagent).VelX]      = deal(0); % initial velocity X
 [AGENT(1:nagent).VelY]      = deal(0); % initial velocity Y
 
 [AGENT(1:nagent).DirX]      = deal(1./sqrt(2)); % x-direction vector
 [AGENT(1:nagent).DirY]      = deal(1./sqrt(2)); % y-direction vector
+
+
+VelX                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).DirX]); % initial velocity X
+VelY                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).DirY]); % initial velocity Y
+
+
+[AGENT(1:nagent).VelX]      = VelX{:};
+[AGENT(1:nagent).VelY]      = VelY{:};
+
 
 cell_array = num2cell((0.5+ (rand(nagent,1))*0.2)./2);
 [AGENT(1:nagent).Size]   = cell_array{:};
@@ -342,27 +351,27 @@ while (time <= maxtime && size(AGENT,2)>0)
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
-        if noUSEatPresent
+        %if noUSEatPresent
         if TooClose
             % normal force
             F_physAgents_normalX = k.*DistanceToAgents(indTooClose).*NormalX(indTooClose);
             F_physAgents_normalY = k.*DistanceToAgents(indTooClose).*NormalY(indTooClose);
             % tangential force
             % compute tangential vector
-            TangentX        = -NormalY(v0);
-            TangentY        = NormalX(indTooClose);
+            TangentX        = -NormalY(indTooClose);
+            TangentY        = NormalX(indTooClose');
             
             VelOthers   = [AGENT(pointsidx(indTooClose)).Vel];
             DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
             
-            DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX ...
-                        + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY;    
+            DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX' ...
+                        + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY';    
                     
-            F_physAgents_tangentX = kappa.*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
-            F_physAgents_tangentY = kappa.*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
+            F_physAgents_tangentX = kappa.*[DistanceToAgents(indTooClose)]'.*DeltaV.*TangentX';
+            F_physAgents_tangentY = kappa.*[DistanceToAgents(indTooClose)]'.*DeltaV.*TangentY';
         end
-        end
+        %end
         
         %----------------------------------------------------
         % compute physical forces from walls 
@@ -413,23 +422,28 @@ while (time <= maxtime && size(AGENT,2)>0)
     % according to [Helbing 2000]:
     % a = dvi/dt = (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m + [AGENT.FxPedestrians]./m
     v0_x                    = v0 .* [AGENT(1:nagent).xExitDir];
-    dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m ) .*dt;	%change of velocity
+    dvi_x                   = ( ([AGENT(1:nagent).VMax] - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m ) .*dt;	%change of velocity
     dummy                   = num2cell([AGENT.VelX]+dvi_x);
     [AGENT(1:nagent).VelX]  = dummy{:};                                                     %update velocity
     dummy                   = num2cell([AGENT.LocX] + [AGENT.VelX].*dt);
     [AGENT(1:nagent).LocX]  = dummy{:};                                                     %update position
+    
     
     v0_y                    = v0 .* [AGENT(1:nagent).yExitDir];
     dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FyArch]./m ) .*dt;	%change of velocity
     dummy                   = num2cell([AGENT.VelY]+dvi_y);
     [AGENT(1:nagent).VelY]  = dummy{:};                                                     %update velocity
     dummy                   = num2cell([AGENT.LocY] + [AGENT.VelY].*dt);
-    [AGENT(1:nagent).LocY]  = dummy{:};                                                     %update position
+    [AGENT(1:nagent).LocY]  = dummy{:};
+    %update direction of agent
+    Vtot                    = num2cell([AGENT.VelX].^2+[AGENT.VelY].^2);
+    
+    dummy                   = num2cell([AGENT.VelX]./Vtot);
+    [AGENT(1:nagent).DirX]  = dummy{:};
+    dummy                   = num2cell([AGENT.VelY]./Vtot);
+    [AGENT(1:nagent).DirY]  = dummy{:};
         
-    
 
-    
-    
     %----------------------------------------------------
     % remove successfull agents
     %----------------------------------------------------
