@@ -6,13 +6,14 @@
 % Marcel Thielmann & Fabio Crameri
 
 % Comments:
-% - B, i.e. spread out of wall forces needs to be larger ...fc
+% - B, i.e. spread out of wall forces may need to be larger ...fc
+% - agents initially placed too close to walls become rockets! ...fc
 % 
 
-clear;
+clear; clear all;
 
 %numerical parameter
-resolution      = 0.2;      % resolution in [m]
+resolution      = 0.1;      % resolution in [m]
 dt              = 0.1;    	% time step in [s]
 maxtime         = 30;       % maximum time to run in [min]
 
@@ -22,16 +23,17 @@ nagent          = 30;      % number of agents
 noUSEatPresent  = logical(0);
 
 % physical forces parameters (Helbing,2000)
-k               = 1.2e5;
-kappa           = 2.4e5;
+Parameter.k   	= 1.2e5;
+Parameter.kappa	= 2.4e5;
 
 % social force parameters
 Parameter.A  	= 2e3;   	%[N]  [2e3 Helbing 2000]
-Parameter.B  	= 0.1;      %[m]  [0.08 Helbing 2000]
+Parameter.B  	= 0.08;      %[m]  [0.08 Helbing 2000]
 
 % agent parameters
 m               = 80;       % mass in kg
 v0              = 1;        % maximal/desired velocity [m/s]
+cutoffVelocity  = logical(1); %sets maximum velocity at v0
 t_acc           = 0.5;      % acceleration time in [s]
 
 
@@ -225,9 +227,8 @@ while (time <= maxtime && size(AGENT,2)>0)
     disp('*****************************************')
     disp(['timestep ',num2str(itime),':    time = ',num2str(time/60),' min'])
     
-    % update the number of agents
-    nagent = size(AGENT,2);
-    
+    if (nagent~=size(AGENT,2)); error('fc: nagent not equal nr. of agents!'); end
+
     %----------------------------------------------------
     % compute kdtree of agents for later use
     %----------------------------------------------------
@@ -239,7 +240,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     tree =   kdtree(ReferencePoints);
     
     clearvars ReferencePoints
-    
+
     %----------------------------------------------------
     % building locations
     %----------------------------------------------------
@@ -251,42 +252,56 @@ while (time <= maxtime && size(AGENT,2)>0)
     % compute forces from buildings on all agents (just interpolate the
     % precomputed force field to the agents)
     %----------------------------------------------------
+if isnan(xArchForces(find(isnan(xArchForces)))); error('fc: NaN!'); end
     
-    FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
-    FyArchAgents = interp2(X_Grid,Y_Grid,yArchForces',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
+    FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces',[AGENT.LocX],[AGENT.LocY]);
+    FyArchAgents = interp2(X_Grid,Y_Grid,yArchForces',[AGENT.LocX],[AGENT.LocY]);
     
     dummy = num2cell(FxArchAgents);
     [AGENT(1:nagent).FxArch]       = dummy{:};
     dummy = num2cell(FyArchAgents);
     [AGENT(1:nagent).FyArch]       = dummy{:};
     
+if isnan([AGENT(find(isnan([AGENT.FxArch]))).FxArch]); error('fc: NaN!'); end
+    
     %----------------------------------------------------
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
     
-    xExitDirAgents = interp2(X_Grid,Y_Grid,xArchDir_exits',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
-    yExitDirAgents = interp2(X_Grid,Y_Grid,yArchDir_exits',[AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY]);
+    xExitDirAgents = interp2(X_Grid,Y_Grid,xArchDir_exits',[AGENT.LocX],[AGENT.LocY]);
+    yExitDirAgents = interp2(X_Grid,Y_Grid,yArchDir_exits',[AGENT.LocX],[AGENT.LocY]);
     
     dummy = num2cell(xExitDirAgents);
     [AGENT(1:nagent).xExitDir]       = dummy{:};
     dummy = num2cell(yExitDirAgents);
     [AGENT(1:nagent).yExitDir]       = dummy{:};
     
-    
-    
+if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
+
     %----------------------------------------------------
     % agent loop
-    for iagent = 1:nagent
+    iagent=0; nagent2 = nagent;
+    for iagent2 = 1:nagent2
+        iagent = iagent+1;
         
         x_agent = AGENT(iagent).LocX;
         y_agent = AGENT(iagent).LocY;
+        %-------------------------------------------------
+        % check if the agent is outside the domain
+        %-------------------------------------------------
+        if x_agent>xmax || x_agent<xmin || y_agent>ymax || y_agent<ymin
+           AGENT(iagent) = [];
+           nagent = nagent-1;
+           display('agent outside domain removed') 
+           continue
+        end
         
         %-------------------------------------------------
         % get the agents that are in the "individual box" and compute the
         % distance to them
         %-------------------------------------------------
-        
+        if noUSEatPresent
         % generate the Boxes per Agent
         Boxes      = zeros(2,2);
         Boxes(1,1) = [AGENT(iagent).LocX]-[AGENT(iagent).BoxSize]./2;
@@ -317,18 +332,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         else
             TooClose = false;
         end
-        
-        %-------------------------------------------------
-        % get the distance to the closest wall
-        %-------------------------------------------------
-        WallDist    = sqrt((x_Buildings-x_agent).^2+(y_Buildings-y_agent).^2);
-        WallDist    = WallDist-[AGENT(iagent).Size];
-        indWallDist = find(WallDist<0);
-        if ~isempty(indWallDist)
-            AtWall = true;
-        else
-            AtWall = false;
-        end
+
         
         %----------------------------------------------------
         % compute social forces from other agents and apply a weighting
@@ -338,15 +342,15 @@ while (time <= maxtime && size(AGENT,2)>0)
         F_socAgents = Parameter.A.*exp(DistanceToAgents)./Parameter.B;
         F_socAgentsX = F_socAgents.*NormalX;
         F_socAgentsY = F_socAgents.*NormalY;
-        
+        end
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
         if noUSEatPresent
         if TooClose
             % normal force
-            F_physAgents_normalX = k.*DistanceToAgents(indTooClose).*NormalX(indTooClose);
-            F_physAgents_normalY = k.*DistanceToAgents(indTooClose).*NormalY(indTooClose);
+            F_physAgents_normalX = Parameter.k.*DistanceToAgents(indTooClose).*NormalX(indTooClose);
+            F_physAgents_normalY = Parameter.k.*DistanceToAgents(indTooClose).*NormalY(indTooClose);
             % tangential force
             % compute tangential vector
             TangentX        = -NormalY(v0);
@@ -357,8 +361,8 @@ while (time <= maxtime && size(AGENT,2)>0)
             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
             
             DeltaV      = (VelOthers.*DirXOthers-AGENT(iagent).Vel.*AGENT(iagent).DirX).*TangentX + (VelOthers.*DirYOthers-AGENT(iagent).Vel.*AGENT(iagent).DirY).*TangentY;            
-            %F_physAgents_tangentX = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
-            %F_physAgents_tangentY = kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
+            %F_physAgents_tangentX = Parameter.kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentX;
+            %F_physAgents_tangentY = Parameter.kappa*DistanceToAgents(indTooClose).*DeltaV.*TangentY;
             
             F_physAgents_tangentX = 0;
             F_physAgents_tangentY = 0;
@@ -370,50 +374,61 @@ while (time <= maxtime && size(AGENT,2)>0)
         end
         end
         
+        
+                
+        %-------------------------------------------------
+        % get the distance to the closest wall
+        %-------------------------------------------------
+        WallDist        = sqrt((x_Buildings-x_agent).^2+(y_Buildings-y_agent).^2); 	%between agent's center of mass and wall boundary
+        minWallDist     = min(WallDist);
+        WallDist_r      = WallDist-[AGENT(iagent).Size];                            %between agent's boundary and wall boundary
+        minWallDist_r   = min(WallDist_r);
+        indWallDist     = find(WallDist_r==minWallDist_r);  %adjust to make sure it is only one single value!!!!
+        if minWallDist_r<0
+            AtWall = true;
+        else
+            AtWall = false;
+        end
+        
         %----------------------------------------------------
         % compute physical forces from walls 
         %----------------------------------------------------
-        if noUSEatPresent
+        
+        % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]
+        % this is  exp[r/B] :
+        dummy = num2cell([AGENT(iagent).FxArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
+        [AGENT(iagent).FxArch] = dummy{:};
+        dummy = num2cell([AGENT(iagent).FyArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
+        [AGENT(iagent).FyArch] = dummy{:};
+        
         if AtWall
+            if minWallDist==0
+                error('fc: minWallDist=0!')
+            end
             % compute normal vector
-            x_wall      = X(indWallDist);
-            y_wall      = Y(indWallDist);
-            
-            % compute normal vector
-            NormalX     = (x_agent - x_wall)./WallDist(indWallDist);
-            NormalY     = (y_agent - y_wall)./WallDist(indWallDist);
-            
+            NormalX_wall = (x_agent-x_Buildings(indWallDist))/minWallDist;      %distance between center of mass    %check that minWallDist_r never becomes zero!
+            NormalY_wall = (y_agent-y_Buildings(indWallDist))/minWallDist;      %distance between center of mass    %check that minWallDist_r never becomes zero!
             % compute tangential vector
-            TangentX    = -NormalY;
-            TangentY    = NormalX;
-            
-            % normal force
-            F_physWall_normalX = k*WallDist(indWallDist).*NormalX;
-            F_physWall_normalY = k*WallDist(indWallDist).*NormalY;
-            
-            % tangential force
-            DeltaV      = (-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX ...
-                + (-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY;
-            F_physAgents_tangentX = kappa.*WallDist(indWallDist).*DeltaV.*TangentX;
-            F_physAgents_tangentY = kappa.*WallDist(indWallDist).*DeltaV.*TangentY;
-        end
+            TangentX_wall= -NormalY_wall;
+            TangentY_wall= NormalX_wall;
+            % normal force: k*g*(r-d)*n
+            dummy = num2cell([AGENT(iagent).FxArch] + (Parameter.k*(-minWallDist_r))*NormalX_wall);   % -minWallDist_r because r-d and not d-r
+            [AGENT(iagent).FxArch] = dummy{:};
+            dummy = num2cell([AGENT(iagent).FyArch] + (Parameter.k*(-minWallDist_r))*NormalY_wall);   % -minWallDist_r because r-d and not d-r
+            [AGENT(iagent).FyArch] = dummy{:};
+            % tangential force: k*g*(r-d)*(v*t)*t
+            dummy = num2cell([AGENT(iagent).FxArch] - (Parameter.kappa*(-minWallDist_r)*[AGENT(iagent).VelX]*TangentX_wall )*TangentX_wall);
+            [AGENT(iagent).FxArch] = dummy{:};
+            dummy = num2cell([AGENT(iagent).FyArch] - (Parameter.kappa*(-minWallDist_r)*[AGENT(iagent).VelY]*TangentY_wall )*TangentY_wall);
+            [AGENT(iagent).FyArch] = dummy{:};
         end
 
+if isnan([AGENT(iagent).FxArch]); error('fc: NaN!'); end
+        
+
     end
-    %----------------------------------------------------
-    % wall forces
-    %----------------------------------------------------
+
     
-    %     f_iW = -[AGENT.FxArch]+k*g...
-    
-    % k.*g.*([AGENT(iagent).Size]-WallDist(indWallDist))
-    
-    % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]
-    % this is  exp[r/B] :
-    dummy = num2cell([AGENT.FxArch] .* exp([AGENT.Size]./Parameter.B));               %add agent radii to force field
-    [AGENT(1:nagent).FxArch] = dummy{:};
-    dummy = num2cell([AGENT.FyArch] .* exp([AGENT.Size]./Parameter.B));               %add agent radii to force field
-    [AGENT(1:nagent).FyArch] = dummy{:};
    
     %----------------------------------------------------
     % move agents
@@ -423,14 +438,22 @@ while (time <= maxtime && size(AGENT,2)>0)
     % a = dvi/dt = (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m + [AGENT.FxPedestrians]./m
     v0_x                    = v0 .* [AGENT(1:nagent).xExitDir];
     dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m ) .*dt;	%change of velocity
-    dummy                   = num2cell([AGENT.VelX]+dvi_x);
+    if cutoffVelocity
+        dummy               = num2cell( min([AGENT.VelX]+dvi_x,v0) );
+    else
+        dummy               = num2cell([AGENT.VelX]+dvi_x);
+    end
     [AGENT(1:nagent).VelX]  = dummy{:};                                                     %update velocity
     dummy                   = num2cell([AGENT.LocX] + [AGENT.VelX].*dt);
     [AGENT(1:nagent).LocX]  = dummy{:};                                                     %update position
     
     v0_y                    = v0 .* [AGENT(1:nagent).yExitDir];
     dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FyArch]./m ) .*dt;	%change of velocity
-    dummy                   = num2cell([AGENT.VelY]+dvi_y);
+    if cutoffVelocity
+        dummy               = num2cell( min([AGENT.VelY]+dvi_y,v0) );
+    else
+        dummy               = num2cell([AGENT.VelY]+dvi_y);
+    end
     [AGENT(1:nagent).VelY]  = dummy{:};                                                     %update velocity
     dummy                   = num2cell([AGENT.LocY] + [AGENT.VelY].*dt);
     [AGENT(1:nagent).LocY]  = dummy{:};                                                     %update position
@@ -443,15 +466,38 @@ while (time <= maxtime && size(AGENT,2)>0)
     % remove successfull agents
     %----------------------------------------------------
     
+    LocX = [AGENT.LocX]; LocY = [AGENT.LocY];
+    
     %those who arrived in the exits
+    jj=0;
     for i=1:size(ExitList,1)
-        AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
-            & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4)  ) = [];
+%         AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
+%             & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4)  ) = [];
         
+        for j=1:size(LocX,2)
+            jj=jj+1;
+            %remove agents that arrived at the exits
+            if ( LocX(jj)>=ExitList(i,1) && LocX(jj)<=ExitList(i,2) ...
+                    && LocY(jj)>=ExitList(i,3) && LocY(jj)<=ExitList(i,4) )
+                AGENT(jj)=[]; LocX(jj)=[]; LocY(jj)=[];
+                jj=jj-1; %adjust to deleting a value
+                continue
+            end
+            %remove agents outside model domain
+            if LocX(jj)>xmax || LocX(jj)<xmin || LocY(jj)>ymax || LocY(jj)>ymax
+                AGENT(jj)=[]; LocX(jj)=[]; LocY(jj)=[];
+                display(['AGENT ',jj,' removed!'])
+                jj=jj-1; %adjust to deleting a value
+                continue
+            end
+    
+        end
     end
     
-    nagent = size([AGENT.LocX],2); %update number of agents after removing some of them
     
+    nagent = size(AGENT,2); %update number of agents after removing some of them
+    
+
     
     %----------------------------------------------------
     % plot
