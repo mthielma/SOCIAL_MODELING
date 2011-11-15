@@ -410,9 +410,9 @@ while (time <= maxtime && size(AGENT,2)>0)
     
     % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]
     % this is  exp[r/B] :
-    dummy = num2cell([AGENT.FxArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
+    dummy = num2cell([AGENT.FxArch] .* exp([AGENT.Size]./Parameter.B));               %add agent radii to force field
     [AGENT(1:nagent).FxArch] = dummy{:};
-    dummy = num2cell([AGENT.FyArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
+    dummy = num2cell([AGENT.FyArch] .* exp([AGENT.Size]./Parameter.B));               %add agent radii to force field
     [AGENT(1:nagent).FyArch] = dummy{:};
    
     %----------------------------------------------------
