@@ -10,7 +10,7 @@
 % - agents initially placed too close to walls become rockets! ...fc
 % 
 
-clear; clear all;
+clear;
 
 %numerical parameter
 resolution      = 0.1;      % resolution in [m]
