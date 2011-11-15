@@ -14,7 +14,7 @@ clear;
 
 %numerical parameter
 resolution      = 0.1;      % resolution in [m]
-dt              = 0.1;    	% time step in [s]
+dt              = 0.02;    	% time step in [s]
 maxtime         = 30;       % maximum time to run in [min]
 
 %physical parameter
@@ -179,6 +179,10 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).DirX]      = deal(1./sqrt(2)); % x-direction vector
 [AGENT(1:nagent).DirY]      = deal(1./sqrt(2)); % y-direction vector
 
+[AGENT(1:nagent).FxSoc]  	= deal(0); % initial social force X
+[AGENT(1:nagent).FySoc] 	= deal(0); % initial social force Y
+[AGENT(1:nagent).FxArch] 	= deal(0); % initial architecture force X
+[AGENT(1:nagent).FyArch]  	= deal(0); % initial architecture force Y
 
 VelX                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).DirX]); % initial velocity X
 VelY                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).DirY]); % initial velocity Y
@@ -288,6 +292,9 @@ if isnan([AGENT(find(isnan([AGENT.FxArch]))).FxArch]); error('fc: NaN!'); end
     
 if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
 
+
+
+
     %----------------------------------------------------
     % agent loop
     iagent=0; nagent2 = nagent;
@@ -313,32 +320,38 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         % get the agents that are in the "individual box" and compute the
         % distance to them
         %-------------------------------------------------
-        if noUSEatPresent
+
         % generate the Boxes per Agent
-        Boxes      = zeros(2,2);
-        Boxes(1,1) = [AGENT(iagent).LocX]-[AGENT(iagent).BoxSize]./2;
-        Boxes(2,1) = [AGENT(iagent).LocY]-[AGENT(iagent).BoxSize]./2;
-        Boxes(1,2) = [AGENT(iagent).LocX]+[AGENT(iagent).BoxSize]./2;
-        Boxes(2,2) = [AGENT(iagent).LocY]+[AGENT(iagent).BoxSize]./2;
+        Boxes       = zeros(2,2);
+        Boxes(1,1)  = [AGENT(iagent).LocX]-[AGENT(iagent).BoxSize]./2;
+        Boxes(2,1)  = [AGENT(iagent).LocY]-[AGENT(iagent).BoxSize]./2;
+        Boxes(1,2)  = [AGENT(iagent).LocX]+[AGENT(iagent).BoxSize]./2;
+        Boxes(2,2)  = [AGENT(iagent).LocY]+[AGENT(iagent).BoxSize]./2;
         
-        pointsidx    = kdtree_range(tree,Boxes);
+        pointsidx 	= kdtree_range(tree,Boxes);
         % remove the agent itself
         pointsidx(pointsidx==[AGENT(iagent).num]) = [];
         AGENT(iagent).SurroundingAgents = pointsidx;
         
         % Compute the distance to the other agents in the box
-        x_others = [AGENT([AGENT(iagent).SurroundingAgents]).LocX]';
-        y_others = [AGENT([AGENT(iagent).SurroundingAgents]).LocY]';
-        DistanceToAgents = sqrt((x_others-x_agent).^2+(y_others-y_agent).^2)-([AGENT(iagent).Size]+[AGENT(pointsidx).Size]');
+        x_others    = [AGENT([AGENT(iagent).SurroundingAgents]).LocX]';
+        y_others    = [AGENT([AGENT(iagent).SurroundingAgents]).LocY]';
+        % DistanceToAgents = sqrt((x_agent - x_others).^2+(y_agent - y_others).^2)-([AGENT(iagent).Size]+[AGENT(pointsidx).Size]');
         
-        % compute normal vector
-        VecNormal       = zeros(size(pointsidx,2),2);
+        DistanceToAgents    = sqrt((x_agent-x_others).^2 + (y_agent-y_others).^2);  %distance between center of mass
+        %check if correct !!!!
+        DistanceToAgents_r  = ([AGENT(iagent).Size]+[AGENT(pointsidx).Size]' - DistanceToAgents);  %distance between boundaries ( r_ij - d_ij )
+        %check if correct !!!!
+
         
+        
+        
+        % compute normal vector        
         NormalX         = (x_agent - x_others)./DistanceToAgents;
         NormalY         = (y_agent - y_others)./DistanceToAgents;
         
         % find agents that are too close
-        indTooClose                    = find(DistanceToAgents<=0);
+        indTooClose     = find(DistanceToAgents_r<=0);
         if ~isempty(indTooClose)
             TooClose = true;
         else
@@ -351,18 +364,17 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         % function to simulate that agents only have a reduced field of
         % vision
         %----------------------------------------------------
-        F_socAgents = Parameter.A.*exp(DistanceToAgents)./Parameter.B;
-        F_socAgentsX = F_socAgents.*NormalX;
-        F_socAgentsY = F_socAgents.*NormalY;
-        end
+        F_socAgents     = Parameter.A.*exp(DistanceToAgents_r)./Parameter.B;
+        F_socAgentsX    = F_socAgents.*NormalX;
+        F_socAgentsY    = F_socAgents.*NormalY;
+
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
-        %if noUSEatPresent
         if TooClose
             % normal force
-            F_physAgents_normalX = Parameter.k.*DistanceToAgents(indTooClose).*NormalX(indTooClose);
-            F_physAgents_normalY = Parameter.k.*DistanceToAgents(indTooClose).*NormalY(indTooClose);
+            F_physAgents_normalX = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalX(indTooClose);
+            F_physAgents_normalY = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalY(indTooClose);
             % tangential force
             % compute tangential vector
             TangentX        = -NormalY(indTooClose);
@@ -375,10 +387,18 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
             DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX' ...
                         + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY';    
                     
-            F_physAgents_tangentX = kappa.*[DistanceToAgents(indTooClose)]'.*DeltaV.*TangentX';
-            F_physAgents_tangentY = kappa.*[DistanceToAgents(indTooClose)]'.*DeltaV.*TangentY';
+            F_physAgents_tangentX = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentX';
+            F_physAgents_tangentY = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentY';
         end
-        %end
+
+        
+        %add social forces to agents
+        dummy = num2cell( sum(F_socAgentsX) );  %add all social x-forces
+        [AGENT(iagent).FxSoc] = dummy{:};
+        dummy = num2cell( sum(F_socAgentsY) );  %add all social y-forces
+        [AGENT(iagent).FySoc] = dummy{:};
+        
+        
         
         
                 
@@ -429,7 +449,6 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
             [AGENT(iagent).FyArch] = dummy{:};
         end
 
-if isnan([AGENT(iagent).FxArch]); error('fc: NaN!'); end
         
 
     end
@@ -443,7 +462,7 @@ if isnan([AGENT(iagent).FxArch]); error('fc: NaN!'); end
     % according to [Helbing 2000]:
     % a = dvi/dt = (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m + [AGENT.FxPedestrians]./m
     v0_x                    = v0 .* [AGENT(1:nagent).xExitDir];
-    dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m ) .*dt;	%change of velocity
+    dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxSoc]./m + [AGENT.FxArch]./m ) .*dt;	%change of velocity
     if cutoffVelocity
         dummy               = num2cell( min([AGENT.VelX]+dvi_x,v0) );
     else
@@ -455,7 +474,7 @@ if isnan([AGENT(iagent).FxArch]); error('fc: NaN!'); end
     
     
     v0_y                    = v0 .* [AGENT(1:nagent).yExitDir];
-    dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FyArch]./m ) .*dt;	%change of velocity
+    dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FySoc]./m + [AGENT.FyArch]./m ) .*dt;	%change of velocity
     if cutoffVelocity
         dummy               = num2cell( min([AGENT.VelY]+dvi_y,v0) );
     else
