@@ -308,15 +308,12 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         
         x_agent = AGENT(iagent).LocX;
         y_agent = AGENT(iagent).LocY;
-%         %-------------------------------------------------
-%         % check if the agent is outside the domain
-%         %-------------------------------------------------
-%         if x_agent>xmax || x_agent<xmin || y_agent>ymax || y_agent<ymin
-%            AGENT(iagent) = [];
-%            nagent = nagent-1;
-%            display('agent outside domain removed') 
-%            continue
-%         end
+        %-------------------------------------------------
+        % check if the agent is outside the domain
+        %-------------------------------------------------
+        if x_agent>xmax || x_agent<xmin || y_agent>ymax || y_agent<ymin
+           error('fc: stupid agent outside domain!') 
+        end
         
         %-------------------------------------------------
         % get the agents that are in the "individual box" and compute the
@@ -377,25 +374,25 @@ if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
         % compute physical forces from other agents
         %----------------------------------------------------
         if TooClose
-%             % normal force
-%             F_physAgents_normalX = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalX(indTooClose);
-%             F_physAgents_normalY = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalY(indTooClose);
-%             % tangential force
-%             % compute tangential vector
-%             TangentX 	= -NormalY(indTooClose);
-%             TangentY	= NormalX(indTooClose);
-%             
-% %             VelOthers   = [AGENT(pointsidx(indTooClose)).Vel];
-% %             DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
-% %             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
-%             
-% %             DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX' ...
-% %                         + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY';    
-%             DeltaV      = ([AGENT(indTooClose).VelX]-[AGENT(iagent).VelX]).*TangentX' ...
-%                         + ([AGENT(indTooClose).VelY]-[AGENT(iagent).VelY]).*TangentY';
-%                     
-%             F_physAgents_tangentX = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentX';
-%             F_physAgents_tangentY = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentY';
+            % normal force
+            F_physAgents_normalX = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalX(indTooClose);
+            F_physAgents_normalY = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalY(indTooClose);
+            % tangential force
+            % compute tangential vector
+            TangentX 	= -NormalY(indTooClose);
+            TangentY	= NormalX(indTooClose);
+            
+%             VelOthers   = [AGENT(pointsidx(indTooClose)).Vel];
+%             DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
+%             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
+            
+%             DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX' ...
+%                         + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY';    
+            DeltaV      = ([AGENT(indTooClose).VelX]-[AGENT(iagent).VelX]).*TangentX' ...
+                        + ([AGENT(indTooClose).VelY]-[AGENT(iagent).VelY]).*TangentY';
+                    
+            F_physAgents_tangentX = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentX';
+            F_physAgents_tangentY = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentY';
         end
 if isnan([AGENT(find(isnan([AGENT.FxSoc]))).FxSoc]); error('fc: NaN!'); end
 if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
@@ -462,7 +459,6 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
 
     end
 
-    [AGENT(1:nagent).FxSoc]
     if ~SocialForce; [AGENT(1:nagent).FxSoc] = deal(0); [AGENT(1:nagent).FySoc] = deal(0); end  %switch off social forces
    
     %----------------------------------------------------
