@@ -6,8 +6,8 @@
 % Marcel Thielmann & Fabio Crameri
 
 % Comments:
-% - B, i.e. spread out of wall forces may need to be larger ...fc
 % - agents initially placed too close to walls become rockets! ...fc
+% - cutoff velocity is only set for x- and y-directions, not for vtot ...fc
 % 
 
 clear;
@@ -21,6 +21,7 @@ maxtime         = 30;       % maximum time to run in [min]
 nagent          = 30;      % number of agents
 
 noUSEatPresent  = logical(0);
+SocialForce     = logical(0);   %switch for social force
 
 % physical forces parameters (Helbing,2000)
 Parameter.k   	= 1.2e5;
@@ -144,13 +145,13 @@ ARCH.force      = 0.2;                      %1 is the same as wall force
 [xArchForces_exits, yArchForces_exits, xArchDir_exits, yArchDir_exits] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
-xArchForces2 = xArchForces + xArchForces_exits;
-yArchForces2 = yArchForces + yArchForces_exits;
+xArchForces = xArchForces + xArchForces_exits;
+yArchForces = yArchForces + yArchForces_exits;
 
 checkFigure = logical(1);
 if checkFigure
     figure(11)
-    quiver(X_Grid',Y_Grid',xArchForces2,yArchForces2)
+    quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
     title('architecture force')
     xlabel('x [m]')
     ylabel('y [m]')
@@ -454,6 +455,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
     end
 
     
+    if ~SocialForce; [AGENT(1:nagent).FxSoc] = deal(0); [AGENT(1:nagent).FySoc] = deal(0); end  %switch off social forces
    
     %----------------------------------------------------
     % move agents
@@ -468,9 +470,9 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
     else
         dummy               = num2cell([AGENT.VelX]+dvi_x);
     end
-    [AGENT(1:nagent).VelX]  = dummy{:};                                                     %update velocity
+    [AGENT(1:nagent).VelX]  = dummy{:};                                                     %update x-velocity
     dummy                   = num2cell([AGENT.LocX] + [AGENT.VelX].*dt);
-    [AGENT(1:nagent).LocX]  = dummy{:};                                                     %update position
+    [AGENT(1:nagent).LocX]  = dummy{:};                                                     %update x-position
     
     
     v0_y                    = v0 .* [AGENT(1:nagent).yExitDir];
@@ -480,16 +482,16 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
     else
         dummy               = num2cell([AGENT.VelY]+dvi_y);
     end
-    [AGENT(1:nagent).VelY]  = dummy{:};                                                     %update velocity
+    [AGENT(1:nagent).VelY]  = dummy{:};                                                     %update y-velocity
     dummy                   = num2cell([AGENT.LocY] + [AGENT.VelY].*dt);
-    [AGENT(1:nagent).LocY]  = dummy{:};
-    %update direction of agent
-%     Vtot                    = num2cell([AGENT.VelX].^2+[AGENT.VelY].^2);
-%     
-%     dummy                   = num2cell([AGENT.VelX]./Vtot);
-%     [AGENT(1:nagent).DirX]  = dummy{:};
-%     dummy                   = num2cell([AGENT.VelY]./Vtot);
-%     [AGENT(1:nagent).DirY]  = dummy{:};
+    [AGENT(1:nagent).LocY]  = dummy{:};                                                     %update y-position
+    
+    %update direction of agents
+    Vtot                    = sqrt([AGENT.VelX].^2+[AGENT.VelY].^2);                        %velocity of agents
+    dummy                   = num2cell([AGENT.VelX]./Vtot);
+    [AGENT(1:nagent).DirX]  = dummy{:};                                                     %update x-direction
+    dummy                   = num2cell([AGENT.VelY]./Vtot);
+    [AGENT(1:nagent).DirY]  = dummy{:};                                                     %update y-direction
         
 
     %----------------------------------------------------
