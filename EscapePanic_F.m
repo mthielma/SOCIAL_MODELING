@@ -464,7 +464,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
     v0_x                    = v0 .* [AGENT(1:nagent).xExitDir];
     dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxSoc]./m + [AGENT.FxArch]./m ) .*dt;	%change of velocity
     if cutoffVelocity
-        dummy               = num2cell( min([AGENT.VelX]+dvi_x,v0) );
+        dummy               = num2cell( max(min([AGENT.VelX]+dvi_x,v0),-v0) );
     else
         dummy               = num2cell([AGENT.VelX]+dvi_x);
     end
@@ -476,7 +476,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
     v0_y                    = v0 .* [AGENT(1:nagent).yExitDir];
     dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FySoc]./m + [AGENT.FyArch]./m ) .*dt;	%change of velocity
     if cutoffVelocity
-        dummy               = num2cell( min([AGENT.VelY]+dvi_y,v0) );
+        dummy               = num2cell( max(min([AGENT.VelY]+dvi_y,v0),-v0) );
     else
         dummy               = num2cell([AGENT.VelY]+dvi_y);
     end
