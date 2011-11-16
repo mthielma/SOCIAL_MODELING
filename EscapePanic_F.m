@@ -15,13 +15,13 @@ clear;
 %numerical parameter
 resolution      = 0.1;      % resolution in [m]
 dt              = 0.02;    	% time step in [s]
-maxtime         = 30;       % maximum time to run in [min]
+maxtime         = 2;       % maximum time to run in [min]
 
 %physical parameter
 nagent          = 30;      % number of agents
 
 noUSEatPresent  = logical(0);
-SocialForce     = logical(0);   %switch for social force
+SocialForce     = logical(1);   %switch for social force
 
 % physical forces parameters (Helbing,2000)
 Parameter.k   	= 1.2e5;
@@ -169,6 +169,7 @@ end
 % - group (e.g. family) --> later
 % - helping factor --> later
 cell_array = num2cell(1:nagent);
+[AGENT(1:nagent).name]      = cell_array{:};
 [AGENT(1:nagent).num]       = cell_array{:};
 [AGENT(1:nagent).VMax]      = deal(v0);
 [AGENT(1:nagent).BoxSize]   = deal(10); % the agent is only influenced by 
@@ -307,15 +308,15 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         
         x_agent = AGENT(iagent).LocX;
         y_agent = AGENT(iagent).LocY;
-        %-------------------------------------------------
-        % check if the agent is outside the domain
-        %-------------------------------------------------
-        if x_agent>xmax || x_agent<xmin || y_agent>ymax || y_agent<ymin
-           AGENT(iagent) = [];
-           nagent = nagent-1;
-           display('agent outside domain removed') 
-           continue
-        end
+%         %-------------------------------------------------
+%         % check if the agent is outside the domain
+%         %-------------------------------------------------
+%         if x_agent>xmax || x_agent<xmin || y_agent>ymax || y_agent<ymin
+%            AGENT(iagent) = [];
+%            nagent = nagent-1;
+%            display('agent outside domain removed') 
+%            continue
+%         end
         
         %-------------------------------------------------
         % get the agents that are in the "individual box" and compute the
@@ -330,6 +331,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         Boxes(2,2)  = [AGENT(iagent).LocY]+[AGENT(iagent).BoxSize]./2;
         
         pointsidx 	= kdtree_range(tree,Boxes);
+        
         % remove the agent itself
         pointsidx(pointsidx==[AGENT(iagent).num]) = [];
         AGENT(iagent).SurroundingAgents = pointsidx;
@@ -343,12 +345,13 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         %check if correct !!!!
         DistanceToAgents_r  = ([AGENT(iagent).Size]+[AGENT(pointsidx).Size]' - DistanceToAgents);  %distance between boundaries ( r_ij - d_ij )
         %check if correct !!!!
+if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
 
         
         
         
         % compute normal vector        
-        NormalX         = (x_agent - x_others)./DistanceToAgents;
+        NormalX         = (x_agent - x_others)./DistanceToAgents;  %DistanceToAgents should not be zero!
         NormalY         = (y_agent - y_others)./DistanceToAgents;
         
         % find agents that are too close
@@ -369,29 +372,33 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         F_socAgentsX    = F_socAgents.*NormalX;
         F_socAgentsY    = F_socAgents.*NormalY;
 
+        
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
         if TooClose
-            % normal force
-            F_physAgents_normalX = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalX(indTooClose);
-            F_physAgents_normalY = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalY(indTooClose);
-            % tangential force
-            % compute tangential vector
-            TangentX        = -NormalY(indTooClose);
-            TangentY        = NormalX(indTooClose');
-            
-            VelOthers   = [AGENT(pointsidx(indTooClose)).Vel];
-            DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
-            DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
-            
-            DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX' ...
-                        + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY';    
-                    
-            F_physAgents_tangentX = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentX';
-            F_physAgents_tangentY = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentY';
+%             % normal force
+%             F_physAgents_normalX = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalX(indTooClose);
+%             F_physAgents_normalY = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalY(indTooClose);
+%             % tangential force
+%             % compute tangential vector
+%             TangentX 	= -NormalY(indTooClose);
+%             TangentY	= NormalX(indTooClose);
+%             
+% %             VelOthers   = [AGENT(pointsidx(indTooClose)).Vel];
+% %             DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
+% %             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
+%             
+% %             DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX' ...
+% %                         + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY';    
+%             DeltaV      = ([AGENT(indTooClose).VelX]-[AGENT(iagent).VelX]).*TangentX' ...
+%                         + ([AGENT(indTooClose).VelY]-[AGENT(iagent).VelY]).*TangentY';
+%                     
+%             F_physAgents_tangentX = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentX';
+%             F_physAgents_tangentY = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentY';
         end
-
+if isnan([AGENT(find(isnan([AGENT.FxSoc]))).FxSoc]); error('fc: NaN!'); end
+if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         
         %add social forces to agents
         dummy = num2cell( sum(F_socAgentsX) );  %add all social x-forces
@@ -399,8 +406,9 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         dummy = num2cell( sum(F_socAgentsY) );  %add all social y-forces
         [AGENT(iagent).FySoc] = dummy{:};
         
-        
-        
+if isnan([AGENT(find(isnan([AGENT.FxSoc]))).FxSoc]); error('fc: NaN!'); end
+if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
+
         
                 
         %-------------------------------------------------
@@ -422,7 +430,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         %----------------------------------------------------
         
         % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]
-        % this is  exp[r/B] :
+        % ...this is  exp[r/B] :
         dummy = num2cell([AGENT(iagent).FxArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
         [AGENT(iagent).FxArch] = dummy{:};
         dummy = num2cell([AGENT(iagent).FyArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
@@ -454,7 +462,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
 
     end
 
-    
+    [AGENT(1:nagent).FxSoc]
     if ~SocialForce; [AGENT(1:nagent).FxSoc] = deal(0); [AGENT(1:nagent).FySoc] = deal(0); end  %switch off social forces
    
     %----------------------------------------------------
@@ -518,7 +526,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
             %remove agents outside model domain
             if LocX(jj)>xmax || LocX(jj)<xmin || LocY(jj)>ymax || LocY(jj)>ymax
                 AGENT(jj)=[]; LocX(jj)=[]; LocY(jj)=[];
-                display(['AGENT ',jj,' removed!'])
+                display(['AGENT ',num2str(jj),' removed!'])
                 jj=jj-1; %adjust to deleting a value
                 continue
             end
@@ -528,7 +536,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
     
     
     nagent = size(AGENT,2); %update number of agents after removing some of them
-    
+    cell_array = num2cell(1:nagent); [AGENT(1:nagent).num] = cell_array{:}; %update correct numbering from 1:nagent
 
     
     %----------------------------------------------------
