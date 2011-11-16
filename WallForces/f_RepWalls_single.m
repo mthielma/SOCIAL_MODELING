@@ -122,8 +122,8 @@ elseif strcmp(Spreading,'linear')
     %--------------------------------------------------------
 elseif strcmp(Spreading,'const')
     %--------------------------------------------------------
-    F_wall = +Force;  %check!
-    F_attr = -Force;
+    F_wall = 50*A* (+Force);  %check!
+    F_attr = 50*A* (-Force);
     %--------------------------------------------------------
 end
 F_arch = F_wall+F_attr;
