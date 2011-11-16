@@ -30,7 +30,7 @@ Parameter.kappa  	= 2.4e5;
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 20;   %for adjusting strength of constant exit force field
+Parameter.ExitFactor= 30;   %for adjusting strength of constant exit force field
 
 % agent parameters
 m                 	= 80;       % mass in kg
@@ -69,8 +69,8 @@ maxtime = maxtime*60; %[min] => [s]
 % create building list (if not given)
 %---------------------------------------
 BuildingList = [
-                0 50 0 1    %boundary wall
-                0 50 9 10   %boundary wall
+                30 32 0 1    %boundary wall
+                30 32 9 10   %boundary wall
                 30 32 1 4   %top barriere
                 30 32 6 9   %bottom barriere
                 ]; % coordinates of building xmin xmax ymin ymax
@@ -229,7 +229,7 @@ PlotBuildings(ExitList,'g');
 PlotAgents(nagent,AGENT,'y');
 axis equal
 axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
-
+box on
 title('time = 0.00 min')
 xlabel('x [m]')
 ylabel('y [m]')
@@ -547,9 +547,9 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
         % plot topo
 %         contour(X_Grid,Y_Grid,Z_Grid,'k-'),shading interp, colorbar
-        caxis([0 0.5])
-        colormap('Bone')
-        colormap(flipud(colormap))
+%         caxis([0 0.5])
+%         colormap('Bone')
+%         colormap(flipud(colormap))
         
         % plot buildings
         PlotBuildings(BuildingList,'r');
@@ -561,7 +561,7 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
 %         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
-        
+        box on
         title(['time = ',num2str(time/60,3),' min'])
         xlabel('x [m]')
         ylabel('y [m]')
