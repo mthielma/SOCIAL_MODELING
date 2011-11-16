@@ -35,6 +35,7 @@ Force       = ARCH.force;
 
 A           = Parameter.A;
 B           = Parameter.B;
+ExitFactor  = Parameter.ExitFactor;
 
 display('******* calculate wall forces ******')
 
@@ -122,8 +123,8 @@ elseif strcmp(Spreading,'linear')
     %--------------------------------------------------------
 elseif strcmp(Spreading,'const')
     %--------------------------------------------------------
-    F_wall = 50*A* (+Force);  %check!
-    F_attr = 50*A* (-Force);
+    F_wall = ExitFactor*A* (+Force);  %check!
+    F_attr = ExitFactor*A* (-Force);
     %--------------------------------------------------------
 end
 F_arch = F_wall+F_attr;

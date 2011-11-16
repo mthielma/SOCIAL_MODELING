@@ -13,29 +13,30 @@
 clear;
 
 %numerical parameter
-resolution      = 0.1;      % resolution in [m]
-dt              = 0.02;    	% time step in [s]
-maxtime         = 2;       % maximum time to run in [min]
+resolution       	= 0.1;      % resolution in [m]
+dt                	= 0.02;    	% time step in [s]
+maxtime          	= 2;       % maximum time to run in [min]
 
 %physical parameter
-nagent          = 30;      % number of agents
+nagent          	= 50;      % number of agents
 
-noUSEatPresent  = logical(0);
-SocialForce     = logical(1);   %switch for social force
+noUSEatPresent   	= logical(0);
+SocialForce        	= logical(1);   %switch for social force
 
 % physical forces parameters (Helbing,2000)
-Parameter.k   	= 1.2e5;
-Parameter.kappa	= 2.4e5;
+Parameter.k         = 1.2e5;
+Parameter.kappa  	= 2.4e5;
 
 % social force parameters
-Parameter.A  	= 2e3;   	%[N]  [2e3 Helbing 2000]
-Parameter.B  	= 0.08;      %[m]  [0.08 Helbing 2000]
+Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
+Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
+Parameter.ExitFactor= 20;   %for adjusting strength of constant exit force field
 
 % agent parameters
-m               = 80;       % mass in kg
-v0              = 1;        % maximal/desired velocity [m/s]
-cutoffVelocity  = logical(1); %sets maximum velocity at v0
-t_acc           = 0.5;      % acceleration time in [s]
+m                 	= 80;       % mass in kg
+v0               	= 1;        % maximal/desired velocity [m/s]
+cutoffVelocity   	= logical(1); %sets maximum velocity at v0
+t_acc            	= 0.5;      % acceleration time in [s]
 
 
 addpath ./DecisionStrategy/
@@ -44,14 +45,14 @@ addpath ./Plotting/
 addpath ./kdtree_alg_OSX/
 %==========================================================================
 % initialize fine grid (if not given as argument)
-xmin            = 0;
-xmax            = 50;
-ymin            = 0;
-ymax            = 10;
+xmin                = 0;
+xmax                = 50;
+ymin                = 0;
+ymax                = 10;
 
-xvec            = xmin:resolution:xmax;
-yvec            = ymin:resolution:ymax;
-[X_Grid,Y_Grid] = meshgrid(xvec,yvec);
+xvec                = xmin:resolution:xmax;
+yvec                = ymin:resolution:ymax;
+[X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
 
 %convert time
