@@ -14,8 +14,8 @@ clear;
 
 %numerical parameter
 resolution       	= 0.1;      % resolution in [m]
-dt                	= 0.02;    	% time step in [s]
-maxtime          	= 2;       % maximum time to run in [min]
+dt                	= 0.05;    	% time step in [s]
+maxtime          	= 30;       % maximum time to run in [min]
 
 %physical parameter
 nagent          	= 50;      % number of agents
@@ -468,37 +468,41 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
     
     % according to [Helbing 2000]:
     % a = dvi/dt = (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m + [AGENT.FxPedestrians]./m
-    v0_x                    = v0 .* [AGENT(1:nagent).xExitDir];
+    
+    
+    % velocity change in x-direction
+    v0_x                    = [AGENT(1:nagent).VMax] .* [AGENT(1:nagent).xExitDir];
     dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxSoc]./m + [AGENT.FxArch]./m ) .*dt;	%change of velocity
-    if cutoffVelocity
-        dummy               = num2cell( max(min([AGENT.VelX]+dvi_x,v0),-v0) );
-    else
-        dummy               = num2cell([AGENT.VelX]+dvi_x);
-    end
-    [AGENT(1:nagent).VelX]  = dummy{:};                                                     %update x-velocity
+    v_x                     = v0_x + dvi_x;
+    
+    % velocity change in y-direction
+    v0_y                    = [AGENT(1:nagent).VMax] .* [AGENT(1:nagent).yExitDir];
+    dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FySoc]./m + [AGENT.FyArch]./m ) .*dt;	%change of velocity
+    v_y                     = v0_y + dvi_y;
+    
+    % compute total velocity direction of agent
+    v_tot                   = sqrt(v_x.^2+v_y.^2);
+    dir_x                   = v_x./v_tot;
+    dir_y                   = v_y./v_tot;
+    
+    % limit velocity to maximum velocity
+    v_tot                   = min(v_tot,[AGENT(1:nagent).VMax]);
+    dummy                   = num2cell(v_tot);
+    [AGENT(1:nagent).Vel]   = dummy{:};  
+    
+    % recompute vx and vz
+    dummy                   = num2cell(v_tot.*dir_x);
+    [AGENT(1:nagent).VelX]  = dummy{:};
+    dummy                   = num2cell(v_tot.*dir_y);
+    [AGENT(1:nagent).VelY]  = dummy{:};
+    
+    % update locations
     dummy                   = num2cell([AGENT.LocX] + [AGENT.VelX].*dt);
     [AGENT(1:nagent).LocX]  = dummy{:};                                                     %update x-position
     
-    
-    v0_y                    = v0 .* [AGENT(1:nagent).yExitDir];
-    dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FySoc]./m + [AGENT.FyArch]./m ) .*dt;	%change of velocity
-    if cutoffVelocity
-        dummy               = num2cell( max(min([AGENT.VelY]+dvi_y,v0),-v0) );
-    else
-        dummy               = num2cell([AGENT.VelY]+dvi_y);
-    end
-    [AGENT(1:nagent).VelY]  = dummy{:};                                                     %update y-velocity
     dummy                   = num2cell([AGENT.LocY] + [AGENT.VelY].*dt);
     [AGENT(1:nagent).LocY]  = dummy{:};                                                     %update y-position
     
-    %update direction of agents
-    Vtot                    = sqrt([AGENT.VelX].^2+[AGENT.VelY].^2);                        %velocity of agents
-    dummy                   = num2cell([AGENT.VelX]./Vtot);
-    [AGENT(1:nagent).DirX]  = dummy{:};                                                     %update x-direction
-    dummy                   = num2cell([AGENT.VelY]./Vtot);
-    [AGENT(1:nagent).DirY]  = dummy{:};                                                     %update y-direction
-        
-
     %----------------------------------------------------
     % remove successfull agents
     %----------------------------------------------------
