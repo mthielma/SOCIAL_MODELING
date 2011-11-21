@@ -17,7 +17,7 @@ dt                	= 0.05;    	% time step in [s]
 maxtime          	= 1;       % maximum time to run in [min]
 
 %physical parameter
-nagent          	= 50;      % number of agents
+nagent          	= 10;      % number of agents
 
 noUSEatPresent   	= logical(0);
 SocialForce        	= logical(1);   %switch for social force
@@ -344,9 +344,7 @@ if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
         %check if correct !!!!
 if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
 
-        
-        
-        
+
         % compute normal vector        
         NormalX         = (x_agent - x_others)./DistanceToAgents;  %DistanceToAgents should not be zero!
         NormalY         = (y_agent - y_others)./DistanceToAgents;
@@ -359,7 +357,6 @@ if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
             TooClose = false;
         end
 
-        
         %----------------------------------------------------
         % compute social forces from other agents and apply a weighting
         % function to simulate that agents only have a reduced field of
@@ -543,7 +540,7 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
     % plot
     %----------------------------------------------------
     
-    if mod(itime,1)==0
+    if mod(itime,20)==0
     
         figure(1),clf
         hold on
