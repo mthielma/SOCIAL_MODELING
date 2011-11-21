@@ -7,7 +7,6 @@
 
 % Comments:
 % - agents initially placed too close to walls become rockets! ...fc
-% - cutoff velocity is only set for x- and y-directions, not for vtot ...fc
 % 
 
 clear;
@@ -15,7 +14,7 @@ clear;
 %numerical parameter
 resolution       	= 0.1;      % resolution in [m]
 dt                	= 0.05;    	% time step in [s]
-maxtime          	= 30;       % maximum time to run in [min]
+maxtime          	= 1;       % maximum time to run in [min]
 
 %physical parameter
 nagent          	= 50;      % number of agents
@@ -270,8 +269,8 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
 if isnan(xArchForces(find(isnan(xArchForces)))); error('fc: NaN!'); end
     
-    FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces',[AGENT.LocX],[AGENT.LocY]);
-    FyArchAgents = interp2(X_Grid,Y_Grid,yArchForces',[AGENT.LocX],[AGENT.LocY]);
+    FxArchAgents = interp2(X_Grid,Y_Grid,xArchForces',[AGENT.LocX],[AGENT.LocY],'*linear');
+    FyArchAgents = interp2(X_Grid,Y_Grid,yArchForces',[AGENT.LocX],[AGENT.LocY],'*linear');
     
     dummy = num2cell(FxArchAgents);
     [AGENT(1:nagent).FxArch]       = dummy{:};
@@ -285,8 +284,8 @@ if isnan([AGENT(find(isnan([AGENT.FxArch]))).FxArch]); error('fc: NaN!'); end
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
     
-    xExitDirAgents = interp2(X_Grid,Y_Grid,xArchDir_exits',[AGENT.LocX],[AGENT.LocY]);
-    yExitDirAgents = interp2(X_Grid,Y_Grid,yArchDir_exits',[AGENT.LocX],[AGENT.LocY]);
+    xExitDirAgents = interp2(X_Grid,Y_Grid,xArchDir_exits',[AGENT.LocX],[AGENT.LocY],'*linear');
+    yExitDirAgents = interp2(X_Grid,Y_Grid,yArchDir_exits',[AGENT.LocX],[AGENT.LocY],'*linear');
     
     dummy = num2cell(xExitDirAgents);
     [AGENT(1:nagent).xExitDir]       = dummy{:};
