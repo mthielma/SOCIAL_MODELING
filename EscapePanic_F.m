@@ -17,7 +17,7 @@ dt                	= 0.05;    	% time step in [s]
 maxtime          	= 1;       % maximum time to run in [min]
 
 %physical parameter
-nagent          	= 10;      % number of agents
+nagent          	= 50;      % number of agents
 
 noUSEatPresent   	= logical(0);
 SocialForce        	= logical(1);   %switch for social force
@@ -33,7 +33,7 @@ Parameter.ExitFactor= 30;   %for adjusting strength of constant exit force field
 
 % agent parameters
 m                 	= 80;       % mass in kg
-v0               	= 1;        % maximal/desired velocity [m/s]
+v0               	= 0.5;        % maximal/desired velocity [m/s]
 cutoffVelocity   	= logical(1); %sets maximum velocity at v0
 t_acc            	= 0.5;      % acceleration time in [s]
 
@@ -52,6 +52,13 @@ ymax                = 10;
 xvec                = xmin:resolution:xmax;
 yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
+
+% set topography
+Z_Grid = 0.05.*X_Grid;
+
+% compute gradient
+[Gradient_x,Gradient_y] = gradient(Z_Grid,resolution,resolution);
+
 
 
 %convert time
@@ -216,7 +223,8 @@ cellY = num2cell(StartLocY);
 [AGENT(1:nagent).LocX]       = cellX{:};
 [AGENT(1:nagent).LocY]       = cellY{:};
 
-
+% precompute factor for slope-dependent maximum velocity
+PreFac = ([AGENT(1:nagent).VMax]'./exp(-3.5*0.05));
 
 % plot setup
 figure(1),clf
@@ -254,8 +262,9 @@ while (time <= maxtime && size(AGENT,2)>0)
     % generate tree
     tree =   kdtree(ReferencePoints);
     
-    clearvars ReferencePoints
-
+    % clearvars ReferencePoints
+    
+    
     %----------------------------------------------------
     % building locations
     %----------------------------------------------------
@@ -351,12 +360,7 @@ if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
         
         % find agents that are too close
         indTooClose     = find(DistanceToAgents_r<=0);
-        if ~isempty(indTooClose)
-            TooClose = true;
-        else
-            TooClose = false;
-        end
-
+        
         %----------------------------------------------------
         % compute social forces from other agents and apply a weighting
         % function to simulate that agents only have a reduced field of
@@ -370,7 +374,7 @@ if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
         %----------------------------------------------------
         % compute physical forces from other agents
         %----------------------------------------------------
-        if TooClose
+        if ~isempty(indTooClose)
             % normal force
             F_physAgents_normalX = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalX(indTooClose);
             F_physAgents_normalY = Parameter.k.*DistanceToAgents_r(indTooClose).*NormalY(indTooClose);
@@ -481,8 +485,20 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
     dir_x                   = v_x./v_tot;
     dir_y                   = v_y./v_tot;
     
+    % compute maximal velocity due to topgraphy
+
+    % interpolate topography gradient to agents
+    agent_gx = interp2(X_Grid,Y_Grid,Gradient_x,[AGENT.LocX],[AGENT.LocY]);
+    agent_gy = interp2(X_Grid,Y_Grid,Gradient_y,[AGENT.LocX],[AGENT.LocY]);
+    
+    % compute slope in walking direction
+    slope = sum([agent_gx' agent_gy'].*[[AGENT(:).DirX]' [AGENT(:).DirY]'],2);
+    % limit maxmimum velocity
+    PreFac = ([AGENT(1:nagent).VMax]'./exp(-3.5*0.05));
+    V_max_agent = PreFac.*exp(-3.5.*abs(slope-0.05));
+    
     % limit velocity to maximum velocity
-    v_tot                   = min(v_tot,[AGENT(1:nagent).VMax]);
+    v_tot                   = [min(v_tot',V_max_agent)]';
     dummy                   = num2cell(v_tot);
     [AGENT(1:nagent).Vel]   = dummy{:};  
     
@@ -540,7 +556,7 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
     % plot
     %----------------------------------------------------
     
-    if mod(itime,20)==0
+    if mod(itime,10)==0
     
         figure(1),clf
         hold on
