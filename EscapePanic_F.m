@@ -45,7 +45,7 @@ addpath ./kdtree_alg_OSX/
 %==========================================================================
 % initialize fine grid (if not given as argument)
 xmin                = 0;
-xmax                = 50;
+xmax                = 25;
 ymin                = 0;
 ymax                = 10;
 
@@ -72,13 +72,26 @@ maxtime = maxtime*60; %[min] => [s]
 % - location of the exit
 
 %---------------------------------------
+% create starting area map for agents
+%---------------------------------------
+StartArea = zeros(size(yvec,2),size(xvec,2));
+StartArea(find(X_Grid<5)) = 1;
+
+
+%---------------------------------------
+% create boundary map for later use
+%---------------------------------------
+BoundaryMap = zeros(size(yvec,2),size(xvec,2));
+BoundaryMap(1,:)=1; BoundaryMap(size(yvec,2),:)=1; BoundaryMap(:,1)=1; BoundaryMap(:,size(xvec,2))=1;
+
+%---------------------------------------
 % create building list (if not given)
 %---------------------------------------
 BuildingList = [
-                30 32 0 1    %boundary wall
-                30 32 9 10   %boundary wall
-                30 32 1 4   %top barriere
-                30 32 6 9   %bottom barriere
+                15 16 0 1    %boundary wall
+                15 16 9 10   %boundary wall
+                15 16 1 4.5   %top barriere
+                15 16 5.5 9   %bottom barriere
                 ]; % coordinates of building xmin xmax ymin ymax
 
 BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
@@ -96,7 +109,7 @@ end
 % create exit list (if not given)
 %---------------------------------------
 ExitList = [
-            48 50 4 6
+            24 25 4 6
            ]; % coordinates of exits: xmin xmax ymin ymax
 
 ExitList(find(ExitList(:,1)>=xmax),:)   = []; %if exit fully outside domain: remove it!
@@ -131,7 +144,7 @@ yArchForces = yArchForces + yArchForces_walls;
 
 checkFigure = logical(1);
 if checkFigure
-    figure(11)
+    figure(1),clf
     quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
     title('architecture force')
     xlabel('x [m]')
@@ -157,7 +170,7 @@ yArchForces = yArchForces + yArchForces_exits;
 
 checkFigure = logical(1);
 if checkFigure
-    figure(11)
+    figure(1),clf
     quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
     title('architecture force')
     xlabel('x [m]')
@@ -201,11 +214,11 @@ VelY                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).D
 [AGENT(1:nagent).VelY]      = VelY{:};
 
 
-cell_array = num2cell((0.5+ (rand(nagent,1))*0.2)./2);
+cell_array = num2cell((0.8+ (rand(nagent,1))*0.2)./2);
 [AGENT(1:nagent).Size]   = cell_array{:};
 
 % get the indices in BuildingMap that correspond to a road
-[iy,ix] = find(BuildingMap==0 & ExitMap==0);
+[iy,ix] = find(StartArea==1 & BoundaryMap==0 & BuildingMap==0 & ExitMap==0);
 NoRoad  = length(iy);
 % create random indices (make sure that there are no duplicates)
 indices = randperm(NoRoad);
@@ -264,14 +277,12 @@ while (time <= maxtime && size(AGENT,2)>0)
     
     % clearvars ReferencePoints
     
-    
     %----------------------------------------------------
     % building locations
     %----------------------------------------------------
     x_Buildings = X_Grid(BuildingMap==1);
     y_Buildings = Y_Grid(BuildingMap==1);
 
-    
     %----------------------------------------------------
     % compute forces from buildings on all agents (just interpolate the
     % precomputed force field to the agents)
@@ -302,8 +313,6 @@ if isnan([AGENT(find(isnan([AGENT.FxArch]))).FxArch]); error('fc: NaN!'); end
     [AGENT(1:nagent).yExitDir]       = dummy{:};
     
 if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
-
-
 
 
     %----------------------------------------------------
@@ -359,14 +368,14 @@ if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
         NormalY         = (y_agent - y_others)./DistanceToAgents;
         
         % find agents that are too close
-        indTooClose     = find(DistanceToAgents_r<=0);
+        indTooClose     = find(DistanceToAgents_r>=0);
         
         %----------------------------------------------------
         % compute social forces from other agents and apply a weighting
         % function to simulate that agents only have a reduced field of
         % vision
         %----------------------------------------------------
-        F_socAgents     = Parameter.A.*exp(DistanceToAgents_r)./Parameter.B;
+        F_socAgents     = Parameter.A.*exp(DistanceToAgents_r./Parameter.B);
         F_socAgentsX    = F_socAgents.*NormalX;
         F_socAgentsY    = F_socAgents.*NormalY;
 
@@ -387,21 +396,39 @@ if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
 %             DirXOthers  = [AGENT(pointsidx(indTooClose)).DirX];
 %             DirYOthers  = [AGENT(pointsidx(indTooClose)).DirY];
             
-%             DeltaV      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX' ...
+%             DeltaVt      = (VelOthers.*DirXOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirX]).*TangentX' ...
 %                         + (VelOthers.*DirYOthers-[AGENT(iagent).Vel].*[AGENT(iagent).DirY]).*TangentY';    
-            DeltaV      = ([AGENT(indTooClose).VelX]-[AGENT(iagent).VelX]).*TangentX' ...
+            DeltaVt      = ([AGENT(indTooClose).VelX]-[AGENT(iagent).VelX]).*TangentX' ...
                         + ([AGENT(indTooClose).VelY]-[AGENT(iagent).VelY]).*TangentY';
+%             DeltaVt      = ([AGENT(indTooClose).Vel]-[AGENT(iagent).Vel]).*TangentX' ...
+%                         + ([AGENT(indTooClose).Vel]-[AGENT(iagent).Vel]).*TangentY';
                     
-            F_physAgents_tangentX = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentX';
-            F_physAgents_tangentY = Parameter.kappa.*[DistanceToAgents_r(indTooClose)]'.*DeltaV.*TangentY';
+            F_physAgents_tangentX = Parameter.kappa.*DistanceToAgents_r(indTooClose).*DeltaVt'.*TangentX;
+            F_physAgents_tangentY = Parameter.kappa.*DistanceToAgents_r(indTooClose).*DeltaVt'.*TangentY;
+        else
+            F_physAgents_normalX = 0;
+            F_physAgents_normalY = 0;
+            F_physAgents_tangentX = 0;
+            F_physAgents_tangentY = 0;
         end
+        
+%         F_physAgents_normalX = 0;
+%         F_physAgents_normalY = 0;
+%         F_physAgents_tangentX = 0;
+%         F_physAgents_tangentY = 0;
+        
+        
+        
+        
 if isnan([AGENT(find(isnan([AGENT.FxSoc]))).FxSoc]); error('fc: NaN!'); end
 if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         
-        %add social forces to agents
-        dummy = num2cell( sum(F_socAgentsX) );  %add all social x-forces
+        %----------------------------------------------------
+        % add social and physical forces to agent
+        %----------------------------------------------------
+        dummy = num2cell( sum(F_socAgentsX) + sum(F_physAgents_normalX) + sum(F_physAgents_tangentX) );  %add all social x-forces
         [AGENT(iagent).FxSoc] = dummy{:};
-        dummy = num2cell( sum(F_socAgentsY) );  %add all social y-forces
+        dummy = num2cell( sum(F_socAgentsY) + sum(F_physAgents_normalY) + sum(F_physAgents_tangentY) );  %add all social y-forces
         [AGENT(iagent).FySoc] = dummy{:};
         
 if isnan([AGENT(find(isnan([AGENT.FxSoc]))).FxSoc]); error('fc: NaN!'); end
