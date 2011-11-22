@@ -524,29 +524,12 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
     %those who arrived in the exits
     jj=0;
     for i=1:size(ExitList,1)
-%         AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
-%             & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4)  ) = [];
-        
-        for j=1:size(LocX,2)
-            jj=jj+1;
-            %remove agents that arrived at the exits
-            if ( LocX(jj)>=ExitList(i,1) && LocX(jj)<=ExitList(i,2) ...
-                    && LocY(jj)>=ExitList(i,3) && LocY(jj)<=ExitList(i,4) )
-                AGENT(jj)=[]; LocX(jj)=[]; LocY(jj)=[];
-                jj=jj-1; %adjust to deleting a value
-                continue
-            end
-            %remove agents outside model domain
-            if LocX(jj)>xmax || LocX(jj)<xmin || LocY(jj)>ymax || LocY(jj)>ymax
-                AGENT(jj)=[]; LocX(jj)=[]; LocY(jj)=[];
-                display(['AGENT ',num2str(jj),' removed!'])
-                jj=jj-1; %adjust to deleting a value
-                continue
-            end
-    
-        end
+        AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
+            & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4)  ) = [];
     end
-    
+    %remove agents outside model domain
+    AGENT(   [AGENT.LocX]>xmax & [AGENT.LocX]<xmin ...
+        & [AGENT.LocY]>=ymax & [AGENT.LocY]<ymin  ) = [];
     
     nagent = size(AGENT,2); %update number of agents after removing some of them
     cell_array = num2cell(1:nagent); [AGENT(1:nagent).num] = cell_array{:}; %update correct numbering from 1:nagent
