@@ -14,7 +14,7 @@ clear;
 %numerical parameter
 resolution       	= 0.1;      % resolution in [m]
 dt                	= 0.05;    	% time step in [s]
-maxtime          	= 1;       % maximum time to run in [min]
+maxtime          	= 2000;       % maximum time to run in [min]
 
 %physical parameter
 nagent          	= 50;      % number of agents
@@ -29,7 +29,7 @@ Parameter.kappa  	= 2.4e5;
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 30;   %for adjusting strength of constant exit force field
+Parameter.ExitFactor= 35;   %for adjusting strength of constant exit force field [30]
 
 % agent parameters
 m                 	= 80;       % mass in kg
@@ -54,7 +54,7 @@ yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
 % set topography
-Z_Grid = 0.05.*X_Grid;
+Z_Grid = 0.00.*X_Grid;
 
 % compute gradient
 [Gradient_x,Gradient_y] = gradient(Z_Grid,resolution,resolution);
