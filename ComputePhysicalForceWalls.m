@@ -3,7 +3,7 @@ function [FxPhysWall,FyPhysWall] = ComputePhysicalForceWalls(x_agent,y_agent,age
 % get minimum distance to another wall
 WallDist              =    sqrt((x_building-x_agent).^2+(y_building-y_agent).^2); 	%between agent's center of mass and wall boundary
 [minWallDist,ind]     = min(WallDist);
-WallDist              = minWallDist-agent_size;                            %between agent's boundary and wall boundary
+WallDist              = -minWallDist+agent_size;                            %between agent's boundary and wall boundary
 
 x_building = x_building(ind);
 y_building = y_building(ind);
@@ -15,14 +15,17 @@ Normal(:,2)         = (y_agent - y_building)./WallDist;
 Tangent(:,1)         = -Normal(:,2);
 Tangent(:,2)         = Normal(:,1);
 
-if WallDist<0
+if WallDist>=0
     % normal force
-    F_physWall_normalX = Parameter.k.*WallDist.*Normal(:,1);
-    F_physWall_normalY = Parameter.k.*WallDist.*Normal(:,2);
+    F_physWall_normalX = 2*Parameter.k.*WallDist.*Normal(:,1);
+    F_physWall_normalY = 2*Parameter.k.*WallDist.*Normal(:,2);
     % tangential force
     DeltaV      = (-velx_agent).*Tangent(:,1)+(-vely_agent).*Tangent(:,2);
-    F_physWall_tangentX = Parameter.kappa.*WallDist.*DeltaV.*Tangent(:,1);
-    F_physWall_tangentY = Parameter.kappa.*WallDist.*DeltaV.*Tangent(:,2);
+%     F_physWall_tangentX = Parameter.kappa.*WallDist.*DeltaV.*Tangent(:,1);
+%     F_physWall_tangentY = Parameter.kappa.*WallDist.*DeltaV.*Tangent(:,2);
+    F_physWall_tangentX = 0;
+    F_physWall_tangentY = 0;
+    
     % add physical forces
     FxPhysWall = F_physWall_normalX + F_physWall_tangentX;
     FyPhysWall = F_physWall_normalY + F_physWall_tangentY;
