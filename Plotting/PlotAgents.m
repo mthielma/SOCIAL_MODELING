@@ -11,7 +11,7 @@ function PlotAgents(nagent,AGENT,Color)
 % Marcel Thielmann Oct 2011
 
 for i = 1:nagent
-    radius = AGENT(i).Size/2;
+    radius = AGENT(i).Size;
     x      = AGENT(i).LocX;
     y      = AGENT(i).LocY;
     try
