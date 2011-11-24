@@ -44,3 +44,8 @@ Helbing, D., Farkas, I. & Vicsek, T., 2000. Simulating dynamical features of esc
 Helbing, D. & Molnar, P., 1995. Social Force Model for Pedestrian Dynamics, Phys Rev E, 51, 4282-4286.
 Kneidl, A. & Borrmann, A., 2011. How Do Pedestrians find their Way? Results of an experimental study with students compared to simulation results. in Conference on Emergency Evacuation, Warsaw, Poland.
 
+Fast marching algorithm
+http://www.mathworks.com/matlabcentral/fileexchange/24531
+
+kdtree
+http://www.mathworks.com/matlabcentral/fileexchange/7030
