@@ -13,27 +13,29 @@ clear;
 
 %numerical parameter
 resolution       	= 0.1;      % resolution in [m]
-dt                	= 0.05;    	% time step in [s]
-maxtime          	= 1;       % maximum time to run in [min]
+dt                	= 0.01;    	% time step in [s]
+maxtime          	= 3;       % maximum time to run in [min]
+pert                = 0.05;     % maximal amplitude of social agent forces perturbation of 
 
 %physical parameter
-nagent          	= 50;      % number of agents
+nagent          	= 20;      % number of agents
 
 noUSEatPresent   	= logical(0);
 SocialForce        	= logical(1);   %switch for social force
 
 % physical forces parameters (Helbing,2000)
-Parameter.k         = 1.2e5;
+%Parameter.k         = 1.2e5;
+Parameter.k         = 1.2e7;
 Parameter.kappa  	= 2.4e5;
 
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 30;   %for adjusting strength of constant exit force field
+Parameter.ExitFactor= 1e6;   %for adjusting strength of constant exit force field
 
 % agent parameters
 m                 	= 80;       % mass in kg
-v0               	= 0.5;        % maximal/desired velocity [m/s]
+v0               	= 3;        % maximal/desired velocity [m/s]
 cutoffVelocity   	= logical(1); %sets maximum velocity at v0
 t_acc            	= 0.5;      % acceleration time in [s]
 
@@ -42,10 +44,12 @@ addpath ./DecisionStrategy/
 addpath ./WallForces/
 addpath ./Plotting/
 addpath ./kdtree_alg_OSX/
+addpath ./toolbox_fast_marching/
+addpath ./toolbox_fast_marching/toolbox/
 %==========================================================================
 % initialize fine grid (if not given as argument)
 xmin                = 0;
-xmax                = 25;
+xmax                = 20;
 ymin                = 0;
 ymax                = 10;
 
@@ -54,12 +58,10 @@ yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
 % set topography
-Z_Grid = (0.01.*X_Grid+0.08.*Y_Grid)*0;
+Z_Grid = 0*(0.01.*X_Grid+0.08.*Y_Grid);
 
 % compute gradient
 [Gradient_x,Gradient_y] = gradient(Z_Grid,resolution,resolution);
-
-
 
 %convert time
 maxtime = maxtime*60; %[min] => [s]
@@ -89,10 +91,12 @@ BoundaryMap(1,:)=1; BoundaryMap(size(yvec,2),:)=1; BoundaryMap(:,1)=1; BoundaryM
 % create building list (if not given)
 %---------------------------------------
 BuildingList = [
-                15 16 0 1    %boundary wall
-                15 16 9 10   %boundary wall
+                 0 16 0 1    %boundary wall
+                 0 16 9 10   %boundary wall
+               % 12 14 4 6
                 15 16 1 4.5   %top barriere
-                15 16 5.5 9   %bottom barriere
+                15 16 5.5 10   %bottom barriere
+                 
                 ]; % coordinates of building xmin xmax ymin ymax
 
 BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
@@ -110,9 +114,14 @@ end
 % create exit list (if not given)
 %---------------------------------------
 ExitList = [
-            24 25 4 6
+            
+            19 20 4.5 5.5
            ]; % coordinates of exits: xmin xmax ymin ymax
 
+Xexit = [(ExitList(:,2)+ExitList(:,1))/2]; 
+Yexit = [(ExitList(:,3)+ExitList(:,4))/2]; 
+       
+       
 ExitList(find(ExitList(:,1)>=xmax),:)   = []; %if exit fully outside domain: remove it!
 ExitList(find(ExitList(:,3)>=ymax),:)   = []; %if exit fully outside domain: remove it!
 ExitList(find(ExitList(:,2)>xmax),2)    = xmax; %adjust exit to domain boundary
@@ -124,6 +133,38 @@ for i=1:size(ExitList,1)
     ExitMap(X_Grid>=ExitList(i,1) & X_Grid<=ExitList(i,2) & Y_Grid>=ExitList(i,3) & Y_Grid<=ExitList(i,4)) = 1;
 end
 
+
+% set speed map
+F = ones(size(X_Grid))*1;
+% add buildings to map
+for i=1:size(BuildingList,1)
+    F(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = 0;
+end
+
+
+[indx,indy] = find(X_Grid==Xexit & Y_Grid==Yexit);
+[D]=msfm(F, [indx indy]');
+figure(1),clf
+pcolor(X_Grid,Y_Grid,D),shading interp
+
+[Dgradx,Dgrady] = gradient(D,resolution,resolution);
+
+Dgradtot = sqrt(Dgradx.^2+Dgrady.^2);
+Dgradx   = -Dgradx./Dgradtot;
+Dgrady   = -Dgrady./Dgradtot;
+
+
+figure(99),clf
+pcolor(X_Grid,Y_Grid,Dgradx),shading interp
+figure(98),clf
+pcolor(X_Grid,Y_Grid,Dgrady),shading interp
+
+
+
+figure(2),clf
+pcolor(X_Grid,Y_Grid,double(D)),shading interp, colorbar
+hold on
+quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
@@ -153,21 +194,21 @@ if checkFigure
     axis equal; axis tight 
 end
 
-%----------------------------------------------------
-% compute forces from exits (static)
-%----------------------------------------------------
-ArchGeometry	= ExitList;
-ARCH.format     = 'list';                   %'list' or 'map'
-ARCH.type    	= 2;                        %1: repulsive / 2: attractive
-Spreading       = {'exp' 'linear' 'const'};
-ARCH.spreading  = Spreading{3};
-ARCH.force      = 0.2;                      %1 is the same as wall force
-
-[xArchForces_exits, yArchForces_exits, xArchDir_exits, yArchDir_exits] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
-
-%add contribution of object(s)
-xArchForces = xArchForces + xArchForces_exits;
-yArchForces = yArchForces + yArchForces_exits;
+% %----------------------------------------------------
+% % compute forces from exits (static)
+% %----------------------------------------------------
+% ArchGeometry	= ExitList;
+% ARCH.format     = 'list';                   %'list' or 'map'
+% ARCH.type    	= 2;                        %1: repulsive / 2: attractive
+% Spreading       = {'exp' 'linear' 'const'};
+% ARCH.spreading  = Spreading{3};
+% ARCH.force      = 0.2;                      %1 is the same as wall force
+% 
+% [xArchForces_exits, yArchForces_exits, xArchDir_exits, yArchDir_exits] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
+% 
+% %add contribution of object(s)
+% xArchForces = xArchForces + xArchForces_exits;
+% yArchForces = yArchForces + yArchForces_exits;
 
 checkFigure = logical(1);
 if checkFigure
@@ -178,9 +219,6 @@ if checkFigure
     ylabel('y [m]')
     axis equal; axis tight 
 end
-
-
-
 
 %==========================================================================
 % initialize agents in buildings and on streets
@@ -195,14 +233,14 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).name]      = cell_array{:};
 [AGENT(1:nagent).num]       = cell_array{:};
 [AGENT(1:nagent).VMax]      = deal(v0);
-[AGENT(1:nagent).BoxSize]   = deal(10); % the agent is only influenced by 
+[AGENT(1:nagent).BoxSize]   = deal(5); % the agent is only influenced by other agents inside this box
 [AGENT(1:nagent).Vel]       = deal(0); % initial velocity (to be randomized)
 
 [AGENT(1:nagent).VelX]      = deal(0); % initial velocity X
 [AGENT(1:nagent).VelY]      = deal(0); % initial velocity Y
 
-[AGENT(1:nagent).DirX]      = deal(1./sqrt(2)); % x-direction vector
-[AGENT(1:nagent).DirY]      = deal(1./sqrt(2)); % y-direction vector
+[AGENT(1:nagent).DirX]      = deal(1); % x-direction vector
+[AGENT(1:nagent).DirY]      = deal(0); % y-direction vector
 
 [AGENT(1:nagent).FxSoc]  	= deal(0); % initial social force X
 [AGENT(1:nagent).FySoc] 	= deal(0); % initial social force Y
@@ -217,8 +255,16 @@ VelY                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).D
 [AGENT(1:nagent).VelY]      = VelY{:};
 
 
-cell_array = num2cell((0.5+ (rand(nagent,1))*0.2)./2);
+cell_array = num2cell((0.5+ (rand(nagent,1))*0.1)./2);
 [AGENT(1:nagent).Size]   = cell_array{:};
+
+% [AGENT(1:nagent).Size]   = deal(0.5/2);
+% 
+% AGENT(1).LocX = 3;
+% AGENT(1).LocY = 5+0.2; 
+% 
+% AGENT(2).LocX = 3;
+% AGENT(2).LocY = 5-0.2;
 
 % get the indices in BuildingMap that correspond to a road
 [iy,ix] = find(StartArea==1 & BoundaryMap==0 & BuildingMap==0 & ExitMap==0);
@@ -306,13 +352,27 @@ while (time <= maxtime && size(AGENT,2)>0)
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-    [xExitDirAgents,yExitDirAgents] = ComputeSocialForcesStatic(AGENT,X_Grid,Y_Grid,xArchDir_exits,yArchDir_exits,Parameter);
+    xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
+    yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*linear');
 
-    
     dummy = num2cell(xExitDirAgents);
     [AGENT(1:nagent).xExitDir]       = dummy{:};
     dummy = num2cell(yExitDirAgents);
     [AGENT(1:nagent).yExitDir]       = dummy{:};
+    
+    
+%     % set the destination direction (later on, this can be done in a more sophisticated manner)
+%     DistExitX = XExit([AGENT.DestinationNode])-[AGENT.LocX];
+%     DistExitY = YExit([AGENT.DestinationNode])-[AGENT.LocY];
+%     DistExitTot = sqrt(DistExitX.*DistExitX+DistExitY.*DistExitY);
+%     
+%     xexitdir = num2cell(DistExitX./DistExitTot);
+%     [AGENT(1:nagent).xExitDir] = xexitdir{:};
+%     yexitdir = num2cell(DistExitY./DistExitTot);
+%     [AGENT(1:nagent).yExitDir] = yexitdir{:};
+%     % ExitForceX = Parameter.ExitFactor*Parameter.A.*DistExitX./DistExitTot;
+%     % ExitForceY = Parameter.ExitFactor*Parameter.A.*DistExitY./DistExitTot;
+
     %----------------------------------------------------
     % agent loop
     iagent=0; nagent2 = nagent;
@@ -357,7 +417,7 @@ while (time <= maxtime && size(AGENT,2)>0)
 
         if num_others >0
             % find agents that are too close
-            indTooClose     = find(DistanceToAgents>=0);
+            indTooClose     = find(DistanceToAgents>0);
             
             %----------------------------------------------------
             % compute social forces from other agents and apply a weighting
@@ -402,8 +462,8 @@ while (time <= maxtime && size(AGENT,2)>0)
         AGENT(iagent).FyPhysWall     = sum(FyPhysWall);
         
         % add some random noise on the social force from other agents
-        AGENT(iagent).FxSocialAgents = sum(FxAgentsSocial)*(1+0.1*rand(1));
-        AGENT(iagent).FySocialAgents = sum(FyAgentsSocial)*(1+0.1*rand(1));
+        AGENT(iagent).FxSocialAgents = sum(FxAgentsSocial)*(1+ pert*(-0.5+rand(1)) );
+        AGENT(iagent).FySocialAgents = sum(FyAgentsSocial)*(1+ pert*(-0.5+rand(1)) );
     end
 
    
@@ -426,14 +486,19 @@ while (time <= maxtime && size(AGENT,2)>0)
     V_max_agent = PreFac.*exp(-3.5.*abs(slope+0.05));
     
     
+    % compute force from exits
+    xForceExit = [AGENT(1:nagent).xExitDir].*Parameter.ExitFactor;
+    yForceExit = [AGENT(1:nagent).yExitDir].*Parameter.ExitFactor;
+    
+    
     % velocity change in x-direction
     v0_x                    = V_max_agent .* [AGENT(1:nagent).xExitDir]';
-    dvi_x                   = ( (v0_x - [AGENT.VelX]')./t_acc + [AGENT.FxSocialWalls]'./m + [AGENT.FxSocialAgents]'./m + [AGENT(iagent).FxPhysAgents]'./m + [AGENT(iagent).FxPhysWall]'./m) .*dt;	%change of velocity
+    dvi_x                   = ( (v0_x - [AGENT.VelX]')./t_acc + [AGENT.FxSocialWalls]'./m + [AGENT.FxSocialAgents]'./m + [AGENT.FxPhysAgents]'./m + [AGENT.FxPhysWall]'./m + xForceExit'./m) .*dt;	%change of velocity
     v_x                     = v0_x + dvi_x;
     
     % velocity change in y-direction
     v0_y                    = V_max_agent .* [AGENT(1:nagent).yExitDir]';
-    dvi_y                   = ( (v0_y - [AGENT.VelY]')./t_acc + [AGENT.FySocialWalls]'./m + [AGENT.FySocialAgents]'./m + [AGENT(iagent).FyPhysAgents]'./m + [AGENT(iagent).FyPhysWall]'./m) .*dt;	%change of velocity
+    dvi_y                   = ( (v0_y - [AGENT.VelY]')./t_acc + [AGENT.FySocialWalls]'./m + [AGENT.FySocialAgents]'./m + [AGENT.FyPhysAgents]'./m + [AGENT.FyPhysWall]'./m + yForceExit'./m) .*dt;	%change of velocity
     v_y                     = v0_y + dvi_y;
     
     % compute total velocity and direction of agent
@@ -473,6 +538,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     dummy = num2cell(dir_y);
     [AGENT(1:nagent).DirY]  = dummy{:};
     
+    
     %----------------------------------------------------
     % remove successfull agents
     %----------------------------------------------------
@@ -481,7 +547,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     
     %those who arrived in the exits
     jj=0;
-    for i=1:size(ExitList,1)
+    for i=1%1:size(ExitList,1)
         AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
             & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4)  ) = [];
     end
@@ -498,12 +564,12 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     
     if mod(itime,5)==0
-    
+%     
 %         PlotAgents3D(X_Grid,Y_Grid,Z_Grid,AGENT);
 %         filename = ['Escape',num2str(itime,'%5.6d')];
 %         print(filename,'-djpeg90','-r300')
-%         
-        figure(2),clf
+        
+        figure(1),clf
         hold on
         %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
         % plot topo
