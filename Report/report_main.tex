@@ -1,0 +1,190 @@
+\documentclass
+[
+a4paper,                      % Format A4
+twoside,					  % double sided, alternative: oneside
+11pt,                         % font size
+abstract,		      % include if you want to use the abstract environment (if there is an abstract)
+fleqn,                        % equations are aligned on the left side, comment if you want centered equations
+%BCOR=5mm,                     % indention on left side because of the binding
+%cleardoubleplain              % page numbers are printed on empty pages, comment if this is not desired
+]
+{scrartcl} % KOMA script package for scientific articles
+%-----------------------------------------------------------------------------------
+% Packages (do not touch if you don't know what you are doing)
+%-----------------------------------------------------------------------------------
+% symbols and orthography
+\usepackage[latin1]{inputenc} % symbol set 
+\usepackage[english]{babel}   	% englisch orthography
+%\usepackage[french]{babel}	   % french					
+%\usepackage[ngerman]{babel}   % german
+\usepackage[T1]{fontenc}      % enables "Umlaute" (not really needed for English)
+\usepackage[scaled=.90]{helvet}
+%----------------------
+% graphics
+\usepackage{graphicx}         	% package to include graphics (pdf, png, jpg)
+\usepackage{subfig}			% package for subfigures
+\usepackage{float}            		% Option [H] for fixing floats where you want them to be (not recommended unless you really need it)
+%------------------------------
+% math packages
+\usepackage[cmex10]{amsmath}  
+\usepackage{amstext}          % f�r Klartext via \text{} in Formeln
+\usepackage{amsfonts}         % f�r komplexere Formeln (Mengensymbole ...)
+\usepackage{amssymb}          % f�r komplexere Formeln (Mengensymbole ...)
+\usepackage{bm}               % bold math use \bm{}
+
+%--------------------------------
+% other packages
+\usepackage{enumerate}        % better listings
+\usepackage{booktabs}         % nicer tables (see manual for usage)
+\usepackage{textcomp}         % for \textdegree , \textcelsius , sometimes causes problems
+%\usepackage{algorithm}        % for including algorithms
+%\usepackage{algorithmic}      % same as above, but other package (check the manual for usage) 
+%\usepackage{theorem}          % for theorems
+\usepackage{pdfpages}         % include whole pages from pdf files
+\usepackage{parskip}          % insert an empty line between paragraphs instead of an indented beginning
+\usepackage[right]{eurosym}   % Euro symbol
+\usepackage[hyphens]{url}     %enables line breaks for URLs \url{http://www}
+% set border size of page (comment if you want Latex to do this)
+\usepackage[inner=3cm,%
+								outer=2cm,%
+								top=2.7cm,%
+								bottom=3.2cm]{geometry}
+\usepackage{setspace}		  % for a different line spacing
+%-----------------------------------------------------------------------------------
+% other stuff (do not touch, it is good that way !)
+%-----------------------------------------------------------------------------------
+\sloppy                   % avoids lines that are too long on the right side
+% avoid "orphans"
+\clubpenalty = 10000
+% avoid "widows"
+\widowpenalty = 10000
+% this makes the table of content etc. look better
+\renewcommand{\dotfill}{\leaders\hbox to 5pt{\hss.\hss}\hfill}
+
+% avoid indentation of line after a paragraph
+\setlength{\parindent}{0pt}
+%-----------------------------------------------------------------------------------
+%-----------------------------------------------------------------------------------
+
+%Header and footer settings
+% 
+\usepackage{scrpage2} % see manual for usage
+\automark[section]{section}
+\ofoot{\pagemark} % ofoo
+\ifoot{SOMETHING} % ofoo
+%\cfoot[]{\pagemark}
+%\ihead{}
+%\ohead{}
+%\ohead{\headmark}
+\setheadsepline{0.5pt}
+\setfootsepline{0.5pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% References with BibTeX
+%
+\usepackage{natbib}
+\bibliographystyle{apalike}
+%\bibliographystyle{elsart-harv}
+\setlength{\bibsep}{3mm}                  % spacing of the entries in the references
+%
+% look at the chapterbib package if you want to use a separate bibliography for each chapter
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% some other stuff...
+%
+\setlength{\unitlength}{1cm}
+\setlength{\oddsidemargin}{0.3cm}
+\setlength{\evensidemargin}{0.3cm}
+\setlength{\textwidth}{15.5cm}
+\setlength{\topmargin}{0cm}
+\setlength{\textheight}{22cm}
+\columnsep 0.5cm
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% just compile particular parts
+%
+%\includeonly{./SUMMARY/summary} % put in here the path of the file you want to include only
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% define own commands
+\newcommand{\brac}[1]{\left(#1\right)}		
+
+
+%-----------------------------------------------------------------------------------
+% STASRT OF THE ACTUAL DOCUMENT
+%-----------------------------------------------------------------------------------
+\begin{document}
+
+\pagestyle{empty}
+\include{proposal_titel}
+\input{proposal_signatures}
+\cleardoublepage
+
+\setcounter{page}{1}
+
+\tableofcontents 
+
+%\listoffigures
+%\addcontentsline{toc}{chapter}{List of figures}
+\clearpage
+
+%\listoftables
+%\addcontentsline{toc}{chapter}{List of tables}
+%\cleardoublepage
+
+%\listofalgorithms
+%\addcontentsline{toc}{chapter}{List of algorithms}
+
+
+
+
+%
+\onehalfspacing				% 1.5 line spacing
+%\singlespacing				% single line spacing
+
+\pagestyle{scrheadings}		% pagenumbering using the scrpage2 settings
+
+
+%------------------------------------------------------------
+% The following structure is not mandatory!!!!
+%------------------------------------------------------------
+
+% Abstract: if you want to put this in, you have to activate the abstract option at the top (documentclass options)
+%\begin{abstract}
+ 
+%\end{abstract}
+
+
+% Introduction
+%---------------------
+% you can either write directly in here or use separate files that are then included using \include or \input (see manual for the difference between both)
+
+% State of research
+%---------------------
+
+
+% PhD thesis:
+%---------------------
+
+% Publication and Presentations
+%---------------------
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% References
+\addcontentsline{toc}{section}{References}
+\bibliography{bib-File}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Appendix
+%\begin{appendix}
+
+ %\end{appendix}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\end{document}
