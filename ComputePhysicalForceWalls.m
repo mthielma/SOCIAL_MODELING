@@ -1,9 +1,9 @@
 function [FxPhysWall,FyPhysWall] = ComputePhysicalForceWalls(x_agent,y_agent,agent_size,velx_agent,vely_agent,x_building,y_building,Parameter)
 
 % get minimum distance to another wall
-WallDist              =    sqrt((x_building-x_agent).^2+(y_building-y_agent).^2); 	%between agent's center of mass and wall boundary
-[minWallDist,ind]     = min(WallDist);
-WallDist              = -minWallDist+agent_size;                            %between agent's boundary and wall boundary
+WallDist2             =    (x_building-x_agent).*(x_building-x_agent)+(y_building-y_agent).*(y_building-y_agent); 	% squared distance between agent's center of mass and wall boundary
+[minWallDist2,ind]     = min(WallDist2);
+WallDist              = -sqrt(minWallDist2)+agent_size;                            %between agent's boundary and wall boundary
 
 x_building = x_building(ind);
 y_building = y_building(ind);
