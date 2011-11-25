@@ -12,13 +12,16 @@
 clear;
 
 %numerical parameter
-resolution       	= 0.5;      % resolution in [m]
+resolution       	= 0.25;      % resolution in [m]
 dt                	= 0.01;    	% time step in [s]
 maxtime          	= 3;       % maximum time to run in [min]
 pert                = 0.05;     % maximal amplitude of social agent forces perturbation of 
+decision_time       = 0.5;      % after which time does an agent redecide on its path?
+decision_step       = round(decision_time/dt);
+agent_sensitivity   = 0.25; % reduce velocity by which factor if agent is on node?
 
 %physical parameter
-nagent          	= 200;      % number of agents
+nagent          	= 500;      % number of agents
 
 noUSEatPresent   	= logical(0);
 SocialForce        	= logical(1);   %switch for social force
@@ -31,7 +34,7 @@ Parameter.kappa  	= 2.4e5;
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 8e5;   %for adjusting strength of constant exit force field
+Parameter.ExitFactor= 5e6;   %for adjusting strength of constant exit force field
 
 % agent parameters
 m                 	= 80;       % mass in kg
@@ -44,7 +47,7 @@ addpath ./DecisionStrategy/
 addpath ./WallForces/
 addpath ./Plotting/
 addpath ./kdtree_alg_OSX/
-addpath ./FastMarching_version3b
+addpath ./FastMarching_version3b, add_function_paths();
 %==========================================================================
 % initialize fine grid (if not given as argument)
 xmin                = 0;
@@ -112,8 +115,7 @@ BuildingList = [42 53 42 53;...
                 42 57 23 35;...
                  0 28 92 100;...
                  32 97 92 100;...
-                 102 197 92 97]; % coordinates of building xmin xmax ymin ymax            
-            
+                 102 197 92 97]; % coordinates of building xmin xmax ymin ymax
 
 BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
 BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside domain: remove it!
@@ -131,7 +133,7 @@ end
 %---------------------------------------
 ExitList = [
             
-            99 100 99 100
+            98 100 98 100
            ]; % coordinates of exits: xmin xmax ymin ymax
 
 Xexit = [(ExitList(:,2)+ExitList(:,1))/2]; 
@@ -149,7 +151,7 @@ for i=1:size(ExitList,1)
     ExitMap(X_Grid>=ExitList(i,1) & X_Grid<=ExitList(i,2) & Y_Grid>=ExitList(i,3) & Y_Grid<=ExitList(i,4)) = 1;
 end
 
-[Dgradx,Dgrady] = ComputeShortestPathGlobal(BuildingList,Xexit,Yexit,X_Grid,Y_Grid,Gradient_x,Gradient_y,v0,resolution);
+%[Dgradx,Dgrady] = ComputeShortestPathGlobal(BuildingList,Xexit,Yexit,X_Grid,Y_Grid,Gradient_x,Gradient_y,v0,resolution);
 
 %----------------------------------------------------
 % compute forces from buildings (static)
@@ -338,18 +340,36 @@ while (time <= maxtime && size(AGENT,2)>0)
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-    xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
-    yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*linear');
-
-    dummy = num2cell(xExitDirAgents);
-    [AGENT(1:nagent).xExitDir]       = dummy{:};
-    dummy = num2cell(yExitDirAgents);
-    [AGENT(1:nagent).yExitDir]       = dummy{:};
+    if (mod(itime,decision_step)==0 || itime==1)
+        [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingList,Xexit,Yexit,X_Grid,Y_Grid,Gradient_x,Gradient_y,v0,resolution,AGENT,nagent,agent_sensitivity);
+        xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*nearest');
+        yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*nearest');
+        
+        dummy = num2cell(xExitDirAgents);
+        [AGENT(1:nagent).xExitDir]       = dummy{:};
+        dummy = num2cell(yExitDirAgents);
+        [AGENT(1:nagent).yExitDir]       = dummy{:};
+    end
     
-    %---------------------------------------------------------------
-    % compute the distance to the closest building for all agents
-    %---------------------------------------------------------------
+    %----------------------------------------------------------------
+    % compute the distance of all agents to the building polygons
+    %----------------------------------------------------------------
     
+    
+%     for i = 1:size(BuildingList,1)
+%         % generate polygon data for buildings
+%         x(1) = BuildingList(i,1);
+%         x(2) = BuildingList(i,1);
+%         x(3) = BuildingList(i,2);
+%         x(4) = BuildingList(i,2);
+%         
+%         y(1) = BuildingList(i,3);
+%         y(2) = BuildingList(i,4);
+%         y(3) = BuildingList(i,4);
+%         y(4) = BuildingList(i,3);
+%         
+%         [d,x_poly,y_poly] = p_poly_dist([AGENT.LocX],[AGENT.LocY],x,y);
+%     end
     
     
 %     % set the destination direction (later on, this can be done in a more sophisticated manner)
@@ -573,17 +593,34 @@ while (time <= maxtime && size(AGENT,2)>0)
 %         caxis([0 0.5])
 %         colormap('Bone')
 %         colormap(flipud(colormap))
-        
+        subplot(121)
         % plot buildings
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
         PlotAgents(nagent,AGENT,'y');
-        
-        % plot roads
-%         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
+         box on
+        title(['time = ',num2str(time/60,3),' min'])
+        subplot(222)
+        % plot buildings
+        PlotBuildings(BuildingList,'r');
+        PlotBuildings(ExitList,'g');
+        % plot agents
+        PlotAgents(nagent,AGENT,'y');
+        axis([40 50 50 60])
+        axis equal
+        subplot(224)
+        % plot buildings
+        PlotBuildings(BuildingList,'r');
+        PlotBuildings(ExitList,'g');
+        % plot agents
+        PlotAgents(nagent,AGENT,'y');
+        axis([50 60 85 95])
+        axis equal
+        % plot roads
+%         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
         box on
         title(['time = ',num2str(time/60,3),' min'])
         xlabel('x [m]')
