@@ -16,9 +16,12 @@ resolution       	= 0.1;      % resolution in [m]
 dt                	= 0.01;    	% time step in [s]
 maxtime          	= 3;       % maximum time to run in [min]
 pert                = 0.05;     % maximal amplitude of social agent forces perturbation of 
+decision_time       = 0.1;      % after which time does an agent redecide on its path?
+decision_step       = round(decision_time/dt);
+agent_sensitivity   = 0.3; % reduce velocity by which factor if agent is on node?
 
 %physical parameter
-nagent          	= 10;      % number of agents
+nagent          	= 50;      % number of agents
 
 noUSEatPresent   	= logical(0);
 SocialForce        	= logical(1);   %switch for social force
@@ -31,7 +34,7 @@ Parameter.kappa  	= 2.4e5;
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 8e5;   %for adjusting strength of constant exit force field
+Parameter.ExitFactor= 2e6;   %for adjusting strength of constant exit force field
 
 % agent parameters
 m                 	= 80;       % mass in kg
@@ -44,7 +47,7 @@ addpath ./DecisionStrategy/
 addpath ./WallForces/
 addpath ./Plotting/
 addpath ./kdtree_alg_OSX/
-addpath ./FastMarching_version3b
+addpath ./FastMarching_version3b, add_function_paths();
 %==========================================================================
 % initialize fine grid (if not given as argument)
 xmin                = 0;
@@ -91,11 +94,15 @@ BoundaryMap(1,:)=1; BoundaryMap(size(yvec,2),:)=1; BoundaryMap(:,1)=1; BoundaryM
 BuildingList = [
                  0 16 0 1    %boundary wall
                  0 16 9 10   %boundary wall
-               %  12 14 4 6
+               %  6  7 1 7
+               %  7  10 6 7
+               %  12 13 3 9
+                 
+               %  9 12 3 4
                %  8 10 7 8
                % 9  11 2 4
-                15 16 5.5 9   %top barriere
-                15 16 1 4.5   %bottom barriere
+                15 16 5 8   %top barriere
+                15 16 1 4   %bottom barriere
                  
                 ]; % coordinates of building xmin xmax ymin ymax
             
@@ -138,7 +145,7 @@ for i=1:size(ExitList,1)
     ExitMap(X_Grid>=ExitList(i,1) & X_Grid<=ExitList(i,2) & Y_Grid>=ExitList(i,3) & Y_Grid<=ExitList(i,4)) = 1;
 end
 
-[Dgradx,Dgrady] = ComputeShortestPathGlobal(BuildingList,Xexit,Yexit,X_Grid,Y_Grid,Gradient_x,Gradient_y,v0,resolution);
+%[Dgradx,Dgrady] = ComputeShortestPathGlobal(BuildingList,Xexit,Yexit,X_Grid,Y_Grid,Gradient_x,Gradient_y,v0,resolution);
 
 %----------------------------------------------------
 % compute forces from buildings (static)
@@ -327,34 +334,36 @@ while (time <= maxtime && size(AGENT,2)>0)
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-    xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
-    yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*linear');
-
-    dummy = num2cell(xExitDirAgents);
-    [AGENT(1:nagent).xExitDir]       = dummy{:};
-    dummy = num2cell(yExitDirAgents);
-    [AGENT(1:nagent).yExitDir]       = dummy{:};
-    
+    if (mod(itime,decision_step)==0 || itime==1)
+        [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingList,Xexit,Yexit,X_Grid,Y_Grid,Gradient_x,Gradient_y,v0,resolution,AGENT,nagent,agent_sensitivity);
+        xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
+        yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*linear');
+        
+        dummy = num2cell(xExitDirAgents);
+        [AGENT(1:nagent).xExitDir]       = dummy{:};
+        dummy = num2cell(yExitDirAgents);
+        [AGENT(1:nagent).yExitDir]       = dummy{:};
+    end
     
     %----------------------------------------------------------------
     % compute the distance of all agents to the building polygons
     %----------------------------------------------------------------
     
     
-    for i = 1:size(BuildingList,1)
-        % generate polygon data for buildings
-        x(1) = BuildingList(i,1);
-        x(2) = BuildingList(i,1);
-        x(3) = BuildingList(i,2);
-        x(4) = BuildingList(i,2);
-        
-        y(1) = BuildingList(i,3);
-        y(2) = BuildingList(i,4);
-        y(3) = BuildingList(i,4);
-        y(4) = BuildingList(i,3);
-        
-        [d,x_poly,y_poly] = p_poly_dist([AGENT.LocX],[AGENT.LocY],x,y);
-    end
+%     for i = 1:size(BuildingList,1)
+%         % generate polygon data for buildings
+%         x(1) = BuildingList(i,1);
+%         x(2) = BuildingList(i,1);
+%         x(3) = BuildingList(i,2);
+%         x(4) = BuildingList(i,2);
+%         
+%         y(1) = BuildingList(i,3);
+%         y(2) = BuildingList(i,4);
+%         y(3) = BuildingList(i,4);
+%         y(4) = BuildingList(i,3);
+%         
+%         [d,x_poly,y_poly] = p_poly_dist([AGENT.LocX],[AGENT.LocY],x,y);
+%     end
     
     
 %     % set the destination direction (later on, this can be done in a more sophisticated manner)
