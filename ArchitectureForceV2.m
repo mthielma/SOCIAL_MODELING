@@ -28,6 +28,10 @@ for i=1:size(List,1)
     DirY(DirTot==0) = 0;
     
     ForceTemp     = Parameter.A.*exp(-D)./Parameter.B;
+    
+    % if Distance bigger than a threshhold, set force 0
+    ForceTemp(D>3) = 0;
+    
     ForceTempX    = ForceTemp.*DirX;
     ForceTempY    = ForceTemp.*DirY;
     
