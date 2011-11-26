@@ -15,13 +15,13 @@ clear;
 resolution       	= 0.25;      % resolution in [m]
 dt                	= 0.01;    	% time step in [s]
 maxtime          	= 3;       % maximum time to run in [min]
-pert                = 0.05;     % maximal amplitude of social agent forces perturbation of 
+pert                = 0.05;     % maximal amplitude of social agent forces perturbation 
 decision_time       = 0.5;      % after which time does an agent redecide on its path?
 decision_step       = round(decision_time/dt);
 agent_sensitivity   = 0.25; % reduce velocity by which factor if agent is on node?
 
 %physical parameter
-nagent          	= 500;      % number of agents
+nagent          	= 1000;      % number of agents
 
 noUSEatPresent   	= logical(0);
 SocialForce        	= logical(1);   %switch for social force
@@ -34,7 +34,7 @@ Parameter.kappa  	= 2.4e5;
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 5e6;   %for adjusting strength of constant exit force field
+Parameter.ExitFactor= 5;   %for adjusting strength of constant exit force field
 
 % agent parameters
 m                 	= 80;       % mass in kg
@@ -51,7 +51,7 @@ addpath ./FastMarching_version3b, add_function_paths();
 %==========================================================================
 % initialize fine grid (if not given as argument)
 xmin                = 0;
-xmax                = 100;
+xmax                = 105;
 ymin                = 0;
 ymax                = 100;
 
@@ -79,7 +79,7 @@ maxtime = maxtime*60; %[min] => [s]
 % create starting area map for agents
 %---------------------------------------
 StartArea = zeros(size(yvec,2),size(xvec,2));
-StartArea(find(X_Grid<5)) = 1;
+StartArea(find(Y_Grid<10)) = 1;
 
 %---------------------------------------
 % create boundary map for later use
@@ -115,7 +115,9 @@ BuildingList = [42 53 42 53;...
                 42 57 23 35;...
                  0 28 92 100;...
                  32 97 92 100;...
+                 100 105 0 100;...
                  102 197 92 97]; % coordinates of building xmin xmax ymin ymax
+                
 
 BuildingList(find(BuildingList(:,1)>=xmax),:) = []; %if building fully outside domain: remove it!
 BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside domain: remove it!
@@ -224,7 +226,9 @@ end
 cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).name]      = cell_array{:};
 [AGENT(1:nagent).num]       = cell_array{:};
-[AGENT(1:nagent).VMax]      = deal(v0);
+
+vmax                        = num2cell(v0+rand(nagent,1)*0.5);
+[AGENT(1:nagent).VMax]      = vmax{:};
 [AGENT(1:nagent).BoxSize]   = deal(5); % the agent is only influenced by other agents inside this box
 [AGENT(1:nagent).Vel]       = deal(0); % initial velocity (to be randomized)
 
@@ -342,14 +346,15 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     if (mod(itime,decision_step)==0 || itime==1)
         [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingList,Xexit,Yexit,X_Grid,Y_Grid,Gradient_x,Gradient_y,v0,resolution,AGENT,nagent,agent_sensitivity);
-        xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*nearest');
-        yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*nearest');
-        
-        dummy = num2cell(xExitDirAgents);
-        [AGENT(1:nagent).xExitDir]       = dummy{:};
-        dummy = num2cell(yExitDirAgents);
-        [AGENT(1:nagent).yExitDir]       = dummy{:};
     end
+    xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
+    yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*linear');
+    
+    dummy = num2cell(xExitDirAgents);
+    [AGENT(1:nagent).xExitDir]       = dummy{:};
+    dummy = num2cell(yExitDirAgents);
+    [AGENT(1:nagent).yExitDir]       = dummy{:};
+    
     
     %----------------------------------------------------------------
     % compute the distance of all agents to the building polygons
@@ -478,13 +483,15 @@ while (time <= maxtime && size(AGENT,2)>0)
     end
 
     % compute force from exits
-%     arch_force = sqrt([AGENT.FxSocialWalls].^2+[AGENT.FySocialWalls].^2);
-%     
-%     xForceExit = [AGENT(1:nagent).xExitDir].*arch_force.*Parameter.ExitFactor;
-%     yForceExit = [AGENT(1:nagent).yExitDir].*arch_force.*Parameter.ExitFactor;
+    arch_force = sqrt(([AGENT.FxSocialWalls]+[AGENT.FxSocialAgents]).^2+([AGENT.FySocialWalls]+[AGENT.FySocialAgents]).^2);
     
-    xForceExit = [AGENT(1:nagent).xExitDir].*Parameter.ExitFactor;
-    yForceExit = [AGENT(1:nagent).yExitDir].*Parameter.ExitFactor;
+    xForceExit = [AGENT(1:nagent).xExitDir].*arch_force.*Parameter.ExitFactor;
+    yForceExit = [AGENT(1:nagent).yExitDir].*arch_force.*Parameter.ExitFactor;
+    
+    xForceExit(xForceExit==0) = [AGENT((xForceExit==0)).xExitDir].*1e5;
+    yForceExit(yForceExit==0) = [AGENT((xForceExit==0)).yExitDir].*1e5;
+    % xForceExit = [AGENT(1:nagent).xExitDir].*Parameter.ExitFactor;
+    % yForceExit = [AGENT(1:nagent).yExitDir].*Parameter.ExitFactor;
    
     %----------------------------------------------------
     % move agents
@@ -576,14 +583,22 @@ while (time <= maxtime && size(AGENT,2)>0)
 
     
     %----------------------------------------------------
+    % save
+    %----------------------------------------------------
+    if mod(itime,5)==0
+        filename = ['Escape',num2str(itime,'%5.6d')];
+        save(filename,'AGENT')
+    end
+    
+    %----------------------------------------------------
     % plot
     %----------------------------------------------------
     
     if mod(itime,20)==0
 %     
         % PlotAgents3D(X_Grid,Y_Grid,Z_Grid,AGENT,BuildingList);
-        % filename = ['Escape',num2str(itime,'%5.6d')];
-        %print(filename,'-djpeg90','-r150')
+        filename = ['Escape',num2str(itime,'%5.6d')];
+        print(filename,'-djpeg90','-r150')
         
         figure(1),clf
         hold on
@@ -593,7 +608,7 @@ while (time <= maxtime && size(AGENT,2)>0)
 %         caxis([0 0.5])
 %         colormap('Bone')
 %         colormap(flipud(colormap))
-        subplot(121)
+
         % plot buildings
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
@@ -603,29 +618,10 @@ while (time <= maxtime && size(AGENT,2)>0)
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
          box on
         title(['time = ',num2str(time/60,3),' min'])
-        subplot(222)
-        % plot buildings
-        PlotBuildings(BuildingList,'r');
-        PlotBuildings(ExitList,'g');
-        % plot agents
-        PlotAgents(nagent,AGENT,'y');
-        axis([40 50 50 60])
-        axis equal
-        subplot(224)
-        % plot buildings
-        PlotBuildings(BuildingList,'r');
-        PlotBuildings(ExitList,'g');
-        % plot agents
-        PlotAgents(nagent,AGENT,'y');
-        axis([50 60 85 95])
-        axis equal
-        % plot roads
-%         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
-        box on
-        title(['time = ',num2str(time/60,3),' min'])
-        xlabel('x [m]')
-        ylabel('y [m]')
         
+        filename = ['Escape',num2str(itime,'%5.6d')];
+        print(filename,'-djpeg90','-r150')
+
     end
 end
 
