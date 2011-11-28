@@ -18,10 +18,10 @@ maxtime          	= 3;       % maximum time to run in [min]
 pert                = 0.05;     % maximal amplitude of social agent forces perturbation of 
 decision_time       = 0.1;      % after which time does an agent redecide on its path?
 decision_step       = round(decision_time/dt);
-agent_sensitivity   = 0.3; % reduce velocity by which factor if agent is on node?
+agent_sensitivity   = 0.1; % reduce velocity by which factor if agent is on node?
 
 %physical parameter
-nagent          	= 50;      % number of agents
+nagent          	= 30;      % number of agents
 
 noUSEatPresent   	= logical(0);
 SocialForce        	= logical(1);   %switch for social force
@@ -34,7 +34,7 @@ Parameter.kappa  	= 2.4e5;
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 2e6;   %for adjusting strength of constant exit force field
+Parameter.ExitFactor= 1e6;   %for adjusting strength of constant exit force field
 
 % agent parameters
 m                 	= 80;       % mass in kg
@@ -472,13 +472,21 @@ while (time <= maxtime && size(AGENT,2)>0)
     end
 
     % compute force from exits
-%     arch_force = sqrt([AGENT.FxSocialWalls].^2+[AGENT.FySocialWalls].^2);
+    % increase the total social force on the agents by a constant factor
+%     if itime > 1
+%         soc_force  = sqrt([AGENT.FxSocialWalls]+[AGENT.FxSocialAgents].^2+[AGENT.FySocialWalls]+[AGENT.FySocialAgents].^2);
+%     else
+%         soc_force = 0;
+%     end
+% %     
+%     xForceExit = [AGENT(1:nagent).xExitDir].*soc_force.*Parameter.ExitFactor;
+%     yForceExit = [AGENT(1:nagent).yExitDir].*soc_force.*Parameter.ExitFactor;
 %     
-%     xForceExit = [AGENT(1:nagent).xExitDir].*arch_force.*Parameter.ExitFactor;
-%     yForceExit = [AGENT(1:nagent).yExitDir].*arch_force.*Parameter.ExitFactor;
-    
     xForceExit = [AGENT(1:nagent).xExitDir].*Parameter.ExitFactor;
     yForceExit = [AGENT(1:nagent).yExitDir].*Parameter.ExitFactor;
+    
+    xForceExit(xForceExit==0) = [AGENT(1:nagent).xExitDir].*1e5;
+    yForceExit(yForceExit==0) = [AGENT(1:nagent).yExitDir].*1e5;
    
     %----------------------------------------------------
     % move agents

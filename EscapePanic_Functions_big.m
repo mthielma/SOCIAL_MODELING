@@ -18,7 +18,7 @@ maxtime          	= 3;       % maximum time to run in [min]
 pert                = 0.05;     % maximal amplitude of social agent forces perturbation 
 decision_time       = 0.5;      % after which time does an agent redecide on its path?
 decision_step       = round(decision_time/dt);
-agent_sensitivity   = 0.25; % reduce velocity by which factor if agent is on node?
+agent_sensitivity   = 0.1; % reduce velocity by which factor if agent is on node?
 
 %physical parameter
 nagent          	= 1000;      % number of agents
@@ -489,7 +489,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     yForceExit = [AGENT(1:nagent).yExitDir].*arch_force.*Parameter.ExitFactor;
     
     xForceExit(xForceExit==0) = [AGENT((xForceExit==0)).xExitDir].*1e5;
-    yForceExit(yForceExit==0) = [AGENT((xForceExit==0)).yExitDir].*1e5;
+    yForceExit(yForceExit==0) = [AGENT((yForceExit==0)).yExitDir].*1e5;
     % xForceExit = [AGENT(1:nagent).xExitDir].*Parameter.ExitFactor;
     % yForceExit = [AGENT(1:nagent).yExitDir].*Parameter.ExitFactor;
    
@@ -583,7 +583,7 @@ while (time <= maxtime && size(AGENT,2)>0)
 
     
     %----------------------------------------------------
-    % save
+    % save agent data
     %----------------------------------------------------
     if mod(itime,5)==0
         filename = ['Escape',num2str(itime,'%5.6d')];
