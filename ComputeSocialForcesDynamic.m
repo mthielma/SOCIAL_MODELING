@@ -1,4 +1,4 @@
-function [FxDynamicSocial,FyDynamicSocial,DistanceToAgents] = ComputeSocialForcesDynamic(Parameter,DistanceToAgents,NormalVector)
+function [FxDynamicSocial,FyDynamicSocial] = ComputeSocialForcesDynamic(Parameter,DistanceToAgents,NormalVector)
 
 % cmpute social force
 F_socAgents     = Parameter.A.*exp(DistanceToAgents./Parameter.B);
