@@ -37,6 +37,10 @@ v0               	= 0.5;        % maximal/desired velocity [m/s]
 cutoffVelocity   	= logical(1); %sets maximum velocity at v0
 t_acc            	= 0.5;      % acceleration time in [s]
 
+%plotting parameters
+Marking             = 'smiley'; %'number', 'smiley'
+
+
 
 addpath ./DecisionStrategy/
 addpath ./WallForces/
@@ -45,7 +49,7 @@ addpath ./kdtree_alg_OSX/
 %==========================================================================
 % initialize fine grid (if not given as argument)
 xmin                = 0;
-xmax                = 25;
+xmax                = 20;
 ymin                = 0;
 ymax                = 10;
 
@@ -110,7 +114,7 @@ end
 % create exit list (if not given)
 %---------------------------------------
 ExitList = [
-            24 25 4 6
+            19 20 4.5 5.5
            ]; % coordinates of exits: xmin xmax ymin ymax
 
 ExitList(find(ExitList(:,1)>=xmax),:)   = []; %if exit fully outside domain: remove it!
@@ -264,7 +268,7 @@ hold on
 PlotBuildings(BuildingList,'r');
 PlotBuildings(ExitList,'g');
 % plot agents
-PlotAgents2(nagent,AGENT,'y');
+PlotAgents2(nagent,AGENT,'y',Marking);
 axis equal
 axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 box on
@@ -646,7 +650,7 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
-        PlotAgents2(nagent,AGENT,'y');
+        PlotAgents2(nagent,AGENT,'y',Marking);
         
         % plot roads
 %         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
