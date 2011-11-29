@@ -1,7 +1,7 @@
 function EscapePanic(Parameter,BuildingList,ExitList)         
-  
+
 % workflow control
-PlotSetup = true;
+PlotSetup = false;
 PlotEvolution = true;
 
 
@@ -28,7 +28,7 @@ yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
 % set topography
-Z_Grid = 0*(0.01.*X_Grid+0.08.*Y_Grid);
+Z_Grid = (0.01.*X_Grid+0.08.*Y_Grid);
 
 % compute topography gradient
 [Gradient_x,Gradient_y] = gradient(Z_Grid,resolution,resolution);
@@ -41,7 +41,7 @@ decision_step   = round(Parameter.decision_time/Parameter.dt);
 % create starting area map for agents
 %---------------------------------------
 StartArea = zeros(size(yvec,2),size(xvec,2));
-StartArea(find(X_Grid<5)) = 1;
+StartArea(X_Grid<5) = 1;
 
 %---------------------------------------
 % create boundary map for later use
@@ -100,9 +100,8 @@ y_Buildings = Y_Grid(BuildingMap==1);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ForceX,ForceY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
-xArchForces     = ForceX;
-yArchForces     = ForceY;
+[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+
 
 %----------------------------------------------------
 % plot setup
@@ -153,15 +152,16 @@ while (time <= maxtime && size(AGENT,2)>0)
     % precomputed force field to the agents)
     %----------------------------------------------------
     if Parameter.SocialForces
-        [FxSocialWalls,FySocialWalls]         = ComputeSocialForcesStatic(AGENT,X_Grid,Y_Grid,xArchForces,yArchForces,Parameter);
+        [FxSocialWalls,FySocialWalls] = ComputeSocialForcesStatic(AGENT,X_Grid,Y_Grid,ArchForce,ArchDirX,ArchDirY,Parameter);
+        dummy                                 = num2cell(FxSocialWalls);
+        [AGENT(1:nagent).FxSocialWalls]       = dummy{:};
+        dummy                                 = num2cell(FySocialWalls);
+        [AGENT(1:nagent).FySocialWalls]       = dummy{:};
     else
-        FxSocialWalls = 0;
-        FySocialWalls = 0;
+        [AGENT(1:nagent).FxSocialWalls]       = deal(0);
+        [AGENT(1:nagent).FySocialWalls]       = deal(0);
     end
-    dummy                                 = num2cell(FxSocialWalls);
-    [AGENT(1:nagent).FxSocialWalls]       = dummy{:};
-    dummy                                 = num2cell(FySocialWalls);
-    [AGENT(1:nagent).FySocialWalls]       = dummy{:};
+    
     
     %----------------------------------------------------
     % compute direction field to exits on all agents 
@@ -173,6 +173,11 @@ while (time <= maxtime && size(AGENT,2)>0)
     
     xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
     yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*linear');
+    
+    % normalize direction vector
+    dirtot         = sqrt(xExitDirAgents.^2+yExitDirAgents.^2);
+    xExitDirAgents = xExitDirAgents./dirtot;
+    yExitDirAgents = yExitDirAgents./dirtot;
     
     dummy = num2cell(xExitDirAgents);
     [AGENT(1:nagent).xExitDir]       = dummy{:};
@@ -187,8 +192,8 @@ while (time <= maxtime && size(AGENT,2)>0)
         x_agent         = AGENT(iagent).LocX;
         y_agent         = AGENT(iagent).LocY;
         agent_size      = AGENT(iagent).Size;
-        velx_agent = AGENT(iagent).VelX;
-        vely_agent = AGENT(iagent).VelY;
+        velx_agent      = AGENT(iagent).VelX;
+        vely_agent      = AGENT(iagent).VelY;
         %-------------------------------------------------
         % check if the agent is outside the domain
         %-------------------------------------------------
@@ -311,8 +316,8 @@ while (time <= maxtime && size(AGENT,2)>0)
         PlotBuildings(ExitList,'g');
         % plot agents
         PlotAgents(nagent,AGENT,'y');
-        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-%        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'g')
+%        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
+        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'g')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
@@ -322,6 +327,5 @@ while (time <= maxtime && size(AGENT,2)>0)
         
     end
 end
-
 
 %==========================================================================
