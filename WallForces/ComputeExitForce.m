@@ -14,6 +14,7 @@ yForceExit = [AGENT(1:nagent).yExitDir].*social_force.*Parameter.ExitFactor;
 xForceExit(xForceExit==0) = [AGENT((xForceExit==0)).xExitDir].*1e5;
 yForceExit(yForceExit==0) = [AGENT((yForceExit==0)).yExitDir].*1e5;
 
+% assign to structure
 dummy = num2cell(xForceExit);
 [AGENT.xForceExit] = dummy{:};
 dummy = num2cell(yForceExit);
