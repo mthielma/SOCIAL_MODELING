@@ -11,6 +11,8 @@
 
 clear;
 
+savingPlots = logical(1);  filename = 'test1';
+
 %numerical parameter
 resolution       	= 0.1;      % resolution in [m]
 dt                	= 0.05;    	% time step in [s]
@@ -38,7 +40,7 @@ cutoffVelocity   	= logical(1); %sets maximum velocity at v0
 t_acc            	= 0.5;      % acceleration time in [s]
 
 %plotting parameters
-Marking             = 'smiley'; %'number', 'smiley'
+Marking             = 'number'; %'number', 'smiley'
 
 
 
@@ -661,6 +663,14 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         xlabel('x [m]')
         ylabel('y [m]')
         
+        
+        %saving plots
+        if savingPlots
+            directory = ['+images/',filename,'/'];
+            if ~exist(directory); mkdir(directory); end
+            filename2 = [filename,num2str(itime,'%5.6d')];
+            print([directory,filename2],'-djpeg90','-r150')
+        end
     end
 end
 %==========================================================================
