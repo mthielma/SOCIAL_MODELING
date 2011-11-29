@@ -82,7 +82,13 @@ Several external packages are used that are freely available at Matlab FileExcha
 
 \section{Abstract}
 
+Hei M\"ase, we should first define what we mean by social and physical forces. I'm not sure if there is something like social forces between an agent and a wall. I mean normally there is not...
+
+I don't know how to make bold characters
+
 \section{Individual contributions}
+
+Fabio: 376 bugs
 
 \section{Introduction and Motivations}
 
@@ -100,10 +106,39 @@ This section is meant to both give an overview of the methods used in this code 
 \subsection{Initialization of Buildings and Agents}
 \subsection{Social forces}
 \subsubsection{Architecture forces}
+\begin{equation}
+	{f_{iWS}} = \left\{ {{A_i}\exp \left[ {\frac{{\left( {{r_i} - {d_{iW}}} \right)}}{{{B_i}}}} \right]} \right\}{n_{iW}}
+	\label{eq:fiWS}
+\end{equation}
+
+Eq. \eqref{eq:fiWS} can be rewritten as
+
+\begin{equation}
+	{f_{iWS}} = \left\{ {{A_i}\left( {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} \right)} \right\}{n_{iW}}
+	\label{eq:fiWS2}
+\end{equation}
+
 \subsubsection{Exit forces}
 \subsubsection{Agent forces}
 \subsection{Physical forces}
+
 \subsubsection{Wall forces}
+\begin{equation}
+	{f_{iWPn}} = \left\{ {kg\left( {{r_i} - {d_{iW}}} \right)} \right\}{n_{iW}}
+	\label{eq:fiWPn}
+\end{equation}
+
+\begin{equation}
+	{f_{iWPt}} = \left\{ {kg\left( {{r_i} - {d_{iW}}} \right)\left( {{v_i} \cdot {t_{iW}}} \right)} \right\}{t_{iW}}
+	\label{eq:fiWPt}
+\end{equation}
+
+\begin{equation}
+	{f_{iW}} = {f_{iWS}} + {f_{iWPn}} - {f_{iWPt}}
+	\label{eq:fiW}
+\end{equation}
+
+
 \subsubsection{Agent forces}
 \subsection{Walking speed}
 \subsection{Flooding}
