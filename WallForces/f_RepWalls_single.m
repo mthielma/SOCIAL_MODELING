@@ -20,7 +20,7 @@
 % [xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
 % ********************
 
-function [xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
+function [F_arch, xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
 plotFields = logical(0);
 
 
@@ -108,10 +108,10 @@ end
 
 
 
-
 %---------------------------------------------
 %arch force ----------------------------------
 if strcmp(Spreading,'exp')
+    %this is only one part of: A*exp[(r-d)/B]*n
     %--------------------------------------------------------
     F_wall = + A .* exp(-distToWall./B);	%from Helbing2000
     F_attr = - A .* exp(-distToAttr./B);  
@@ -289,6 +289,8 @@ yArchDir = ygrad_arch;
 
 xArchForces = xgradF_arch; %force field dimensional [N]
 yArchForces = ygradF_arch;
+
+F_arch = F_arch;  %Arch forces without direction
 
 
 
