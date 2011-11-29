@@ -1,7 +1,10 @@
 function [FxPhysWall,FyPhysWall] = ComputePhysicalForceWalls(x_agent,y_agent,agent_size,velx_agent,vely_agent,x_building,y_building,Parameter)
 
 % get minimum distance to another wall
-WallDist2             =    (x_building-x_agent).*(x_building-x_agent)+(y_building-y_agent).*(y_building-y_agent); 	% squared distance between agent's center of mass and wall boundary
+xdist = x_building-x_agent;
+ydist = y_building-y_agent;
+
+WallDist2             =    (xdist).*(xdist)+(ydist).*(ydist); 	% squared distance between agent's center of mass and wall boundary
 [minWallDist2,ind]     = min(WallDist2);
 WallDist              = -sqrt(minWallDist2)+agent_size;                            %between agent's boundary and wall boundary
 
@@ -17,8 +20,8 @@ Tangent(:,2)         = Normal(:,1);
 
 if WallDist>=0
     % normal force
-    F_physWall_normalX = Parameter.k.*WallDist.*Normal(:,1);
-    F_physWall_normalY = Parameter.k.*WallDist.*Normal(:,2);
+    F_physWall_normalX = 3*Parameter.k.*WallDist.*Normal(:,1);
+    F_physWall_normalY = 3*Parameter.k.*WallDist.*Normal(:,2);
     
     if Parameter.Tangential
         % tangential force

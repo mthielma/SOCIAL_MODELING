@@ -21,10 +21,10 @@ for i = 1:size(Xexit,1)
     ExitPoints(2,i) = indy;
 end
 % use fast marching algorithm to compute distance to exit
-[D]=msfm(F, ExitPoints);
+[D_orig]=msfm(F, ExitPoints);
 
 % compute gradient in time -> this gives us the direction
-[Dgradx_orig,Dgrady_orig] = gradient(D,Parameter.resolution,Parameter.resolution);
+[Dgradx_orig,Dgrady_orig] = gradient(D_orig,Parameter.resolution,Parameter.resolution);
 
 % scale direction vectors to normal
 Dgradtot = sqrt(Dgradx_orig.^2+Dgrady_orig.^2);
@@ -51,26 +51,21 @@ F0 = F;
 % unfortunately, we have to loop over the agents so far...
 for iagent = 1:nagent
    Inside = (X_Grid-AGENT(iagent).LocX).*(X_Grid-AGENT(iagent).LocX)+(Y_Grid-AGENT(iagent).LocY).*(Y_Grid-AGENT(iagent).LocY);
-   F(Inside<AGENT(iagent).Size) = F0(Inside<AGENT(iagent).Size)*0.1;
+   F(Inside<AGENT(iagent).Size) = F0(Inside<AGENT(iagent).Size)*0.25;
 end
 
 
 % use fast marching algorithm to compute distance to exit
-[D]=msfm(F, ExitPoints);
-
-% compute gradient in time -> this gives us the direction
-[Dgradx_agent,Dgrady_agent] = gradient(D,Parameter.resolution,Parameter.resolution);
-
-% scale direction vectors to normal
-Dgradtot = sqrt(Dgradx_agent.^2+Dgrady_agent.^2);
-Dgradx_agent   = -Dgradx_agent./Dgradtot;
-Dgrady_agent   = -Dgrady_agent./Dgradtot;
+[D_agent]=msfm(F, ExitPoints);
 
 % compute mixture of both fields taking into account sensitivity to agents
 % in the way
-Dgradx = (Parameter.agent_sensitivity.*Dgradx_agent + Dgradx_orig)./(Parameter.agent_sensitivity+1);
-Dgrady = (Parameter.agent_sensitivity.*Dgrady_agent + Dgrady_orig)./(Parameter.agent_sensitivity+1);
+Dmix = (D_orig + Parameter.agent_sensitivity.*D_agent)./(Parameter.agent_sensitivity+1);
+[Dgradx,Dgrady] = gradient(Dmix,Parameter.resolution,Parameter.resolution);
 
+Dgradtot = sqrt(Dgradx.^2+Dgrady.^2);
+Dgradx   = -Dgradx./Dgradtot;
+Dgrady   = -Dgrady./Dgradtot;
 
 if Debug
 
