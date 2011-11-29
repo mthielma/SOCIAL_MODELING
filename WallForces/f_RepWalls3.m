@@ -20,7 +20,7 @@
 % [xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
 % ********************
 
-function [F_arch, xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
+function [F_arch, xArchForces, yArchForces, xArchDir, yArchDir] = f_RepWalls3 (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter)
 plotFields = logical(0);
 
 
