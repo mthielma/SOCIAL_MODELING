@@ -3,8 +3,7 @@ function [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,dt,nagen
 % according to [Helbing 2000]:
 % a = dvi/dt = (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m + [AGENT.FxPedestrians]./m
 
-t_acc = AGENT.t_acc;
-m     = AGENT.m;
+
 
 %==========================================================
 % compute maximum desired velocity due to topography
@@ -22,6 +21,8 @@ V_max_agent = PreFac.*exp(-3.5.*abs(slope+0.05));
 %==========================================================
 % compute velocity change
 %==========================================================
+m = [AGENT.m]';
+t_acc = [AGENT.t_acc]';
 
 % velocity change in x-direction
 v0_x                    = V_max_agent .* [AGENT(1:nagent).xExitDir]';
