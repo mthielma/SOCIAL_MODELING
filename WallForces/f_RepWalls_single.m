@@ -113,8 +113,8 @@ end
 %arch force ----------------------------------
 if strcmp(Spreading,'exp')
     %--------------------------------------------------------
-    F_wall = + A .* exp(-distToWall) ./B;	%from Helbing2000
-    F_attr = - A .* exp(-distToAttr) ./B;  
+    F_wall = + A .* exp(-distToWall./B);	%from Helbing2000
+    F_attr = - A .* exp(-distToAttr./B);  
     %--------------------------------------------------------
 elseif strcmp(Spreading,'linear')    
     %--------------------------------------------------------
