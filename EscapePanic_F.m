@@ -19,7 +19,6 @@ maxtime          	= 2000;       % maximum time to run in [min]
 %physical parameter
 nagent          	= 50;      % number of agents
 
-noUSEatPresent   	= logical(0);
 SocialForce        	= logical(1);   %switch for social force
 
 % physical forces parameters (Helbing,2000)
@@ -29,10 +28,11 @@ Parameter.kappa  	= 2.4e5;
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 35;   %for adjusting strength of constant exit force field [30]
+Parameter.ExitFactor= 0.5;   %for adjusting strength of constant exit force field [30]
 
 % agent parameters
-m                 	= 80;       % mass in kg
+m                 	= 80;       % mass in [kg]
+r_agent             = 0.3;      % radius im [m]
 v0               	= 0.5;        % maximal/desired velocity [m/s]
 cutoffVelocity   	= logical(1); %sets maximum velocity at v0
 t_acc            	= 0.5;      % acceleration time in [s]
@@ -82,7 +82,7 @@ StartArea(find(X_Grid<5)) = 1;
 % create boundary map for later use
 %---------------------------------------
 BoundaryMap = zeros(size(yvec,2),size(xvec,2));
-BoundaryMap(1,:)=1; BoundaryMap(size(yvec,2),:)=1; BoundaryMap(:,1)=1; BoundaryMap(:,size(xvec,2))=1;
+BoundaryMap(1:3,:)=1; BoundaryMap(size(yvec,2),:)=1; BoundaryMap(:,1)=1; BoundaryMap(:,size(xvec,2))=1;
 
 %---------------------------------------
 % create building list (if not given)
@@ -136,11 +136,14 @@ Spreading       = {'exp' 'linear' 'const'};
 ARCH.spreading	= Spreading{1};
 ARCH.force      = 1.0;                      %1 is the same as wall force
 
-[xArchForces_walls, yArchForces_walls, xArchDir_walls, yArchDir_walls] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
+[F_arch_walls, xArchForces_walls, yArchForces_walls, xArchDir_walls, yArchDir_walls] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
+% xArchForces = xArchForces + xArchForces_walls;
+% yArchForces = yArchForces + yArchForces_walls;
 xArchForces = xArchForces + xArchForces_walls;
 yArchForces = yArchForces + yArchForces_walls;
+
 
 checkFigure = logical(1);
 if checkFigure
@@ -162,7 +165,7 @@ Spreading       = {'exp' 'linear' 'const'};
 ARCH.spreading  = Spreading{3};
 ARCH.force      = 0.2;                      %1 is the same as wall force
 
-[xArchForces_exits, yArchForces_exits, xArchDir_exits, yArchDir_exits] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
+[F_arch_exit, xArchForces_exits, yArchForces_exits, xArchDir_exits, yArchDir_exits] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
 xArchForces = xArchForces + xArchForces_exits;
@@ -206,6 +209,12 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).FxArch] 	= deal(0); % initial architecture force X
 [AGENT(1:nagent).FyArch]  	= deal(0); % initial architecture force Y
 
+[AGENT(1:nagent).DirXwalls] = deal(0); % initial architecture force X
+[AGENT(1:nagent).DirYwalls] = deal(0); % initial architecture force Y
+
+[AGENT(1:nagent).DirXexit] 	= deal(0); % initial architecture force X
+[AGENT(1:nagent).DirYexit]  = deal(0); % initial architecture force Y
+
 VelX                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).DirX]); % initial velocity X
 VelY                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).DirY]); % initial velocity Y
 
@@ -213,9 +222,14 @@ VelY                        = num2cell([AGENT(1:nagent).Vel].*[AGENT(1:nagent).D
 [AGENT(1:nagent).VelX]      = VelX{:};
 [AGENT(1:nagent).VelY]      = VelY{:};
 
+%random size
+% cell_array = num2cell((0.5+ (rand(nagent,1))*0.2)./2);
+% [AGENT(1:nagent).Size]   = cell_array{:};
+%same size
+[AGENT(1:nagent).Size]   = deal(r_agent);  %radius [m]
 
-cell_array = num2cell((0.8+ (rand(nagent,1))*0.2)./2);
-[AGENT(1:nagent).Size]   = cell_array{:};
+
+
 
 % get the indices in BuildingMap that correspond to a road
 [iy,ix] = find(StartArea==1 & BoundaryMap==0 & BuildingMap==0 & ExitMap==0);
@@ -246,7 +260,7 @@ hold on
 PlotBuildings(BuildingList,'r');
 PlotBuildings(ExitList,'g');
 % plot agents
-PlotAgents(nagent,AGENT,'y');
+PlotAgents2(nagent,AGENT,'y');
 axis equal
 axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 box on
@@ -298,6 +312,20 @@ if isnan(xArchForces(find(isnan(xArchForces)))); error('fc: NaN!'); end
     [AGENT(1:nagent).FyArch]       = dummy{:};
     
 if isnan([AGENT(find(isnan([AGENT.FxArch]))).FxArch]); error('fc: NaN!'); end
+
+
+    %----------------------------------------------------
+    % compute direction field to walls on all agents 
+    % (just interpolate the precomputed field to the agents)
+    %----------------------------------------------------
+%     xWallsDirAgents = interp2(X_Grid,Y_Grid,xArchDir_walls',[AGENT.LocX],[AGENT.LocY],'*linear');
+%     yWallsDirAgents = interp2(X_Grid,Y_Grid,yArchDir_walls',[AGENT.LocX],[AGENT.LocY],'*linear');
+%     
+%     dummy = num2cell(xWallsDirAgents);
+%     [AGENT(1:nagent).DirXwalls]       = dummy{:};
+%     dummy = num2cell(yWallsDirAgents);
+%     [AGENT(1:nagent).DirYwalls]       = dummy{:};
+
     
     %----------------------------------------------------
     % compute direction field to exits on all agents 
@@ -308,9 +336,9 @@ if isnan([AGENT(find(isnan([AGENT.FxArch]))).FxArch]); error('fc: NaN!'); end
     yExitDirAgents = interp2(X_Grid,Y_Grid,yArchDir_exits',[AGENT.LocX],[AGENT.LocY],'*linear');
     
     dummy = num2cell(xExitDirAgents);
-    [AGENT(1:nagent).xExitDir]       = dummy{:};
+    [AGENT(1:nagent).DirXexit]       = dummy{:};
     dummy = num2cell(yExitDirAgents);
-    [AGENT(1:nagent).yExitDir]       = dummy{:};
+    [AGENT(1:nagent).DirYexit]       = dummy{:};
     
 if isnan(yExitDirAgents(find(isnan(yExitDirAgents)))); error('fc: isnan!'); end
 
@@ -454,12 +482,23 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         % compute physical forces from walls 
         %----------------------------------------------------
         
+        %----------------------------------------------------
+        % add second part of social wall force:
+        
         % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]
         % ...this is  exp[r/B] :
-        dummy = num2cell([AGENT(iagent).FxArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
+        dummy = num2cell([AGENT(iagent).FxArch] * exp([AGENT(iagent).Size]/Parameter.B) );% *[AGENT(iagent).DirXwalls]);               %add agent radii to force field
         [AGENT(iagent).FxArch] = dummy{:};
-        dummy = num2cell([AGENT(iagent).FyArch] * exp([AGENT(iagent).Size]/Parameter.B));               %add agent radii to force field
+        dummy = num2cell([AGENT(iagent).FyArch] * exp([AGENT(iagent).Size]/Parameter.B) );% *[AGENT(iagent).DirYwalls]);               %add agent radii to force field
         [AGENT(iagent).FyArch] = dummy{:};
+        %----------------------------------------------------
+        
+        %%%%%%%%%%%%%%%%%%%%
+        %NOT CORRECT BECAUSE RADIUS PART IS NOT ACCOUNTED FOR DIFFERENT
+        %DIRECTIONS (x,y) BUT FOR THE TOTAL FORCE !!!!
+        % as such F_exits and F_walls fit not together...
+        %%%%%%%%%%%%%%%%%%%
+        
         
         if AtWall
             if minWallDist==0
@@ -498,12 +537,12 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
     
     
     % velocity change in x-direction
-    v0_x                    = [AGENT(1:nagent).VMax] .* [AGENT(1:nagent).xExitDir];
+    v0_x                    = [AGENT(1:nagent).VMax] .* [AGENT(1:nagent).DirXexit];
     dvi_x                   = ( (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxSoc]./m + [AGENT.FxArch]./m ) .*dt;	%change of velocity
     v_x                     = v0_x + dvi_x;
     
     % velocity change in y-direction
-    v0_y                    = [AGENT(1:nagent).VMax] .* [AGENT(1:nagent).yExitDir];
+    v0_y                    = [AGENT(1:nagent).VMax] .* [AGENT(1:nagent).DirYexit];
     dvi_y                   = ( (v0_y - [AGENT.VelY])./t_acc + [AGENT.FySoc]./m + [AGENT.FyArch]./m ) .*dt;	%change of velocity
     v_y                     = v0_y + dvi_y;
     
@@ -581,7 +620,7 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
-        PlotAgents(nagent,AGENT,'y');
+        PlotAgents2(nagent,AGENT,'y');
         
         % plot roads
 %         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
