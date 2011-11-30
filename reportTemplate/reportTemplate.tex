@@ -146,6 +146,21 @@ Eq. \eqref{eq:fiWS} can be rewritten as
 
 \section{Simulation Results and Discussion}
 \subsection{Simple evacuation bottleneck: One exit}
+\subsubsection{direct exit force}
+
+The simplest version of our code has one exit (Fig. \ref{fig:test1}). The attractive force on the agents is defined to be linear towards the exit, thereby neglecting obstacles in between. The agents will not move towards an opening in an obstacle but toward the exit itself. Moreover, this formulation inhibits the agents of running around a bigger obstacle. This is a strong simplification but suitable to test the code.
+The behavior of the agents towards the repulsive walls and towards each other is satisfactory.
+
+\begin{figure}[H]
+\begin{center}
+	\includegraphics[width=16cm]{figures/test1000493.jpg}
+	\caption{Simple simulation of an evacuation bottleneck. Agents (yellow) try to exit a room surrounded by repulsive walls (red) with an 1 m-wide door towards an attractive exit (green).}
+	\label{fig:test1}
+\end{center}
+\end{figure}
+
+\subsubsection{shortest path formulation}
+
 \subsection{Simple evacuation bottleneck: Two exits}
 \subsection{Evacuation through a road network}
 \subsection{Evacuation through a road network with topography and flooding}
