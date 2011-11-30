@@ -11,12 +11,12 @@
 
 clear;
 
-savingPlots = logical(1);  filename = 'test1';
+savingPlots = logical(0);  filename = 'test4';
 
 %numerical parameter
-resolution       	= 0.1;      % resolution in [m]
-dt                	= 0.05;    	% time step in [s]
-maxtime          	= 2000;       % maximum time to run in [min]
+resolution       	= 0.1;      % resolution in [m]            0.1
+dt                	= 0.05;    	% time step in [s]              0.05
+maxtime          	= 5;       % maximum time to run in [min]
 
 %physical parameter
 nagent          	= 50;      % number of agents
@@ -40,8 +40,9 @@ cutoffVelocity   	= logical(1); %sets maximum velocity at v0
 t_acc            	= 0.5;      % acceleration time in [s]
 
 %plotting parameters
-Marking             = 'number'; %'number', 'smiley'
-
+PLOTTING.Marking    = 'number'; %'number', 'smiley'
+PLOTTING.FontSize   = 14;
+PLOTTING.Color      = 'y';      %agents color
 
 
 addpath ./DecisionStrategy/
@@ -265,18 +266,20 @@ PreFac = ([AGENT(1:nagent).VMax]'./exp(-3.5*0.05));
 
 % plot setup
 figure(1),clf
+set(cla,'FontSize',PLOTTING.FontSize)
 hold on
 % plot buildings
 PlotBuildings(BuildingList,'r');
 PlotBuildings(ExitList,'g');
 % plot agents
-PlotAgents2(nagent,AGENT,'y',Marking);
+PlotAgents2(nagent,AGENT,PLOTTING);
 axis equal
 axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 box on
-title('time = 0.00 min')
+title('time = 0.00 min','FontSize',PLOTTING.FontSize)
 xlabel('x [m]')
 ylabel('y [m]')
+
 
 %==========================================================================
 % time loop
@@ -637,9 +640,10 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
     % plot
     %----------------------------------------------------
     
-    if mod(itime,10)==0
+    if mod(itime,5)==0
     
         figure(1),clf
+        set(cla,'FontSize',PLOTTING.FontSize)
         hold on
         %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
         % plot topo
@@ -652,24 +656,24 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
-        PlotAgents2(nagent,AGENT,'y',Marking);
+        PlotAgents2(nagent,AGENT,PLOTTING);
         
         % plot roads
 %         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
-        title(['time = ',num2str(time/60,3),' min'])
+        title(['time = ',num2str(time/60,3),' min'],'FontSize',PLOTTING.FontSize)
         xlabel('x [m]')
         ylabel('y [m]')
-        
+
         
         %saving plots
         if savingPlots
             directory = ['+images/',filename,'/'];
             if ~exist(directory); mkdir(directory); end
             filename2 = [filename,num2str(itime,'%5.6d')];
-            print([directory,filename2],'-djpeg90','-r150')
+            print([directory,filename2],'-djpeg90','-r300')
         end
     end
 end
