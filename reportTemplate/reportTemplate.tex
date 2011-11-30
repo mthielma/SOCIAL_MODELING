@@ -100,36 +100,40 @@ Fabio: 376 bugs
 The "social" repulsive force defined here for the walls/buildings can be written in mathematical terms as
 
 \begin{equation}
-	{f_{iWS}} = \left\{ {{A_i}\exp \left[ {\frac{{\left( {{r_i} - {d_{iW}}} \right)}}{{{B_i}}}} \right]} \right\}{n_{iW}}
+	{f_{iWS}} = \left\{ {{A_i}\exp \left[ {\frac{{\left( {{r_i} - {d_{iW}}} \right)}}{{{B_i}}}} \right]} \right\}{n_{iW}} ,
 	\label{eq:fiWS}
 \end{equation}
 
 where $A_i$ and $B_i$ are constants, $n_{iW}$ is the normalized vector pointing from the pedestrian to the wall, $d_{iW}$ is the distance in between and $r_i$ is the size (i.e. radius) of the pedestrian (Helbing et al., 2000).
 
-The physical wall forces can be divided into a normal force acting from the wall and written as
+The physical wall forces can be divided into a normal force and a tangential force acting from the wall and written as
 
 \begin{equation}
 	{f_{iWPn}} = \left\{ {kg\left( {{r_i} - {d_{iW}}} \right)} \right\}{n_{iW}}
 	\label{eq:fiWPn}
 \end{equation}
 
-and a tangential force
+and
 
 \begin{equation}
-	{f_{iWPt}} = \left\{ {\kappa g\left( {{r_i} - {d_{iW}}} \right)\left( {{v_i} \cdot {t_{iW}}} \right)} \right\}{t_{iW}}
+	{f_{iWPt}} = \left\{ {\kappa g\left( {{r_i} - {d_{iW}}} \right)\left( {{v_i} \cdot {t_{iW}}} \right)} \right\}{t_{iW}} ,
 	\label{eq:fiWPt}
 \end{equation}
 
-where the function $g$ is zero if the pedestrian does not touch the wall, $k$ and $\kappa$ are large constants and $(v_i \cdot t_{iW})$ is the tangential velocity difference.
+respectively. Here, the function $g$ is zero if the pedestrian does not touch the wall, $k$ and $\kappa$ are large constants and $(v_i \cdot t_{iW})$ is the tangential velocity difference.
+
+The total repulsive force from the architecture can then be written as
 
 \begin{equation}
-	{f_{iW}} = {f_{iWS}} + {f_{iWPn}} - {f_{iWPt}}
+	{f_{iW}} = {f_{iWS}} + {f_{iWPn}} - {f_{iWPt}} .
 	\label{eq:fiW}
 \end{equation}
 
 
-
 \subsubsection{Attractive forces}
+
+The attractive forces ($f_{iAS}$) in this work are defined in two different ways. For the simple models we use a constant force acting straight towards the attractor, neglecting obstacles in between. A more elaborated and also a more nature like formulation is used later on. It takes into account, that the pedestrians know the shortest path towards the attractive source (e.g. an exit) around any obstacle.
+
 \subsection{Physical forces}
 \subsection{Walking speed}
 \subsection{Flooding}
@@ -184,6 +188,8 @@ The behavior of the agents towards the repulsive walls and towards each other is
 \subsection{Evacuation of a beach in the case of a tsunami event}
 
 \section{Summary and Outlook}
+
+Christmas Tree!
 
 \section{References}
 
