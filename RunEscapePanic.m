@@ -84,6 +84,10 @@ ExitList = [
             ]; % coordinates of exits: xmin xmax ymin ymax
        
        
+%---------------------------------------
+% test map
+%---------------------------------------
+TestMap(Parameter,BuildingList,ExitList,filename,topo_name);      
        
 %---------------------------------------
 % run simulation
