@@ -1,4 +1,4 @@
-function EscapePanic(Parameter,BuildingList,ExitList)         
+function EscapePanic(Parameter,BuildingList,ExitList,filename,topo_name)         
 
 % workflow control
 PlotSetup = false;
@@ -27,8 +27,14 @@ xvec                = xmin:resolution:xmax;
 yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
-% set topography
-Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
+% load topography
+
+% if strcmp(topo_name,'none')
+    Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
+% else
+%     load(topo_name);
+%     Z_Grid = interp2(TopoX,TopoY,TopoZ,X_Grid,Y_Grid);
+% end
 
 % compute topography gradient
 [Gradient_x,Gradient_y] = gradient(Z_Grid,resolution,resolution);
@@ -298,9 +304,13 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % save data
     %----------------------------------------------------
-    if mod(itime,5)==0
-        filename = ['Escape',num2str(itime,'%5.6d')];
-        save(filename,'AGENT')
+    if mod(itime,1)==0
+        filestem = ['+output/',filename];
+        if ~exist(filestem); mkdir(filestem); end
+        
+        filename_full = [filestem,'/',filename,'_',num2str(itime,'%5.6d')];
+        
+        save(filename_full,'AGENT')
     end
     
     %----------------------------------------------------

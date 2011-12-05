@@ -1,5 +1,8 @@
 clear;
 
+filename                = 'ahoi';
+topo_name               = 'none';
+
 % domain
 Parameter.xmin                = 0;
 Parameter.xmax                = 20;
@@ -85,7 +88,7 @@ ExitList = [
 %---------------------------------------
 % run simulation
 %---------------------------------------
-EscapePanic(Parameter,BuildingList,ExitList);
+EscapePanic(Parameter,BuildingList,ExitList,filename,topo_name);
 
 
 
