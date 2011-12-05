@@ -276,7 +276,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % move agents
     %----------------------------------------------------
-    [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,Parameter.dt,nagent);
+    [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,Parameter.dt,nagent,Parameter);
     
     %----------------------------------------------------
     % remove successfull agents
