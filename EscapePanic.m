@@ -336,9 +336,13 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % save data
     %----------------------------------------------------
-    if mod(itime,save_time)==0
-        filename = ['Escape',num2str(itime,'%5.6d')];
-        save(filename,'AGENT')
+    if mod(itime,1)==0
+        filestem = ['+output/',Foldername];
+        if ~exist(filestem); mkdir(filestem); end
+        
+        filename_full = [filestem,'/',Foldername,'_',num2str(itime,'%5.6d')];
+        
+        save(filename_full,'AGENT')
     end
     
     %----------------------------------------------------

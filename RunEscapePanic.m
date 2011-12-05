@@ -96,7 +96,7 @@ ExitList = [
 %---------------------------------------
 % test map
 %---------------------------------------
-TestMap(Parameter,BuildingList,ExitList,filename,topo_name);      
+% TestMap(Parameter,BuildingList,ExitList,filename,topo_name);      
        
 %---------------------------------------
 % run simulation
