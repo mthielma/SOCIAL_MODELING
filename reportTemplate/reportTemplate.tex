@@ -84,11 +84,14 @@ Several external packages are used that are freely available at Matlab FileExcha
 
 Hei M\"ase, we should first define what we mean by social and physical forces. I'm not sure if there is something like social forces between an agent and a wall. I mean normally there is not...
 
+Hei Fäbu, in dem Helbing paper gibts definitiv social forces zwischen Wand und den agents. Irgendwie soll das ausdrücken, dass die agents nicht so nah an der Wand laufen wollen. Wir können aber auch argumentieren, dass diese Kräfte in ner Paniksituation ziemlich wurscht sind.
+
 I don't know how to make bold characters
 
 \section{Individual contributions}
+Marcel: 376 bugs
+Fabio: 376 bugfixes
 
-Fabio: 376 bugs
 
 \section{Introduction and Motivations}
 
@@ -131,9 +134,8 @@ The total repulsive force from the architecture can then be written as
 
 
 \subsubsection{Attractive forces}
-
-The attractive forces ($f_{iAS}$) in this work are defined in two different ways. For the simple models we use a constant force acting straight towards the attractor, neglecting obstacles in between. A more elaborated and also a more nature like formulation is used later on. It takes into account, that the pedestrians know the shortest path towards the attractive source (e.g. an exit) around any obstacle.
-
+In our model, the sole attractive force is the exit force. As for the social forces, it is rather a psychological force representing the will of each agent to reach the exit. In this work, we chose value of the exit force to be proportional to the sum of the other psychological forces (in our code, one can choose a proportionality constant to adjust the exit force). To determine the direction of the exit force, we used two different approaches: i) the agent is drawn directly towards the exit, regardless of any obstacles in between him and an exit, and ii) the agent decides on its walking direction based on the estimate of the time it needs to reach the exit.\\
+While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect at all the decision process of a human agent, since obstacles between the agent and the exit are always taken into account. Second, 
 \subsection{Physical forces}
 \subsection{Walking speed}
 \subsection{Flooding}
@@ -155,6 +157,8 @@ Eq. \eqref{eq:fiWS} can be rewritten as
 
 
 \subsubsection{Exit forces}
+In this section, we show two approaches to tackle the problem of the psychological exit force. Using small and rather simple models, we show the differences that arise from the different implementations. We then choose one of
+
 \subsubsection{Agent forces}
 \subsection{Physical forces}
 
@@ -181,7 +185,9 @@ The behavior of the agents towards the repulsive walls and towards each other is
 \end{figure}
 
 \subsubsection{shortest path formulation}
-
+Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. One of the earliest solutions to this problem was presented by Dykstra (reference). Shebian (right name? reference?) presented a fast and efficient method to solve a certain class of shortest path problems, which  is called the Fast marching method. It is a special case of level set methods and solve the Eikonal equation (equation?). This equation describes the We can essentially apply this algorithm to our problem
+In a more sophisticated version of the code, we make use of a fast marching algorithm that takes into account walls as being regions with a low velocity. We compute the shortest path
+subsection{Simple evacuation bottleneck: One exit with topography}
 \subsection{Simple evacuation bottleneck: Two exits}
 \subsection{Evacuation through a road network}
 \subsection{Evacuation through a road network with topography and flooding}
