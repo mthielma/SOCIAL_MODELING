@@ -15,22 +15,29 @@ Parameter.dt                	= 0.01;    	% time step in [s]
 Parameter.maxtime               = 3;       % maximum time to run in [min]
 
 Parameter.pert_social           = 0.05;     % maximal amplitude factor of social agent forces perturbation
-Parameter.decision_time         = 0.1;      % after which time does an agent redecide on its path?
+Parameter.decision_time         = 0.01;      % after which time does an agent redecide on its path?
 
 % physical forces parameters (Helbing,2000)
 Parameter.PhysicalForces    = true;
 Parameter.Tangential        = false;
-Parameter.k                 = 1.2e5;
+Parameter.k                 = 1.2e7;
 Parameter.kappa             = 2.4e5;
 
 % social force parameters
 Parameter.SocialForces   = true;
 Parameter.A             = 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B             = 0.08;     %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor    = 2;        %for adjusting strength of constant exit force field
+Parameter.ExitFactor    = 1;        %for adjusting strength of constant exit force field
 
 % shortest path computation
-Parameter.agent_sensitivity   = 1; % how much are agents taken into account when computing the shortest path? [0: not taken into account - high value: taken into account]
+Parameter.orig_sensitivity    = 3; % best to leave this fixed
+Parameter.agent_sensitivity   = 2; % how much are agents taken into account when computing the shortest path? [0: not taken into account - high value: taken into account]
+Parameter.topo_sensitivity    = 1; % sensitivity of agents to topography
+
+% parameters for slope-dependent velocity
+Parameter.slope_f = 3.5;
+Parameter.slope_crit = 0.05;
+
 
 % agent parameters (can be perturbed with a random perturbation)
 Parameter.m                 = 80;       % mass in kg
@@ -40,7 +47,7 @@ Parameter.v0_pert           = 1;
 
 Parameter.t_acc            	= 0.5;      % acceleration time in [s]
 
-Parameter.AgentSize         = 0.3;      % agent radius
+Parameter.AgentSize         = 0.25;      % agent radius
 Parameter.AgentSize_pert    = 0.05; 
 
 Parameter.BoxSize           = 5;      % agent box size
@@ -58,8 +65,8 @@ BuildingList = [
                %  9 12 3 4
                %  8 10 7 8
                % 9  11 2 4
-                15 16 5 9   %top barriere
-                15 16 1 4   %bottom barriere
+                15 16 5.5 9   %top barriere
+                15 16 1 4.5   %bottom barriere
                  
                 ]; % coordinates of building xmin xmax ymin ymax
             
