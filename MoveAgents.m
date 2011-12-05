@@ -1,4 +1,4 @@
-function [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,dt,nagent)
+function [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,dt,nagent,Parameter)
 
 % according to [Helbing 2000]:
 % a = dvi/dt = (v0_x - [AGENT.VelX])./t_acc + [AGENT.FxArch]./m + [AGENT.FxPedestrians]./m
@@ -15,8 +15,9 @@ agent_gy = interp2(X_Grid,Y_Grid,Gradient_y,[AGENT.LocX],[AGENT.LocY],'*linear')
 % compute slope in walking direction
 slope = sum([agent_gx' agent_gy'].*[[AGENT(:).DirX]' [AGENT(:).DirY]'],2);
 % limit maxmimum velocity
-PreFac = ([AGENT(1:nagent).VMax]'./exp(-3.5*0.05));
-V_max_agent = PreFac.*exp(-3.5.*abs(slope+0.05));
+
+PreFac = ([AGENT(1:nagent).VMax]'./exp(-Parameter.slope_f*Parameter.slope_crit));
+V_max_agent = PreFac.*exp(-Parameter.slope_f.*abs(slope+Parameter.slope_crit));
 
 %==========================================================
 % compute velocity change
