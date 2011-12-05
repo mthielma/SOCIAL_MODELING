@@ -94,10 +94,17 @@ Fabio: 376 bugs
 
 \section{Description of the Model}
 
-\subsection{Social forces}
-\subsubsection{Repulsive forces}
+\subsection{Agent}
+\subsubsection{Psychological forces}
 
-The "social" repulsive force defined here for the walls/buildings can be written in mathematical terms as
+\subsubsection{Physical forces}
+
+
+\subsection{Walls}
+
+\subsubsection{Psychological forces}
+
+The psychological repulsive force defined here for the walls/buildings can be written in mathematical terms as
 
 \begin{equation}
 	{f_{iWS}} = \left\{ {{A_i}\exp \left[ {\frac{{\left( {{r_i} - {d_{iW}}} \right)}}{{{B_i}}}} \right]} \right\}{n_{iW}} ,
@@ -105,6 +112,8 @@ The "social" repulsive force defined here for the walls/buildings can be written
 \end{equation}
 
 where $A_i$ and $B_i$ are constants, $n_{iW}$ is the normalized vector pointing from the pedestrian to the wall, $d_{iW}$ is the distance in between and $r_i$ is the size (i.e. radius) of the pedestrian (Helbing et al., 2000).
+
+\subsubsection{Physical forces}
 
 The physical wall forces can be divided into a normal force and a tangential force acting from the wall and written as
 
@@ -130,20 +139,34 @@ The total repulsive force from the architecture can then be written as
 \end{equation}
 
 
-\subsubsection{Attractive forces}
+
+\subsection{Exits}
 
 The attractive forces ($f_{iAS}$) in this work are defined in two different ways. For the simple models we use a constant force acting straight towards the attractor, neglecting obstacles in between. A more elaborated and also a more nature like formulation is used later on. It takes into account, that the pedestrians know the shortest path towards the attractive source (e.g. an exit) around any obstacle.
 
-\subsection{Physical forces}
+
+\subsection{Flood}
+
+\subsection{Topography}
+
 \subsection{Walking speed}
-\subsection{Flooding}
+
+
 
 \section{Implementation}
-This section is meant to both give an overview of the methods used in this code as well as to provide a documentation of the code. Therefore, some details are mentioned here that might not be crucial for any code that simulates pedestrian dynamics, but are needed in our implementation. 
-\subsection{Initialization of Buildings and Agents}
-\subsection{Social forces}
 
-\subsubsection{Architecture forces}
+This section is meant to both give an overview of the methods used in this code as well as to provide a documentation of the code. Therefore, some details are mentioned here that might not be crucial for any code that simulates pedestrian dynamics, but are needed in our implementation. 
+
+\subsection{Initialization of Buildings and Agents}
+
+\subsection{Agents}
+
+\subsubsection{Agent forces}
+
+
+\subsection{Architecture}
+
+\subsubsection{Repulsive walls}
 
 Eq. \eqref{eq:fiWS} can be rewritten as
 
@@ -152,22 +175,20 @@ Eq. \eqref{eq:fiWS} can be rewritten as
 	\label{eq:fiWS2}
 \end{equation}
 
-
-
 \subsubsection{Exit forces}
-\subsubsection{Agent forces}
-\subsection{Physical forces}
 
-\subsubsection{Wall forces}
 
-\subsubsection{Agent forces}
 \subsection{Walking speed}
+
 \subsection{Flooding}
 
 
+
 \section{Simulation Results and Discussion}
+
 \subsection{Simple evacuation bottleneck: One exit}
-\subsubsection{direct exit force}
+
+\subsubsection{Direct exit force}
 
 The simplest version of our code has one exit (Fig. \ref{fig:test1}). The attractive force on the agents is defined to be linear towards the exit, thereby neglecting obstacles in between. The agents will not move towards an opening in an obstacle but toward the exit itself. Moreover, this formulation inhibits the agents of running around a bigger obstacle. This is a strong simplification but suitable to test the code.
 The behavior of the agents towards the repulsive walls and towards each other is satisfactory.
@@ -180,7 +201,7 @@ The behavior of the agents towards the repulsive walls and towards each other is
 	\end{center}
 \end{figure}
 
-\subsubsection{shortest path formulation}
+\subsubsection{Shortest path formulation}
 
 \subsection{Simple evacuation bottleneck: Two exits}
 \subsection{Evacuation through a road network}
