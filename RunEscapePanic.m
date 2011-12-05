@@ -2,11 +2,11 @@ clear;
 
 
 % Workflow control
-ShortestPath = false; % true or false, determines if the fast marching algorithm is used for shortest path computation (true), or if the exit direction is the direct line (false)
+Parameter.DirectExitPath = true; % true or false, determines if the fast marching algorithm is used for shortest path computation (false), or if the exit direction is the direct line (true)
 
-WithAgents = false; % true or false, determines if agents are taken into account for shortest path computation
-WithTopo   = false; % true or false, determines if topography is taken into account for shortest path computation
-WithFlood  = false; % true or false, determines if flood is taken into account for shortest path computation
+Parameter.WithAgents = false; % true or false, determines if agents are taken into account for shortest path computation
+Parameter.WithTopo   = false; % true or false, determines if topography is taken into account for shortest path computation
+Parameter.WithFlood  = false; % true or false, determines if flood is taken into account for shortest path computation
 
 % subfolder and topo information
 Foldername = 'test'; % subfolder where output is to be stored
@@ -97,7 +97,7 @@ ExitList = [
 %---------------------------------------
 % run simulation
 %---------------------------------------
-EscapePanic(Parameter,BuildingList,ExitList);
+EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name);
 
 
 

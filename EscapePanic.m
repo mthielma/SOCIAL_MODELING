@@ -5,6 +5,14 @@ PlotSetup = false;
 PlotEvolution = true;
 save_time = 5; % after how many timesteps is an output file saved?
 
+
+% Workflow control
+DirectExitPath = Parameter.DirectExitPath;
+WithAgents = Parameter.WithAgents;
+WithTopo   = Parameter.WithTopo;
+WithFlood  = Parameter.WithFlood;
+
+
 % subfolder and topo information
 Foldername = 'test'; % subfolder where output is to be stored
 
@@ -108,13 +116,13 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute shortest path to exit
 %----------------------------------------------------
-if (ShortestPath && ~WithTopo)
+if (~DirectExitPath && ~WithTopo)
     % compute shortest path without topography with fast marchng algorithm
     [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
-elseif (ShortestPath && WithTopo)
+elseif (~DirectExitPath && WithTopo)
     % compute shortest path with topography with fast marchng algorithm
     [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
-elseif ~ShortestPath
+elseif DirectExitPath
     % compute exit direction directly
     [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
 end
@@ -191,11 +199,11 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     
     
-    if (ShortestPath && WithAgents)
+    if (~DirectExitPath && WithAgents)
         if (mod(itime,decision_step)==0 || itime==1)
             [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
         end
-    elseif (ShortestPath && WithAgents && WithFlood)
+    elseif (~DirectExitPath && WithAgents && WithFlood)
         error('not yet implemented')
     end
     
