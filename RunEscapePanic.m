@@ -1,5 +1,18 @@
 clear;
 
+
+% Workflow control
+ShortestPath = false; % true or false, determines if the fast marching algorithm is used for shortest path computation (true), or if the exit direction is the direct line (false)
+
+WithAgents = false; % true or false, determines if agents are taken into account for shortest path computation
+WithTopo   = false; % true or false, determines if topography is taken into account for shortest path computation
+WithFlood  = false; % true or false, determines if flood is taken into account for shortest path computation
+
+
+% subfolder and topo information
+Foldername = 'test'; % subfolder where output is to be stored
+Topo_name  = 'none'; % topography file to be loaded (if there is none, use 'none')
+
 % domain
 Parameter.xmin                = 0;
 Parameter.xmax                = 20;
