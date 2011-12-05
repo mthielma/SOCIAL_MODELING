@@ -1,8 +1,21 @@
-function EscapePanic(Parameter,BuildingList,ExitList,filename,topo_name)         
+function EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name)         
 
 % workflow control
 PlotSetup = false;
 PlotEvolution = true;
+save_time = 5; % after how many timesteps is an output file saved?
+
+
+% Workflow control
+DirectExitPath = Parameter.DirectExitPath;
+WithAgents = Parameter.WithAgents;
+WithTopo   = Parameter.WithTopo;
+WithFlood  = Parameter.WithFlood;
+
+
+% subfolder and topo information
+Foldername = 'test'; % subfolder where output is to be stored
+
 
 
 %==========================================================================
@@ -27,15 +40,13 @@ xvec                = xmin:resolution:xmax;
 yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
-% load topography
-
-% if strcmp(topo_name,'none')
-    Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
-% else
-%     load(topo_name);
-%     Z_Grid = interp2(TopoX,TopoY,TopoZ,X_Grid,Y_Grid);
-% end
-
+% set topography
+if strcmp(Topo_name,'none')
+Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
+else
+   load(Topo_name);
+   Z_Grid = interp2(XTopo,YTopo,ZTopo,X_Grid,Y_Grid);
+end
 % compute topography gradient
 [Gradient_x,Gradient_y] = gradient(Z_Grid,resolution,resolution);
 
@@ -103,10 +114,18 @@ y_Buildings = Y_Grid(BuildingMap);
 [ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
 
 %----------------------------------------------------
-% compute shortest path based on topography
+% compute shortest path to exit
 %----------------------------------------------------
-[Dgradx_orig,Dgrady_orig,D_orig] = ComputeShortestPathGlobal(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
-[Dgradx_topo,Dgrady_topo,D_topo] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
+if (~DirectExitPath && ~WithTopo)
+    % compute shortest path without topography with fast marchng algorithm
+    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
+elseif (~DirectExitPath && WithTopo)
+    % compute shortest path with topography with fast marchng algorithm
+    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
+elseif DirectExitPath
+    % compute exit direction directly
+    [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
+end
 %----------------------------------------------------
 % plot setup
 %----------------------------------------------------
@@ -140,6 +159,13 @@ while (time <= maxtime && size(AGENT,2)>0)
     if (nagent~=size(AGENT,2)); error('fc: nagent not equal nr. of agents!'); end
 
     %----------------------------------------------------
+    % compute flooding
+    %----------------------------------------------------
+    if WithFlood
+       error('not yet implemented') 
+    end
+    
+    %----------------------------------------------------
     % compute kdtree of agents for later use
     %----------------------------------------------------
     ReferencePoints         = zeros(nagent,2);
@@ -171,8 +197,14 @@ while (time <= maxtime && size(AGENT,2)>0)
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-    if (mod(itime,decision_step)==0 || itime==1)
-        [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
+    
+    
+    if (~DirectExitPath && WithAgents)
+        if (mod(itime,decision_step)==0 || itime==1)
+            [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
+        end
+    elseif (~DirectExitPath && WithAgents && WithFlood)
+        error('not yet implemented')
     end
     
     xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
@@ -282,7 +314,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % move agents
     %----------------------------------------------------
-    [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,Parameter.dt,nagent);
+    [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,Parameter.dt,nagent,Parameter);
     
     %----------------------------------------------------
     % remove successfull agents
@@ -304,13 +336,9 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % save data
     %----------------------------------------------------
-    if mod(itime,1)==0
-        filestem = ['+output/',filename];
-        if ~exist(filestem); mkdir(filestem); end
-        
-        filename_full = [filestem,'/',filename,'_',num2str(itime,'%5.6d')];
-        
-        save(filename_full,'AGENT')
+    if mod(itime,save_time)==0
+        filename = ['Escape',num2str(itime,'%5.6d')];
+        save(filename,'AGENT')
     end
     
     %----------------------------------------------------

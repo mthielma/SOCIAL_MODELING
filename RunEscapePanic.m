@@ -1,7 +1,16 @@
 clear;
 
-filename                = 'ahoi';
-topo_name               = 'none';
+
+% Workflow control
+Parameter.DirectExitPath = true; % true or false, determines if the fast marching algorithm is used for shortest path computation (false), or if the exit direction is the direct line (true)
+
+Parameter.WithAgents = false; % true or false, determines if agents are taken into account for shortest path computation
+Parameter.WithTopo   = false; % true or false, determines if topography is taken into account for shortest path computation
+Parameter.WithFlood  = false; % true or false, determines if flood is taken into account for shortest path computation
+
+% subfolder and topo information
+Foldername = 'test'; % subfolder where output is to be stored
+Topo_name  = 'none'; % topography file to be loaded (if there is none, use 'none')
 
 % domain
 Parameter.xmin                = 0;
@@ -92,7 +101,7 @@ TestMap(Parameter,BuildingList,ExitList,filename,topo_name);
 %---------------------------------------
 % run simulation
 %---------------------------------------
-EscapePanic(Parameter,BuildingList,ExitList,filename,topo_name);
+EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name);
 
 
 
