@@ -28,7 +28,7 @@ yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
 % set topography
-Z_Grid = (0.01.*X_Grid+0.08.*Y_Grid);
+Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
 
 % compute topography gradient
 [Gradient_x,Gradient_y] = gradient(Z_Grid,resolution,resolution);
@@ -57,29 +57,23 @@ BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside d
 BuildingList(find(BuildingList(:,2)>xmax),2) = xmax; %adjust building to domain boundary
 BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain boundary
 
-BuildingMap = X_Grid*0;
+BuildingMap = logical(X_Grid*0);
 % add buildings to map
 for i=1:size(BuildingList,1)
-    BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = 1;
+    BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = true;
 end
 
 %-----------------------------------------------------------------
 % create exit map for later use and compute center point of exits
 %-----------------------------------------------------------------
-
-
-Xexit = [(ExitList(:,2)+ExitList(:,1))/2]; 
-Yexit = [(ExitList(:,3)+ExitList(:,4))/2]; 
-       
-       
 ExitList(find(ExitList(:,1)>=xmax),:)   = []; %if exit fully outside domain: remove it!
 ExitList(find(ExitList(:,3)>=ymax),:)   = []; %if exit fully outside domain: remove it!
 ExitList(find(ExitList(:,2)>xmax),2)    = xmax; %adjust exit to domain boundary
 ExitList(find(ExitList(:,4)>ymax),2)    = ymax; %adjust exit to domain boundary
 
-ExitMap = X_Grid*0;
+ExitMap = logical(X_Grid*0);
 for i=1:size(ExitList,1)
-    ExitMap(X_Grid>=ExitList(i,1) & X_Grid<=ExitList(i,2) & Y_Grid>=ExitList(i,3) & Y_Grid<=ExitList(i,4)) = 1;
+    ExitMap(X_Grid>=ExitList(i,1) & X_Grid<=ExitList(i,2) & Y_Grid>=ExitList(i,3) & Y_Grid<=ExitList(i,4)) = true;
 end
 
 
@@ -93,8 +87,8 @@ AGENT   = CreateInitialAgentDistribution(nagent,AGENT,X_Grid,Y_Grid,BuildingMap,
 %----------------------------------------------------
 % building locations
 %----------------------------------------------------
-x_Buildings = X_Grid(BuildingMap==1);
-y_Buildings = Y_Grid(BuildingMap==1);
+x_Buildings = X_Grid(BuildingMap);
+y_Buildings = Y_Grid(BuildingMap);
 
 
 %----------------------------------------------------
@@ -102,7 +96,11 @@ y_Buildings = Y_Grid(BuildingMap==1);
 %----------------------------------------------------
 [ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
 
-
+%----------------------------------------------------
+% compute shortest path based on topography
+%----------------------------------------------------
+[Dgradx_orig,Dgrady_orig,D_orig] = ComputeShortestPathGlobal(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
+[Dgradx_topo,Dgrady_topo,D_topo] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
 %----------------------------------------------------
 % plot setup
 %----------------------------------------------------
@@ -168,7 +166,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
     if (mod(itime,decision_step)==0 || itime==1)
-        [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingList,Xexit,Yexit,X_Grid,Y_Grid,Gradient_x,Gradient_y,AGENT,nagent,Parameter);
+        [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
     end
     
     xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
@@ -305,19 +303,22 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % plot
     %----------------------------------------------------
-    
+
+
     if (PlotEvolution && mod(itime,5)==0)
 
         figure(1),clf
         hold on
-
+        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
+        
         PlotAgents(nagent,AGENT,'y');
+        
 %        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'g')
+        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
