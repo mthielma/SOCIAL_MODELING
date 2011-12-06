@@ -120,7 +120,17 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV3(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+
+if logical(0)
+   figure(2),clf
+   pcolor(X_Grid,Y_Grid,ArchForce)
+   colorbar
+   axis tight; axis equal;
+   figure(3),clf
+   quiver(X_Grid,Y_Grid,ArchDirX,ArchDirY)
+   axis tight; axis equal;
+end
 
 %----------------------------------------------------
 % compute shortest path to exit
@@ -135,6 +145,18 @@ elseif DirectExitPath
     % compute exit direction directly
     [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
 end
+
+if logical(0)
+%    figure(2),clf
+%    pcolor(X_Grid,Y_Grid,ArchForce)
+%    colorbar
+%    axis tight; axis equal;
+   
+   figure(3),clf
+   quiver(X_Grid,Y_Grid,Dgradx,Dgrady)
+   axis tight; axis equal;
+end
+
 
 %----------------------------------------------------
 % plot setup
@@ -204,12 +226,20 @@ while (time <= maxtime && size(AGENT,2)>0)
         [AGENT(1:nagent).FySocialWalls]       = deal(0);
     end
     
+    if logical(0)
+        figure(2),clf
+        pcolor(X_Grid,Y_Grid,ArchForce)
+        colorbar
+        axis tight; axis equal;
+        figure(3),clf
+        quiver(X_Grid,Y_Grid,ArchDirX,ArchDirY)
+        axis tight; axis equal;
+    end
     
     %----------------------------------------------------
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-
     if (~DirectExitPath && WithAgents)
         if (mod(itime,decision_step)==0 || itime==1)
             [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
@@ -364,8 +394,8 @@ while (time <= maxtime && size(AGENT,2)>0)
     if (PlotEvolution && mod(itime,Parameter.PlotTimeStep)==0)
 
         figure(1),clf
-        hold on
-        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
+%         hold on
+%         pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
@@ -382,7 +412,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         title(['time = ',num2str(time/60,3),' min'])
         xlabel('x [m]')
         ylabel('y [m]')
-        
+        pause(0.01)
     end
 end
 
