@@ -25,19 +25,16 @@ WithTopo   = Parameter.WithTopo;
 WithFlood  = Parameter.WithFlood;
 
 
-% subfolder and topo information
-Foldername = 'test'; % subfolder where output is to be stored
-
 
 
 %==========================================================================
 % add necessary paths
 %==========================================================================       
-addpath ./DecisionStrategy/
-addpath ./WallForces/
-addpath ./Plotting/
-addpath ./kdtree_alg_OSX/
-addpath ./FastMarching_version3b, add_function_paths();
+addpath ../DecisionStrategy/
+addpath ../WallForces/
+addpath ../Plotting/
+addpath ../kdtree_alg_OSX/
+addpath ../FastMarching_version3b, add_function_paths();
 
 %==========================================================================
 % initialize grid
