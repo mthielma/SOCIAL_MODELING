@@ -12,7 +12,7 @@ x_building = x_building(ind);
 y_building = y_building(ind);
 
 % compute normal and tangential vector
-Normal(:,1)         = (x_agent - x_building)./minWallDist2;  %DistanceToAgents should not be zero!
+Normal(:,1)         = (x_agent - x_building)./minWallDist2;
 Normal(:,2)         = (y_agent - y_building)./minWallDist2;
 
 Tangent(:,1)         = -Normal(:,2);
@@ -20,8 +20,8 @@ Tangent(:,2)         = Normal(:,1);
 
 if WallDist>=0
     % normal force
-    F_physWall_normalX = 3*Parameter.k.*WallDist.*Normal(:,1);
-    F_physWall_normalY = 3*Parameter.k.*WallDist.*Normal(:,2);
+    F_physWall_normalX = Parameter.k.*WallDist.*Normal(:,1);
+    F_physWall_normalY = Parameter.k.*WallDist.*Normal(:,2);
     
     if Parameter.Tangential
         % tangential force

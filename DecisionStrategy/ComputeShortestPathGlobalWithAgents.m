@@ -31,15 +31,23 @@ end
 [D_agent]=msfm(F_agent, ExitPoints);
 %[D_test] = msfm2d_gradient(Z_Grid,Parameter.resolution,Parameter, ExitPoints,false,false);
 
+
+
+% compute gradients of both fields and add the directions
+[Dgradx_bg,Dgrady_bg] = gradient(D_orig,Parameter.resolution,Parameter.resolution);
 [Dgradx,Dgrady] = gradient(D_agent,Parameter.resolution,Parameter.resolution);
+
+
+Dgradx = Dgradx_bg+Parameter.orig_sensitivity.*Dgradx;
+Dgrady = Dgrady_bg+Parameter.orig_sensitivity.*Dgrady;
 
 Dgradtot = sqrt(Dgradx.^2+Dgrady.^2);
 Dgradx   = -Dgradx./Dgradtot;
 Dgrady   = -Dgrady./Dgradtot;
 
 % scale d_orig and D_agent to their respective max
-D_orig(~BuildingMap) = D_orig(~BuildingMap)./max(D_orig(~BuildingMap(:)));
-D_agent(~BuildingMap) = D_agent(~BuildingMap)./max(D_agent(~BuildingMap(:)));
+% D_orig(~BuildingMap) = D_orig(~BuildingMap)./max(D_orig(~BuildingMap(:)));
+% D_agent(~BuildingMap) = D_agent(~BuildingMap)./max(D_agent(~BuildingMap(:)));
 
 % compute mixture of both fields taking into account sensitivity to agents
 % in the way

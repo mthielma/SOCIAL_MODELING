@@ -1,18 +1,9 @@
-% =========================
-% EscapePanic      
-% =========================
-function EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name)
+%function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name)         
 
-if nargin==0
-    
-    clear;
-    [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
+%if nargin == 0
+   TwoExitsStandardSetup; 
+%end
 
-    %plotting parameters
-    PLOTTING.Marking    = 'number'; %'number', 'smiley'
-    PLOTTING.FontSize   = 11;
-    PLOTTING.Color      = 'y';      %agents color
-end
 
 % workflow control
 PlotSetup = false;
@@ -25,11 +16,6 @@ DirectExitPath = Parameter.DirectExitPath;
 WithAgents = Parameter.WithAgents;
 WithTopo   = Parameter.WithTopo;
 WithFlood  = Parameter.WithFlood;
-
-
-% subfolder and topo information
-Foldername = 'test'; % subfolder where output is to be stored
-
 
 
 %==========================================================================
@@ -113,8 +99,20 @@ nagent  = Parameter.nagent;
 AGENT   = InitializeAgents(nagent,Parameter);
 
 % create random agent distribution
+if strcmp(Parameter.AgentSetup,'random')
 AGENT   = CreateInitialAgentDistribution(nagent,AGENT,X_Grid,Y_Grid,BuildingMap,BoundaryMap,StartArea,ExitMap);
-
+elseif strcmp(Parameter.AgentSetup,'given')
+    cell_array = num2cell(AgentX);
+    [AGENT(1:nagent).LocX]      = cell_array{:};
+    cell_array = num2cell(AgentY);
+    [AGENT(1:nagent).LocY]      = cell_array{:};
+elseif strcmp(Parameter.AgentSetup,'load')
+    load(Parameter.AgentLocationFile);
+    cell_array = num2cell(AgentX);
+    [AGENT(1:nagent).LocX]      = cell_array{:};
+    cell_array = num2cell(AgentY);
+    [AGENT(1:nagent).LocY]      = cell_array{:};
+end
 %----------------------------------------------------
 % building locations
 %----------------------------------------------------
@@ -125,7 +123,7 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
 
 %----------------------------------------------------
 % compute shortest path to exit
@@ -140,10 +138,10 @@ elseif DirectExitPath
     % compute exit direction directly
     [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
 end
-
 %----------------------------------------------------
 % plot setup
 %----------------------------------------------------
+
 if PlotSetup
     % plot setup
     figure(1),clf
@@ -152,8 +150,7 @@ if PlotSetup
     PlotBuildings(BuildingList,'r');
     PlotBuildings(ExitList,'g');
     % plot agents
-    %         PlotAgents(nagent,AGENT,'y');
-    PlotAgents2(nagent,AGENT,PLOTTING);
+    PlotAgents(nagent,AGENT,'y');
     axis equal
     axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
     box on
@@ -161,8 +158,6 @@ if PlotSetup
     xlabel('x [m]')
     ylabel('y [m]')
 end
-
-
 %==========================================================================
 % time loop
 
@@ -173,8 +168,9 @@ while (time <= maxtime && size(AGENT,2)>0)
     disp('*****************************************')
     disp(['timestep ',num2str(itime),':    time = ',num2str(time/60),' min'])
     
-    if (nagent~=size(AGENT,2)); error('fc: nagent not equal nr. of agents!'); end
-
+    if sum(isnan([AGENT.LocX]))
+        error('NaN');
+    end
     %----------------------------------------------------
     % compute flooding
     %----------------------------------------------------
@@ -214,7 +210,8 @@ while (time <= maxtime && size(AGENT,2)>0)
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-
+    
+    
     if (~DirectExitPath && WithAgents)
         if (mod(itime,decision_step)==0 || itime==1)
             [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
@@ -260,7 +257,6 @@ while (time <= maxtime && size(AGENT,2)>0)
         [AGENT,x_others,y_others,others_size] = GetSurroundingAgents(iagent,AGENT,tree);
         
         [Normal,Tangent,DistanceToAgents,num_others] = ComputeDistanceToAgents(x_agent,y_agent,agent_size,x_others,y_others,others_size);
-        if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
 
         if num_others >0
             % find agents that are too close
@@ -352,9 +348,9 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % save data
     %----------------------------------------------------
-    if mod(itime,Parameter.SaveTimeStep)==0
-        filestem = ['output/',Foldername];
-        if ~exist(filestem); mkdir(filestem); end
+    if mod(itime,1)==0
+        filestem = ['+output/',Foldername];
+        if ~exist(filestem,'dir'); mkdir(filestem); end
         
         filename_full = [filestem,'/',Foldername,'_',num2str(itime,'%5.6d')];
         
@@ -364,27 +360,29 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % plot
     %----------------------------------------------------
-
-
-    if (PlotEvolution && mod(itime,Parameter.PlotTimeStep)==0)
-
+    
+    
+    if (PlotEvolution && mod(itime,10)==0)
+        
         figure(1),clf
         hold on
-        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
+        %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
         
-%         PlotAgents(nagent,AGENT,'y');
-        PlotAgents2(nagent,AGENT,PLOTTING);
+        PlotAgents(nagent,AGENT,'y');
+        for i = 1:nagent
+           text(AGENT(i).LocX,AGENT(i).LocY,num2str(AGENT(i).name)) 
+        end
         
-%        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-%         quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
+        %        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
+        % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
-        title(['time = ',num2str(time/60,3),' min'])
+        title(['time = ',num2str(time,'%.2d'),' s'])
         xlabel('x [m]')
         ylabel('y [m]')
         
