@@ -1,4 +1,4 @@
-clear;
+function [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel
 
 
 % Workflow control
@@ -104,7 +104,7 @@ ExitList = [
 %---------------------------------------
 % run simulation
 %---------------------------------------
-EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name);
+% EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name);
 
 
 

@@ -15,8 +15,8 @@ else
     DistanceToAgents    = (agent_size+others_size) - MassCenterDistance;
     % compute normal and tangential vector between agents
     % compute normal vector
-    Normal(:,1)         = (x_agent - x_others)./DistanceToAgents;  %DistanceToAgents should not be zero!
-    Normal(:,2)         = (y_agent - y_others)./DistanceToAgents;
+    Normal(:,1)         = (x_agent - x_others)./MassCenterDistance;  %MassCenterDistance should not be zero!
+    Normal(:,2)         = (y_agent - y_others)./MassCenterDistance;
     
     Tangent(:,1)         = -Normal(:,2);
     Tangent(:,2)         = Normal(:,1);
