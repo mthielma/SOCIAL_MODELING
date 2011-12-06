@@ -20,8 +20,8 @@ Tangent(:,2)         = Normal(:,1);
 
 if WallDist>=0
     % normal force
-    F_physWall_normalX = 3*Parameter.k.*WallDist.*Normal(:,1);
-    F_physWall_normalY = 3*Parameter.k.*WallDist.*Normal(:,2);
+    F_physWall_normalX = Parameter.k.*WallDist.*Normal(:,1);
+    F_physWall_normalY = Parameter.k.*WallDist.*Normal(:,2);
     
     if Parameter.Tangential
         % tangential force

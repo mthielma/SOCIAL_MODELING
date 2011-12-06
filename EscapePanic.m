@@ -1,4 +1,9 @@
-function EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name)         
+%function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name)         
+
+%if nargin == 0
+   TwoExitsStandardSetup; 
+%end
+
 
 % workflow control
 PlotSetup = false;
@@ -94,8 +99,20 @@ nagent  = Parameter.nagent;
 AGENT   = InitializeAgents(nagent,Parameter);
 
 % create random agent distribution
+if strcmp(Parameter.AgentSetup,'random')
 AGENT   = CreateInitialAgentDistribution(nagent,AGENT,X_Grid,Y_Grid,BuildingMap,BoundaryMap,StartArea,ExitMap);
-
+elseif strcmp(Parameter.AgentSetup,'given')
+    cell_array = num2cell(AgentX);
+    [AGENT(1:nagent).LocX]      = cell_array{:};
+    cell_array = num2cell(AgentY);
+    [AGENT(1:nagent).LocY]      = cell_array{:};
+elseif strcmp(Parameter.AgentSetup,'load')
+    load(Parameter.AgentLocationFile);
+    cell_array = num2cell(AgentX);
+    [AGENT(1:nagent).LocX]      = cell_array{:};
+    cell_array = num2cell(AgentY);
+    [AGENT(1:nagent).LocY]      = cell_array{:};
+end
 %----------------------------------------------------
 % building locations
 %----------------------------------------------------
@@ -240,11 +257,10 @@ while (time <= maxtime && size(AGENT,2)>0)
         [AGENT,x_others,y_others,others_size] = GetSurroundingAgents(iagent,AGENT,tree);
         
         [Normal,Tangent,DistanceToAgents,num_others] = ComputeDistanceToAgents(x_agent,y_agent,agent_size,x_others,y_others,others_size);
-        if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
 
         if num_others >0
             % find agents that are too close
-            indTooClose     = find(DistanceToAgents>0);
+            indTooClose     = find(DistanceToAgents>=0);
             
             %----------------------------------------------------
             % compute social forces from other agents and apply a weighting
@@ -346,7 +362,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     
     
-    if (PlotEvolution && mod(itime,5)==0)
+    if (PlotEvolution && mod(itime,10)==0)
         
         figure(1),clf
         hold on
@@ -357,13 +373,16 @@ while (time <= maxtime && size(AGENT,2)>0)
         % plot agents
         
         PlotAgents(nagent,AGENT,'y');
+        for i = 1:nagent
+           text(AGENT(i).LocX,AGENT(i).LocY,num2str(AGENT(i).name)) 
+        end
         
         %        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
         % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
-        title(['time = ',num2str(time/60,3),' min'])
+        title(['time = ',num2str(time,'%.2d'),' s'])
         xlabel('x [m]')
         ylabel('y [m]')
         
