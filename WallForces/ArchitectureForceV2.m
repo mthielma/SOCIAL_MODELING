@@ -28,7 +28,6 @@ ArchForce(logical(Map)) = 0;
 % invert map
 MapInv = ~(logical(Map));
 [D,L] = bwdist(MapInv);
-D = double(D).*resolution;
 
 DirX_B = 0*X_Grid;
 DirY_B = 0*X_Grid;
