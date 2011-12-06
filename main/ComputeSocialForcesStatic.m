@@ -1,0 +1,17 @@
+function [FxSocialStatic,FySocialStatic] = ComputeSocialForcesStatic(AGENT,X_Grid,Y_Grid,ArchForce,ArchDirX,ArchDirY,Parameter)
+
+% compute total force taking into account agent size
+ArchForceStatic = interp2(X_Grid,Y_Grid,ArchForce,[AGENT.LocX],[AGENT.LocY],'*linear').*exp([AGENT.Size]./Parameter.B); 
+
+% compute directional force
+DirX = interp2(X_Grid,Y_Grid,ArchDirX,[AGENT.LocX],[AGENT.LocY],'*linear');
+DirY = interp2(X_Grid,Y_Grid,ArchDirY,[AGENT.LocX],[AGENT.LocY],'*linear');
+
+% norm direction vector
+DirTot = sqrt(DirX.*DirX+DirY.*DirY);
+DirX   = DirX./DirTot;
+DirY   = DirY./DirTot;
+
+% compute forces
+FxSocialStatic = ArchForceStatic.*DirX;
+FySocialStatic = ArchForceStatic.*DirY;
