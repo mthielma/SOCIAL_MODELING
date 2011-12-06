@@ -13,11 +13,6 @@ WithTopo   = Parameter.WithTopo;
 WithFlood  = Parameter.WithFlood;
 
 
-% subfolder and topo information
-Foldername = 'test'; % subfolder where output is to be stored
-
-
-
 %==========================================================================
 % add necessary paths
 %==========================================================================       
@@ -111,7 +106,7 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
 
 %----------------------------------------------------
 % compute shortest path to exit
@@ -156,8 +151,9 @@ while (time <= maxtime && size(AGENT,2)>0)
     disp('*****************************************')
     disp(['timestep ',num2str(itime),':    time = ',num2str(time/60),' min'])
     
-    if (nagent~=size(AGENT,2)); error('fc: nagent not equal nr. of agents!'); end
-
+    if sum(isnan([AGENT.LocX]))
+        error('NaN');
+    end
     %----------------------------------------------------
     % compute flooding
     %----------------------------------------------------
@@ -338,7 +334,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     if mod(itime,1)==0
         filestem = ['+output/',Foldername];
-        if ~exist(filestem); mkdir(filestem); end
+        if ~exist(filestem,'dir'); mkdir(filestem); end
         
         filename_full = [filestem,'/',Foldername,'_',num2str(itime,'%5.6d')];
         
@@ -348,13 +344,13 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % plot
     %----------------------------------------------------
-
-
+    
+    
     if (PlotEvolution && mod(itime,5)==0)
-
+        
         figure(1),clf
         hold on
-        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
+        %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
@@ -362,8 +358,8 @@ while (time <= maxtime && size(AGENT,2)>0)
         
         PlotAgents(nagent,AGENT,'y');
         
-%        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
+        %        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
+        % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
