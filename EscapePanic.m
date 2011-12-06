@@ -1,16 +1,18 @@
 % =========================
 % EscapePanic      
 % =========================
-clear;
+function EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name)
 
-[Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
+if nargin==0
+    
+    clear;
+    [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
 
-
-%plotting parameters
-PLOTTING.Marking    = 'number'; %'number', 'smiley'
-PLOTTING.FontSize   = 11;
-PLOTTING.Color      = 'y';      %agents color
-
+    %plotting parameters
+    PLOTTING.Marking    = 'number'; %'number', 'smiley'
+    PLOTTING.FontSize   = 11;
+    PLOTTING.Color      = 'y';      %agents color
+end
 
 % workflow control
 PlotSetup = false;
