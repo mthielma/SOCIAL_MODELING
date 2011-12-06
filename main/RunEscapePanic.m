@@ -1,4 +1,4 @@
-function [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel
+clear;
 
 
 % Workflow control
@@ -12,8 +12,8 @@ Parameter.WithFlood     = false; % true or false, determines if flood is taken i
 Foldername      = 'test1'; % subfolder where output is to be stored
 Topo_name       = 'none'; % topography file to be loaded (if there is none, use 'none')
 
-Parameter.PlotTimeStep  = 200;      % plots every PlotTimeStep
-Parameter.SaveTimeStep  = 1000;      % saves every PlotTimeStep
+Parameter.PlotTimeStep  = 100;      % plots every PlotTimeStep
+Parameter.SaveTimeStep  = 100;      % saves every PlotTimeStep
 
 % domain
 Parameter.xmin          = 0;
@@ -104,7 +104,7 @@ ExitList = [
 %---------------------------------------
 % run simulation
 %---------------------------------------
-% EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name);
+EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name);
 
 
 
