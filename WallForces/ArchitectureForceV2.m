@@ -1,4 +1,4 @@
-function [ForceX,ForceY] = ArchitectureForceV2(X_Grid,Y_Grid,List,Parameter,resolution)
+function [ForceTotal,DirX,DirY] = ArchitectureForceV2(X_Grid,Y_Grid,List,Parameter,resolution)
 
 % compute architecture forces
 
@@ -6,8 +6,6 @@ function [ForceX,ForceY] = ArchitectureForceV2(X_Grid,Y_Grid,List,Parameter,reso
 % building
 % then add up all forces and set forces inside buildings to 0
 
-ForceX = 0*X_Grid;
-ForceY = 0*X_Grid;
 for i=1:size(List,1)
     MapTemp = zeros(size(X_Grid));
     MapTemp(X_Grid>=List(i,1) & X_Grid<=List(i,2) & Y_Grid>=List(i,3) & Y_Grid<=List(i,4)) = 1;
@@ -27,21 +25,12 @@ for i=1:size(List,1)
     DirX(DirTot==0) = 0;
     DirY(DirTot==0) = 0;
     
-    ForceTemp     = Parameter.A.*exp(-D./Parameter.B);
+    ForceTotal   = Parameter.A.*exp(-D./Parameter.B);
     
-    % if Distance bigger than a threshhold, set force 0
-    % ForceTemp(D>3) = 0;
-    
-    ForceTempX    = ForceTemp.*DirX;
-    ForceTempY    = ForceTemp.*DirY;
-    
-    ForceX     = ForceX + ForceTempX;
-    ForceY     = ForceY + ForceTempY;
 end
 
 % remove forces inside buildings
 for i=1:size(List,1)
-    ForceX(X_Grid>=List(i,1) & X_Grid<=List(i,2) & Y_Grid>=List(i,3) & Y_Grid<=List(i,4)) = 0;
-    ForceY(X_Grid>=List(i,1) & X_Grid<=List(i,2) & Y_Grid>=List(i,3) & Y_Grid<=List(i,4)) = 0;
+    ForceTotal(X_Grid>=List(i,1) & X_Grid<=List(i,2) & Y_Grid>=List(i,3) & Y_Grid<=List(i,4)) = 0;
 end
 

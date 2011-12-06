@@ -11,10 +11,12 @@
 
 clear;
 
+savingPlots = logical(0);  filename = 'test4';
+
 %numerical parameter
-resolution       	= 0.1;      % resolution in [m]
-dt                	= 0.05;    	% time step in [s]
-maxtime          	= 2000;       % maximum time to run in [min]
+resolution       	= 0.1;      % resolution in [m]            0.1
+dt                	= 0.05;    	% time step in [s]              0.05
+maxtime          	= 5;       % maximum time to run in [min]
 
 %physical parameter
 nagent          	= 50;      % number of agents
@@ -28,7 +30,7 @@ Parameter.kappa  	= 2.4e5;
 % social force parameters
 Parameter.A       	= 2e3;   	%[N]  [2e3 Helbing 2000]
 Parameter.B       	= 0.08;      %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor= 0.5;   %for adjusting strength of constant exit force field [30]
+Parameter.ExitFactor= 1.0;   %for adjusting strength of constant exit force field [30]
 
 % agent parameters
 m                 	= 80;       % mass in [kg]
@@ -36,6 +38,11 @@ r_agent             = 0.3;      % radius im [m]
 v0               	= 0.5;        % maximal/desired velocity [m/s]
 cutoffVelocity   	= logical(1); %sets maximum velocity at v0
 t_acc            	= 0.5;      % acceleration time in [s]
+
+%plotting parameters
+PLOTTING.Marking    = 'number'; %'number', 'smiley'
+PLOTTING.FontSize   = 14;
+PLOTTING.Color      = 'y';      %agents color
 
 
 addpath ./DecisionStrategy/
@@ -45,7 +52,7 @@ addpath ./kdtree_alg_OSX/
 %==========================================================================
 % initialize fine grid (if not given as argument)
 xmin                = 0;
-xmax                = 25;
+xmax                = 20;
 ymin                = 0;
 ymax                = 10;
 
@@ -88,8 +95,9 @@ BoundaryMap(1:3,:)=1; BoundaryMap(size(yvec,2),:)=1; BoundaryMap(:,1)=1; Boundar
 % create building list (if not given)
 %---------------------------------------
 BuildingList = [
-                15 16 0 1    %boundary wall
-                15 16 9 10   %boundary wall
+                0 1  0 10   %boundary wall
+                0 25 0 1    %boundary wall
+                0 25 9 10   %boundary wall
                 15 16 1 4.5   %top barriere
                 15 16 5.5 9   %bottom barriere
                 ]; % coordinates of building xmin xmax ymin ymax
@@ -109,7 +117,7 @@ end
 % create exit list (if not given)
 %---------------------------------------
 ExitList = [
-            24 25 4 6
+            19 20 4.5 5.5
            ]; % coordinates of exits: xmin xmax ymin ymax
 
 ExitList(find(ExitList(:,1)>=xmax),:)   = []; %if exit fully outside domain: remove it!
@@ -136,24 +144,24 @@ Spreading       = {'exp' 'linear' 'const'};
 ARCH.spreading	= Spreading{1};
 ARCH.force      = 1.0;                      %1 is the same as wall force
 
-[F_arch_walls, xArchForces_walls, yArchForces_walls, xArchDir_walls, yArchDir_walls] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
+[F_arch_walls, xArchForces_walls, yArchForces_walls, xArchDir_walls, yArchDir_walls] = f_RepWalls3 (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
 % xArchForces = xArchForces + xArchForces_walls;
 % yArchForces = yArchForces + yArchForces_walls;
-xArchForces = xArchForces + xArchForces_walls;
-yArchForces = yArchForces + yArchForces_walls;
-
-
-checkFigure = logical(1);
-if checkFigure
-    figure(1),clf
-    quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
-    title('architecture force')
-    xlabel('x [m]')
-    ylabel('y [m]')
-    axis equal; axis tight 
-end
+% xArchForces = xArchForces + xArchForces_walls;
+% yArchForces = yArchForces + yArchForces_walls;
+% 
+% 
+% checkFigure = logical(1);
+% if checkFigure
+%     figure(1),clf
+%     quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
+%     title('architecture force')
+%     xlabel('x [m]')
+%     ylabel('y [m]')
+%     axis equal; axis tight 
+% end
 
 %----------------------------------------------------
 % compute forces from exits (static)
@@ -165,21 +173,21 @@ Spreading       = {'exp' 'linear' 'const'};
 ARCH.spreading  = Spreading{3};
 ARCH.force      = 0.2;                      %1 is the same as wall force
 
-[F_arch_exit, xArchForces_exits, yArchForces_exits, xArchDir_exits, yArchDir_exits] = f_RepWalls_single (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
+[F_arch_exit, xArchForces_exits, yArchForces_exits, xArchDir_exits, yArchDir_exits] = f_RepWalls3 (X_Grid, Y_Grid, ArchGeometry, ARCH, Parameter);
 
 %add contribution of object(s)
-xArchForces = xArchForces + xArchForces_exits;
-yArchForces = yArchForces + yArchForces_exits;
-
-checkFigure = logical(1);
-if checkFigure
-    figure(1),clf
-    quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
-    title('architecture force')
-    xlabel('x [m]')
-    ylabel('y [m]')
-    axis equal; axis tight 
-end
+% xArchForces = xArchForces + xArchForces_exits;
+% yArchForces = yArchForces + yArchForces_exits;
+% 
+% checkFigure = logical(1);
+% if checkFigure
+%     figure(1),clf
+%     quiver(X_Grid',Y_Grid',xArchForces,yArchForces)
+%     title('architecture force')
+%     xlabel('x [m]')
+%     ylabel('y [m]')
+%     axis equal; axis tight 
+% end
 
 
 %==========================================================================
@@ -208,6 +216,9 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).FySoc] 	= deal(0); % initial social force Y
 [AGENT(1:nagent).FxArch] 	= deal(0); % initial architecture force X
 [AGENT(1:nagent).FyArch]  	= deal(0); % initial architecture force Y
+[AGENT(1:nagent).FWalls] 	= deal(0); % initial wall force
+[AGENT(1:nagent).FxExits] 	= deal(0); % initial architecture force X
+[AGENT(1:nagent).FyExits]  	= deal(0); % initial architecture force Y
 
 [AGENT(1:nagent).DirXwalls] = deal(0); % initial architecture force X
 [AGENT(1:nagent).DirYwalls] = deal(0); % initial architecture force Y
@@ -255,18 +266,20 @@ PreFac = ([AGENT(1:nagent).VMax]'./exp(-3.5*0.05));
 
 % plot setup
 figure(1),clf
+set(cla,'FontSize',PLOTTING.FontSize)
 hold on
 % plot buildings
 PlotBuildings(BuildingList,'r');
 PlotBuildings(ExitList,'g');
 % plot agents
-PlotAgents2(nagent,AGENT,'y');
+PlotAgents2(nagent,AGENT,PLOTTING);
 axis equal
 axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
 box on
-title('time = 0.00 min')
+title('time = 0.00 min','FontSize',PLOTTING.FontSize)
 xlabel('x [m]')
 ylabel('y [m]')
+
 
 %==========================================================================
 % time loop
@@ -313,18 +326,32 @@ if isnan(xArchForces(find(isnan(xArchForces)))); error('fc: NaN!'); end
     
 if isnan([AGENT(find(isnan([AGENT.FxArch]))).FxArch]); error('fc: NaN!'); end
 
+    %walls
+    FwallsAgents = interp2(X_Grid,Y_Grid,F_arch_walls',[AGENT.LocX],[AGENT.LocY],'*linear');
+    
+    dummy = num2cell(FwallsAgents);
+    [AGENT(1:nagent).FWalls]       = dummy{:};
+
+    %exit
+    FxExitAgents = interp2(X_Grid,Y_Grid,xArchForces_exits',[AGENT.LocX],[AGENT.LocY],'*linear');
+    FyExitAgents = interp2(X_Grid,Y_Grid,yArchForces_exits',[AGENT.LocX],[AGENT.LocY],'*linear');
+    
+    dummy = num2cell(FxExitAgents);
+    [AGENT(1:nagent).FxExits]       = dummy{:};
+    dummy = num2cell(FyExitAgents);
+    [AGENT(1:nagent).FyExits]       = dummy{:};
 
     %----------------------------------------------------
     % compute direction field to walls on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-%     xWallsDirAgents = interp2(X_Grid,Y_Grid,xArchDir_walls',[AGENT.LocX],[AGENT.LocY],'*linear');
-%     yWallsDirAgents = interp2(X_Grid,Y_Grid,yArchDir_walls',[AGENT.LocX],[AGENT.LocY],'*linear');
-%     
-%     dummy = num2cell(xWallsDirAgents);
-%     [AGENT(1:nagent).DirXwalls]       = dummy{:};
-%     dummy = num2cell(yWallsDirAgents);
-%     [AGENT(1:nagent).DirYwalls]       = dummy{:};
+    xWallsDirAgents = interp2(X_Grid,Y_Grid,xArchDir_walls',[AGENT.LocX],[AGENT.LocY],'*linear');
+    yWallsDirAgents = interp2(X_Grid,Y_Grid,yArchDir_walls',[AGENT.LocX],[AGENT.LocY],'*linear');
+    
+    dummy = num2cell(xWallsDirAgents);
+    [AGENT(1:nagent).DirXwalls]       = dummy{:};
+    dummy = num2cell(yWallsDirAgents);
+    [AGENT(1:nagent).DirYwalls]       = dummy{:};
 
     
     %----------------------------------------------------
@@ -467,7 +494,7 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         %-------------------------------------------------
         % get the distance to the closest wall
         %-------------------------------------------------
-        WallDist        = sqrt((x_Buildings-x_agent).^2+(y_Buildings-y_agent).^2); 	%between agent's center of mass and wall boundary
+        WallDist        = sqrt((x_Buildings-x_agent).^2+(y_Buildings-y_agent).^2); 	%between agent's center of mass and wall boundary    %NOT NEEDED TO COMPUTE HERE! ALREADY DONE!
         minWallDist     = min(WallDist);
         WallDist_r      = WallDist-[AGENT(iagent).Size];                            %between agent's boundary and wall boundary
         minWallDist_r   = min(WallDist_r);
@@ -477,45 +504,53 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         else
             AtWall = false;
         end
+
         
         %----------------------------------------------------
-        % compute physical forces from walls 
+        % add social wall force:
         %----------------------------------------------------
-        
-        %----------------------------------------------------
-        % add second part of social wall force:
-        
-        % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]
-        % ...this is  exp[r/B] :
-        dummy = num2cell([AGENT(iagent).FxArch] * exp([AGENT(iagent).Size]/Parameter.B) );% *[AGENT(iagent).DirXwalls]);               %add agent radii to force field
+        % A*exp[(r-d)/B] = A*exp[-d/B] * exp[r/B]    ...from [Helbing 2000]
+        % ...and times normal vector (DirXwalls)
+        % ...this is adding exp[r/B] :
+        dummy = num2cell( ( [AGENT(iagent).FWalls] * exp([AGENT(iagent).Size]/Parameter.B) )*[AGENT(iagent).DirXwalls] );  %wall force in x-direction
         [AGENT(iagent).FxArch] = dummy{:};
-        dummy = num2cell([AGENT(iagent).FyArch] * exp([AGENT(iagent).Size]/Parameter.B) );% *[AGENT(iagent).DirYwalls]);               %add agent radii to force field
+        dummy = num2cell( ( [AGENT(iagent).FWalls] * exp([AGENT(iagent).Size]/Parameter.B) )*[AGENT(iagent).DirYwalls] );  %wall force in y-direction
         [AGENT(iagent).FyArch] = dummy{:};
         %----------------------------------------------------
         
-        %%%%%%%%%%%%%%%%%%%%
-        %NOT CORRECT BECAUSE RADIUS PART IS NOT ACCOUNTED FOR DIFFERENT
-        %DIRECTIONS (x,y) BUT FOR THE TOTAL FORCE !!!!
-        % as such F_exits and F_walls fit not together...
-        %%%%%%%%%%%%%%%%%%%
-        
+        %----------------------------------------------------
+        % add social exit force:
+        %----------------------------------------------------
+        % F_walls + F_exits
+        dummy = num2cell( [AGENT(iagent).FxArch] + [AGENT(iagent).FxExits] );  %exit force in x-direction
+        [AGENT(iagent).FxArch] = dummy{:};
+        dummy = num2cell( [AGENT(iagent).FyArch] + [AGENT(iagent).FyExits] );  %exit force in y-direction
+        [AGENT(iagent).FyArch] = dummy{:};
+        %----------------------------------------------------
+
+                
+        %----------------------------------------------------
+        % compute physical forces from walls 
+        %----------------------------------------------------
         
         if AtWall
             if minWallDist==0
                 error('fc: minWallDist=0!')
             end
-            % compute normal vector
+            % compute normal vector   %MIGHT ALREADY BE COMPUTED EARLIER ON
             NormalX_wall = (x_agent-x_Buildings(indWallDist))/minWallDist;      %distance between center of mass    %check that minWallDist_r never becomes zero!
             NormalY_wall = (y_agent-y_Buildings(indWallDist))/minWallDist;      %distance between center of mass    %check that minWallDist_r never becomes zero!
             % compute tangential vector
             TangentX_wall= -NormalY_wall;
             TangentY_wall= NormalX_wall;
             % normal force: k*g*(r-d)*n
+            % F_walls + F_exits + F_walls_normal
             dummy = num2cell([AGENT(iagent).FxArch] + (Parameter.k*(-minWallDist_r))*NormalX_wall);   % -minWallDist_r because r-d and not d-r
             [AGENT(iagent).FxArch] = dummy{:};
             dummy = num2cell([AGENT(iagent).FyArch] + (Parameter.k*(-minWallDist_r))*NormalY_wall);   % -minWallDist_r because r-d and not d-r
             [AGENT(iagent).FyArch] = dummy{:};
             % tangential force: k*g*(r-d)*(v*t)*t
+            % F_walls + F_exits + F_walls_normal + F_walls_tangential
             dummy = num2cell([AGENT(iagent).FxArch] - (Parameter.kappa*(-minWallDist_r)*[AGENT(iagent).VelX]*TangentX_wall )*TangentX_wall);
             [AGENT(iagent).FxArch] = dummy{:};
             dummy = num2cell([AGENT(iagent).FyArch] - (Parameter.kappa*(-minWallDist_r)*[AGENT(iagent).VelY]*TangentY_wall )*TangentY_wall);
@@ -605,9 +640,10 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
     % plot
     %----------------------------------------------------
     
-    if mod(itime,10)==0
+    if mod(itime,5)==0
     
         figure(1),clf
+        set(cla,'FontSize',PLOTTING.FontSize)
         hold on
         %scatter(X_Grid(:),Y_Grid(:),50,BuildingMap(:),'.')
         % plot topo
@@ -620,17 +656,25 @@ if isnan([AGENT(find(isnan([AGENT.FySoc]))).FySoc]); error('fc: NaN!'); end
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
-        PlotAgents2(nagent,AGENT,'y');
+        PlotAgents2(nagent,AGENT,PLOTTING);
         
         % plot roads
 %         for i = 1:size(PathVec,1),plot([X(PathVec(i,1)) X(PathVec(i,2))],[Y(PathVec(i,1)) Y(PathVec(i,2))],'r-'),end
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
-        title(['time = ',num2str(time/60,3),' min'])
+        title(['time = ',num2str(time/60,3),' min'],'FontSize',PLOTTING.FontSize)
         xlabel('x [m]')
         ylabel('y [m]')
+
         
+        %saving plots
+        if savingPlots
+            directory = ['+images/',filename,'/'];
+            if ~exist(directory); mkdir(directory); end
+            filename2 = [filename,num2str(itime,'%5.6d')];
+            print([directory,filename2],'-djpeg90','-r300')
+        end
     end
 end
 %==========================================================================
