@@ -1,4 +1,16 @@
-function EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name)         
+% =========================
+% EscapePanic      
+% =========================
+clear;
+
+[Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
+
+
+%plotting parameters
+PLOTTING.Marking    = 'number'; %'number', 'smiley'
+PLOTTING.FontSize   = 11;
+PLOTTING.Color      = 'y';      %agents color
+
 
 % workflow control
 PlotSetup = false;
@@ -111,7 +123,7 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV3(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
 
 %----------------------------------------------------
 % compute shortest path to exit
@@ -126,10 +138,10 @@ elseif DirectExitPath
     % compute exit direction directly
     [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
 end
+
 %----------------------------------------------------
 % plot setup
 %----------------------------------------------------
-
 if PlotSetup
     % plot setup
     figure(1),clf
@@ -138,7 +150,8 @@ if PlotSetup
     PlotBuildings(BuildingList,'r');
     PlotBuildings(ExitList,'g');
     % plot agents
-    PlotAgents(nagent,AGENT,'y');
+    %         PlotAgents(nagent,AGENT,'y');
+    PlotAgents2(nagent,AGENT,PLOTTING);
     axis equal
     axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
     box on
@@ -146,6 +159,8 @@ if PlotSetup
     xlabel('x [m]')
     ylabel('y [m]')
 end
+
+
 %==========================================================================
 % time loop
 
@@ -197,8 +212,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-    
-    
+
     if (~DirectExitPath && WithAgents)
         if (mod(itime,decision_step)==0 || itime==1)
             [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
@@ -248,7 +262,7 @@ while (time <= maxtime && size(AGENT,2)>0)
 
         if num_others >0
             % find agents that are too close
-            indTooClose     = find(DistanceToAgents>0);
+            indTooClose     = find(DistanceToAgents>=0);
             
             %----------------------------------------------------
             % compute social forces from other agents and apply a weighting
@@ -336,7 +350,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % save data
     %----------------------------------------------------
-    if mod(itime,1)==0
+    if mod(itime,Parameter.SaveTimeStep)==0
         filestem = ['+output/',Foldername];
         if ~exist(filestem); mkdir(filestem); end
         
@@ -350,7 +364,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
 
 
-    if (PlotEvolution && mod(itime,5)==0)
+    if (PlotEvolution && mod(itime,Parameter.PlotTimeStep)==0)
 
         figure(1),clf
         hold on
@@ -360,10 +374,11 @@ while (time <= maxtime && size(AGENT,2)>0)
         PlotBuildings(ExitList,'g');
         % plot agents
         
-        PlotAgents(nagent,AGENT,'y');
+%         PlotAgents(nagent,AGENT,'y');
+        PlotAgents2(nagent,AGENT,PLOTTING);
         
 %        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
+%         quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
