@@ -5,10 +5,6 @@ function [ArchForce,DirX,DirY] = ArchitectureForceV2(X_Grid,Y_Grid,Map,Parameter
 % loop through building list and compute the social force from each
 % building
 % then add up all forces and set forces inside buildings to 0
-ArchForce = zeros(size(X_Grid));
-ForceX       = zeros(size(X_Grid));
-ForceY       = zeros(size(X_Grid));
-
 
 [D,L] = bwdist(Map);
 
