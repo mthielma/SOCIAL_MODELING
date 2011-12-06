@@ -123,7 +123,7 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV3(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
 
 %----------------------------------------------------
 % compute shortest path to exit
