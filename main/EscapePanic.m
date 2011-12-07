@@ -15,8 +15,6 @@ end
 % workflow control
 PlotSetup = false;
 PlotEvolution = true;
-save_time = 5; % after how many timesteps is an output file saved?
-
 
 % Workflow control
 DirectExitPath = Parameter.DirectExitPath;
@@ -83,10 +81,13 @@ BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside d
 BuildingList(find(BuildingList(:,2)>xmax),2) = xmax; %adjust building to domain boundary
 BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain boundary
 
-BuildingMap = logical(X_Grid*0);
+BuildingMap = logical(X_Grid*0); BuildingMap_sp = BuildingMap; 
 % add buildings to map
 for i=1:size(BuildingList,1)
     BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = true;
+    %for shortest path formulation:
+    BuildingMap_sp(X_Grid>=(BuildingList(i,1)-Parameter.Enlarge) & X_Grid<=(BuildingList(i,2)+Parameter.Enlarge) ...
+        & Y_Grid>=(BuildingList(i,3)-Parameter.Enlarge) & Y_Grid<=(BuildingList(i,4)+Parameter.Enlarge) ) = true;
 end
 
 %-----------------------------------------------------------------
@@ -120,14 +121,25 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV3(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
+
+if logical(0)
+   figure(2),clf
+   pcolor(X_Grid,Y_Grid,ArchForce)
+   colorbar
+   axis tight; axis equal;
+   figure(3),clf
+   quiver(X_Grid,Y_Grid,ArchDirX,ArchDirY)
+   axis tight; axis equal;
+end
 
 %----------------------------------------------------
 % compute shortest path to exit
 %----------------------------------------------------
+BuildingMap_boundary = zeros(size(BuildingMap)); BuildingMap_boundary(BuildingMap~=BuildingMap_sp) = 1;
 if (~DirectExitPath && ~WithTopo)
     % compute shortest path without topography with fast marchng algorithm
-    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
+    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
 elseif (~DirectExitPath && WithTopo)
     % compute shortest path with topography with fast marchng algorithm
     [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
@@ -135,6 +147,28 @@ elseif DirectExitPath
     % compute exit direction directly
     [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
 end
+
+if logical(1)
+%    figure(2),clf
+%    pcolor(X_Grid,Y_Grid,ArchForce)
+%    colorbar
+%    axis tight; axis equal;
+%     BuildingMap2 = size(BuildingMap); BuildingMap2 = +BuildingMap;
+%     BuildingMap_sp2 = size(BuildingMap_sp); BuildingMap_sp2 = +BuildingMap_sp;
+   figure(2),clf
+   pcolor(X_Grid,Y_Grid,+BuildingMap)
+   hold on
+   pcolor(X_Grid,Y_Grid,+BuildingMap_sp)
+   
+   figure(3),clf
+   quiver(X_Grid,Y_Grid,Dgradx,Dgrady)
+   axis tight; axis equal;
+   
+   figure(1); hold on;
+   quiver(X_Grid,Y_Grid,Dgradx,Dgrady)
+   axis tight; axis equal;
+end
+
 
 %----------------------------------------------------
 % plot setup
@@ -204,12 +238,20 @@ while (time <= maxtime && size(AGENT,2)>0)
         [AGENT(1:nagent).FySocialWalls]       = deal(0);
     end
     
+    if logical(0)
+        figure(2),clf
+        pcolor(X_Grid,Y_Grid,ArchForce)
+        colorbar
+        axis tight; axis equal;
+        figure(3),clf
+        quiver(X_Grid,Y_Grid,ArchDirX,ArchDirY)
+        axis tight; axis equal;
+    end
     
     %----------------------------------------------------
     % compute direction field to exits on all agents 
     % (just interpolate the precomputed field to the agents)
     %----------------------------------------------------
-
     if (~DirectExitPath && WithAgents)
         if (mod(itime,decision_step)==0 || itime==1)
             [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
@@ -364,8 +406,8 @@ while (time <= maxtime && size(AGENT,2)>0)
     if (PlotEvolution && mod(itime,Parameter.PlotTimeStep)==0)
 
         figure(1),clf
-        hold on
-        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
+%         hold on
+%         pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
@@ -382,7 +424,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         title(['time = ',num2str(time/60,3),' min'])
         xlabel('x [m]')
         ylabel('y [m]')
-        
+        pause(0.01)
     end
 end
 
