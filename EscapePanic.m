@@ -3,14 +3,14 @@
 %if nargin == 0
     clear;
     %Marcels:
-%     TwoExitsStandardSetup;
+     TwoExitsStandardSetup;
     
-    %Fabios:
-    [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
-    %plotting parameters
-    PLOTTING.Marking    = 'number'; %'number', 'smiley'
-    PLOTTING.FontSize   = 11;
-    PLOTTING.Color      = 'y';      %agents color
+%     %Fabios:
+%     [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
+%     %plotting parameters
+%     PLOTTING.Marking    = 'number'; %'number', 'smiley'
+%     PLOTTING.FontSize   = 11;
+%     PLOTTING.Color      = 'y';      %agents color
 %end
 
 
@@ -135,7 +135,7 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
+[ArchForce,ArchD,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
 
 %----------------------------------------------------
 % compute shortest path to exit
@@ -335,6 +335,15 @@ while (time <= maxtime && size(AGENT,2)>0)
     % move agents
     %----------------------------------------------------
     [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,Parameter.dt,nagent,Parameter);
+    
+    
+    
+    
+    %----------------------------------------------------
+    % check if agents are inside walls and move them out
+    %----------------------------------------------------
+    
+    AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
     
     %----------------------------------------------------
     % remove successfull agents
