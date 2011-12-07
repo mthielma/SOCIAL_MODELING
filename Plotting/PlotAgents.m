@@ -1,4 +1,4 @@
-function PlotAgents(nagent,AGENT,Plotting)
+function PlotAgents(AGENT,Plotting)
 % plot agents as circles with the size of the circle being their radius
 % 
 % nagent: number of agents
@@ -14,7 +14,7 @@ function PlotAgents(nagent,AGENT,Plotting)
 %
 % Marcel Thielmann Oct 2011
 
-
+nagent = size(AGENT,2);
 for i = 1:nagent
     radius = AGENT(i).Size;
     x      = AGENT(i).LocX;
