@@ -83,10 +83,13 @@ BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside d
 BuildingList(find(BuildingList(:,2)>xmax),2) = xmax; %adjust building to domain boundary
 BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain boundary
 
-BuildingMap = logical(X_Grid*0);
+BuildingMap = logical(X_Grid*0); BuildingMap_sp = BuildingMap; 
 % add buildings to map
 for i=1:size(BuildingList,1)
     BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = true;
+    %for shortest path formulation:
+    BuildingMap_sp(X_Grid>=(BuildingList(i,1)-Parameter.Enlarge) & X_Grid<=(BuildingList(i,2)+Parameter.Enlarge) ...
+        & Y_Grid>=(BuildingList(i,3)-Parameter.Enlarge) & Y_Grid<=(BuildingList(i,4)+Parameter.Enlarge) ) = true;
 end
 
 %-----------------------------------------------------------------
@@ -135,9 +138,10 @@ end
 %----------------------------------------------------
 % compute shortest path to exit
 %----------------------------------------------------
+BuildingMap_boundary = zeros(size(BuildingMap)); BuildingMap_boundary(BuildingMap~=BuildingMap_sp) = 1;
 if (~DirectExitPath && ~WithTopo)
     % compute shortest path without topography with fast marchng algorithm
-    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
+    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
 elseif (~DirectExitPath && WithTopo)
     % compute shortest path with topography with fast marchng algorithm
     [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
@@ -146,13 +150,23 @@ elseif DirectExitPath
     [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
 end
 
-if logical(0)
+if logical(1)
 %    figure(2),clf
 %    pcolor(X_Grid,Y_Grid,ArchForce)
 %    colorbar
 %    axis tight; axis equal;
+%     BuildingMap2 = size(BuildingMap); BuildingMap2 = +BuildingMap;
+%     BuildingMap_sp2 = size(BuildingMap_sp); BuildingMap_sp2 = +BuildingMap_sp;
+   figure(2),clf
+   pcolor(X_Grid,Y_Grid,+BuildingMap)
+   hold on
+   pcolor(X_Grid,Y_Grid,+BuildingMap_sp)
    
    figure(3),clf
+   quiver(X_Grid,Y_Grid,Dgradx,Dgrady)
+   axis tight; axis equal;
+   
+   figure(1); hold on;
    quiver(X_Grid,Y_Grid,Dgradx,Dgrady)
    axis tight; axis equal;
 end
