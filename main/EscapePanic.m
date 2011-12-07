@@ -15,8 +15,6 @@ end
 % workflow control
 PlotSetup = false;
 PlotEvolution = true;
-save_time = 5; % after how many timesteps is an output file saved?
-
 
 % Workflow control
 DirectExitPath = Parameter.DirectExitPath;
