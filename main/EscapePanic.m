@@ -158,6 +158,7 @@ end
 if PlotSetup
     % plot setup
     figure(1),clf
+    set(cla,'FontSize',Plotting.FontSize)
     hold on
     % plot buildings
     PlotBuildings(BuildingList,'r');
@@ -378,6 +379,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     if (PlotEvolution && mod(itime,Parameter.PlotTimeStep)==0)
         
         figure(1),clf
+        set(cla,'FontSize',Plotting.FontSize)
         hold on
         %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings

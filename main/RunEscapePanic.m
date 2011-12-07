@@ -108,7 +108,7 @@ Plotting.PlotEvolution      = true;             % direct plotting
 Parameter.PlotTimeStep      = 50;               % plots every PlotTimeStep
 
 Plotting.Marking            = 'none';           % 'none', 'number', 'smiley'
-Plotting.FontSize           = 9;
+Plotting.FontSize           = 14;
 Plotting.Color              = 'y';              % agents color
 
 
