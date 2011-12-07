@@ -1,4 +1,4 @@
-function [Dgradx,Dgrady,D] = ComputeShortestPathGlobal(BuildingMap,ExitMap,X_Grid,Y_Grid,v0,resolution)
+function [Dgradx,Dgrady,D] = ComputeShortestPathGlobal(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,v0,resolution)
 
 Debug =false;
 
@@ -7,6 +7,7 @@ F = ones(size(X_Grid))*v0;
 % add buildings to map
 % add buildings to map
 F(BuildingMap) = 1e-8;
+F(BuildingMap_boundary==1) = v0/3;
 
 %==============================================================
 % Shortest path w/o topo
