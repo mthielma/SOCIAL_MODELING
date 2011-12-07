@@ -10,6 +10,7 @@ clear
 %--------------------------------------------------------------------------
 % run name
 Parameter.Foldername        = 'test1';      % Run name
+Parameter.Save              = logical(0);   % switch for saving output
 Parameter.SaveTimeStep      = 200;          % saves every PlotTimeStep
 
 

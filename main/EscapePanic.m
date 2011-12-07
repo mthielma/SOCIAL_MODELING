@@ -18,6 +18,11 @@ function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Plotting)
 %end
 
 
+% saves setup
+if Parameter.Save
+    save(['../+output/',Parameter.Foldername,'/Setup.mat'])
+end
+
 % workflow control
 PlotSetup       = false;
 PlotEvolution   = Plotting.PlotEvolution;
@@ -364,7 +369,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % save data
     %----------------------------------------------------
-    if mod(itime,Parameter.SaveTimeStep)==0
+    if Parameter.Save && mod(itime,Parameter.SaveTimeStep)==0
         filestem = ['../+output/',Parameter.Foldername];
         if ~exist(filestem,'dir'); mkdir(filestem); end
         
