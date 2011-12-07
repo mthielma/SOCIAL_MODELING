@@ -46,8 +46,8 @@ dir_y                   = v_y./v_tot;
 % compute slope in walking direction
 slope = sum([agent_gx' agent_gy'].*[dir_x dir_y],2);
 % limit maxmimum velocity
-PreFac = ([AGENT(1:nagent).VMax]'./exp(-3.5*0.05));
-V_max_agent = PreFac.*exp(-3.5.*abs(slope+0.05));
+PreFac = ([AGENT(1:nagent).VMax]'./exp(-Parameter.slope_f*Parameter.slope_crit));
+V_max_agent = PreFac.*exp(-Parameter.slope_f.*abs(slope+Parameter.slope_crit));
 
 %==========================================================
 % limit velocity to maximum velocity
