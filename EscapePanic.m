@@ -136,7 +136,7 @@ elseif (~DirectExitPath && WithTopo)
     [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
 elseif DirectExitPath
     % compute exit direction directly
-    [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
+    [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
 end
 %----------------------------------------------------
 % plot setup
@@ -222,12 +222,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     
     xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
     yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*linear');
-    
-    % normalize direction vector
-    dirtot         = sqrt(xExitDirAgents.^2+yExitDirAgents.^2);
-    xExitDirAgents = xExitDirAgents./dirtot;
-    yExitDirAgents = yExitDirAgents./dirtot;
-    
+   
     dummy = num2cell(xExitDirAgents);
     [AGENT(1:nagent).xExitDir]       = dummy{:};
     dummy = num2cell(yExitDirAgents);
@@ -299,7 +294,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         %----------------------------------------------------
         % compute physical forces from walls 
         %----------------------------------------------------
-        if Parameter.PhysicalForces
+        if Parameter.PhysicalForces 
             [FxPhysWall,FyPhysWall] = ComputePhysicalForceWalls(x_agent,y_agent,agent_size,velx_agent,vely_agent,x_Buildings,y_Buildings,Parameter);
         else
             FxPhysWall = 0;
@@ -362,7 +357,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     
     
-    if (PlotEvolution && mod(itime,10)==0)
+    if (PlotEvolution && mod(itime,1)==0)
         
         figure(1),clf
         hold on
@@ -378,7 +373,9 @@ while (time <= maxtime && size(AGENT,2)>0)
         end
         
         %        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
+        %
+        % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
+        % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
