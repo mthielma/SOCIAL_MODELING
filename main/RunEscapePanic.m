@@ -1,4 +1,4 @@
-function [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel
+function [Parameter,BuildingList,ExitList,Plotting] = RunEscapePanic
 
 
 % Workflow control
@@ -10,11 +10,16 @@ Parameter.WithTopo      = false; % true or false, determines if topography is ta
 Parameter.WithFlood     = false; % true or false, determines if flood is taken into account for shortest path computation
 
 % subfolder and topo information
-Foldername      = 'test1'; % subfolder where output is to be stored
-Topo_name       = 'none'; % topography file to be loaded (if there is none, use 'none')
+Parameter.Foldername  	= 'test1'; % subfolder where output is to be stored
+Parameter.Topo_name  	= 'none'; % topography file to be loaded (if there is none, use 'none')
 
 Parameter.PlotTimeStep  = 50;      % plots every PlotTimeStep
 Parameter.SaveTimeStep  = 200;      % saves every PlotTimeStep
+
+%plotting parameters
+Plotting.Marking        = 'number'; %'number', 'smiley'
+Plotting.FontSize       = 11;
+Plotting.Color          = 'y';      %agents color
 
 % domain
 Parameter.xmin          = 0;
@@ -34,10 +39,10 @@ Parameter.pert_social  	= 0.0;     % maximal amplitude factor of social agent fo
 Parameter.decision_time	= 0.05;      % after which time does an agent redecide on its path?
 
 % physical forces parameters (Helbing,2000)
-Parameter.PhysicalForces	= true;
-Parameter.Tangential        = false;
-Parameter.k                 = 1.2e5;
-Parameter.kappa             = 2.4e5;
+Parameter.PhysicalForces= true;
+Parameter.Tangential  	= false;
+Parameter.k           	= 1.2e5;
+Parameter.kappa      	= 2.4e5;
 
 % social force parameters
 Parameter.SocialForces	= true;
@@ -51,23 +56,23 @@ Parameter.agent_sensitivity   = 2; % how much are agents taken into account when
 Parameter.topo_sensitivity    = 1; % sensitivity of agents to topography
 
 % parameters for slope-dependent velocity
-Parameter.slope_f = 3.5;
-Parameter.slope_crit = 0.05;
+Parameter.slope_f       = 3.5;
+Parameter.slope_crit    = 0.05;
 
 
 % agent parameters (can be perturbed with a random perturbation)
-Parameter.AgentSetup        = 'random'; % 'random' 'given' 'load'
-Parameter.m                 = 80;       % mass in kg
-Parameter.m_pert            = 10;
-Parameter.v0               	= 1;        % maximal/desired velocity [m/s]
-Parameter.v0_pert           = 0;   
+Parameter.AgentSetup   	= 'random'; % 'random' 'given' 'load'
+Parameter.m            	= 80;       % mass in kg
+Parameter.m_pert       	= 10;
+Parameter.v0         	= 1;        % maximal/desired velocity [m/s]
+Parameter.v0_pert     	= 0;   
 
-Parameter.t_acc            	= 0.5;      % acceleration time in [s]
+Parameter.t_acc      	= 0.5;      % acceleration time in [s]
 
-Parameter.AgentSize         = 0.25;      % agent radius
-Parameter.AgentSize_pert    = 0.05; 
+Parameter.AgentSize    	= 0.25;      % agent radius
+Parameter.AgentSize_pert= 0.05; 
 
-Parameter.BoxSize           = 5;      % agent box size
+Parameter.BoxSize     	= 5;      % agent box size
 
 %---------------------------------------
 % create building list (if not given)
