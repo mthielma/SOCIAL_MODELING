@@ -164,7 +164,7 @@ if PlotSetup
     PlotBuildings(BuildingList,'r');
     PlotBuildings(ExitList,'g');
     % plot agents
-    PlotAgents(nagent,AGENT,Plotting);
+    PlotAgents(AGENT,Plotting);
     axis equal
     axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
     box on
@@ -386,7 +386,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
-        PlotAgents(nagent,AGENT,Plotting);
+        PlotAgents(AGENT,Plotting);
         
         % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
         % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
