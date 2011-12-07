@@ -1,4 +1,4 @@
-function [ArchForce,DirX,DirY] = ArchitectureForceV2(X_Grid,Y_Grid,Map,Parameter,resolution)
+function [ArchForce,D,DirX,DirY] = ArchitectureForceV2(X_Grid,Y_Grid,Map,Parameter,resolution)
 
 % compute architecture forces
 
