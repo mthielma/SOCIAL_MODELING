@@ -1,17 +1,19 @@
-%=======================
-%     ESCAPE PANIC
-%=======================
+%=================================
+%          ESCAPE PANIC
+% 
+%=================================
+% Marcel Thielmann & Fabio Crameri
 
-%function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Plotting)         
+function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Plotting)         
 
 %if nargin == 0
-    clear;
+%     clear;
     %**************************************************
     %Marcels:
 %     TwoExitsStandardSetup;
     %**************************************************
     %Fabios:
-    [Parameter,BuildingList,ExitList,Plotting] = SetupModel;
+%     [Parameter,BuildingList,ExitList,Plotting] = SetupModel;
     %**************************************************
 %end
 
@@ -20,11 +22,10 @@
 PlotSetup       = false;
 PlotEvolution   = true;
 
-% Workflow control
-DirectExitPath = Parameter.DirectExitPath;
-WithAgents = Parameter.WithAgents;
-WithTopo   = Parameter.WithTopo;
-WithFlood  = Parameter.WithFlood;
+DirectExitPath  = Parameter.DirectExitPath;
+WithAgents      = Parameter.WithAgents;
+WithTopo        = Parameter.WithTopo;
+WithFlood       = Parameter.WithFlood;
 
 %==========================================================================
 % add necessary paths
@@ -50,11 +51,12 @@ yvec                = ymin:resolution:ymax;
 
 % set topography
 if strcmp(Parameter.Topo_name,'none')
-Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
+    Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
 else
-   load(Parameter.Topo_name);
-   Z_Grid = interp2(XTopo,YTopo,ZTopo,X_Grid,Y_Grid);
+    load(Parameter.Topo_name);
+    Z_Grid = interp2(XTopo,YTopo,ZTopo,X_Grid,Y_Grid);
 end
+
 % compute topography gradient
 [Gradient_x,Gradient_y] = gradient(Z_Grid,resolution,resolution);
 
@@ -133,7 +135,7 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
+[ArchForce,ArchD,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
 
 %----------------------------------------------------
 % compute shortest path to exit
@@ -161,7 +163,7 @@ if PlotSetup
     PlotBuildings(BuildingList,'r');
     PlotBuildings(ExitList,'g');
     % plot agents
-    PlotAgents(nagent,AGENT,'y');
+    PlotAgents(nagent,AGENT,Plotting);
     axis equal
     axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
     box on
@@ -339,6 +341,11 @@ while (time <= maxtime && size(AGENT,2)>0)
     [AGENT] = MoveAgents(AGENT,X_Grid,Y_Grid,Gradient_x,Gradient_y,Parameter.dt,nagent,Parameter);
     
     %----------------------------------------------------
+    % check if agents are inside walls and move them out
+    %----------------------------------------------------
+    AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
+    
+    %----------------------------------------------------
     % remove successfull agents
     %----------------------------------------------------
     %those who arrived in the exits
@@ -377,14 +384,9 @@ while (time <= maxtime && size(AGENT,2)>0)
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
+        PlotAgents(nagent,AGENT,Plotting);
         
-        PlotAgents(nagent,AGENT,'y');
-        for i = 1:nagent
-           text(AGENT(i).LocX,AGENT(i).LocY,num2str(AGENT(i).name)) 
-        end
-        
-        %        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        %
+        % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
         % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
         % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
         axis equal
