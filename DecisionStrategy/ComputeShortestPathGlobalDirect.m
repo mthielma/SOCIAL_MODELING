@@ -1,4 +1,4 @@
-function [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,v0,resolution)
+function [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(BuildingMap,ExitMap,X_Grid,Y_Grid,v0,resolution)
 
 Debug =false;
 
@@ -24,7 +24,28 @@ Dgradtot = sqrt(Dgradx.^2+Dgrady.^2);
 Dgradx   = -Dgradx./Dgradtot;
 Dgrady   = -Dgrady./Dgradtot;
 
-% this could be done in an iterative manner, but is this necessary?
+
+% invert map
+MapInv = ~(logical(BuildingMap));
+[D,L] = bwdist(MapInv);
+
+DirX_B = 0*X_Grid;
+DirY_B = 0*X_Grid;
+DirX_B(:) = -(X_Grid(:) - X_Grid(L(:))); % actual distance between actual point and nearest building point
+DirY_B(:) = -(Y_Grid(:) - Y_Grid(L(:))); % actual distance between actual point and nearest building point
+
+DirTot_B = sqrt(DirX_B.*DirX_B+DirY_B.*DirY_B);
+DirX_B = DirX_B./DirTot_B;
+DirY_B = DirY_B./DirTot_B;
+
+Dgradx(logical(BuildingMap)) = DirX_B(logical(BuildingMap));
+Dgrady(logical(BuildingMap)) = DirY_B(logical(BuildingMap));
+
+
+
+
+
+
 
 if Debug
     
