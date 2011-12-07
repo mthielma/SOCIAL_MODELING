@@ -10,8 +10,6 @@ clear
 %--------------------------------------------------------------------------
 % run name
 Parameter.Foldername        = 'test1';      % Run name
-
-Parameter.PlotTimeStep      = 50;           % plots every PlotTimeStep
 Parameter.SaveTimeStep      = 200;          % saves every PlotTimeStep
 
 
@@ -106,6 +104,9 @@ ExitList                    = [                 % coordinates of exits: xmin xma
        
 %--------------------------------------------------------------------------
 %plotting parameters
+Plotting.PlotEvolution      = true;             % direct plotting
+Parameter.PlotTimeStep      = 50;               % plots every PlotTimeStep
+
 Plotting.Marking            = 'none';           % 'none', 'number', 'smiley'
 Plotting.FontSize           = 9;
 Plotting.Color              = 'y';              % agents color

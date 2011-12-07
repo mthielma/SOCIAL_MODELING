@@ -20,7 +20,7 @@ function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Plotting)
 
 % workflow control
 PlotSetup       = false;
-PlotEvolution   = true;
+PlotEvolution   = Plotting.PlotEvolution;
 
 DirectExitPath  = Parameter.DirectExitPath;
 WithAgents      = Parameter.WithAgents;
