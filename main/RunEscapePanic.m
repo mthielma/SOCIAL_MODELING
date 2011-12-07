@@ -1,9 +1,10 @@
-clear;
+function [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel
 
 
 % Workflow control
-Parameter.DirectExitPath = true; % true or false, determines if the fast marching algorithm is used for shortest path computation (false), or if the exit direction is the direct line (true)
+Parameter.DirectExitPath = false; % true or false, determines if the fast marching algorithm is used for shortest path computation (false), or if the exit direction is the direct line (true)
 
+Parameter.Enlarge       = 0.2;  % enlarge buildings for shortest path formulation
 Parameter.WithAgents    = false; % true or false, determines if agents are taken into account for shortest path computation
 Parameter.WithTopo      = false; % true or false, determines if topography is taken into account for shortest path computation
 Parameter.WithFlood     = false; % true or false, determines if flood is taken into account for shortest path computation
@@ -12,8 +13,8 @@ Parameter.WithFlood     = false; % true or false, determines if flood is taken i
 Foldername      = 'test1'; % subfolder where output is to be stored
 Topo_name       = 'none'; % topography file to be loaded (if there is none, use 'none')
 
-Parameter.PlotTimeStep  = 100;      % plots every PlotTimeStep
-Parameter.SaveTimeStep  = 100;      % saves every PlotTimeStep
+Parameter.PlotTimeStep  = 50;      % plots every PlotTimeStep
+Parameter.SaveTimeStep  = 200;      % saves every PlotTimeStep
 
 % domain
 Parameter.xmin          = 0;
@@ -30,11 +31,11 @@ Parameter.dt           	= 0.01;    	% time step in [s]
 Parameter.maxtime      	= 3;       % maximum time to run in [min]
 
 Parameter.pert_social  	= 0.0;     % maximal amplitude factor of social agent forces perturbation e.g. 0.05
-Parameter.decision_time	= 0.01;      % after which time does an agent redecide on its path?
+Parameter.decision_time	= 0.05;      % after which time does an agent redecide on its path?
 
 % physical forces parameters (Helbing,2000)
 Parameter.PhysicalForces	= true;
-Parameter.Tangential        = true;
+Parameter.Tangential        = false;
 Parameter.k                 = 1.2e5;
 Parameter.kappa             = 2.4e5;
 
@@ -55,9 +56,10 @@ Parameter.slope_crit = 0.05;
 
 
 % agent parameters (can be perturbed with a random perturbation)
+Parameter.AgentSetup        = 'random'; % 'random' 'given' 'load'
 Parameter.m                 = 80;       % mass in kg
 Parameter.m_pert            = 10;
-Parameter.v0               	= 0.5;        % maximal/desired velocity [m/s]
+Parameter.v0               	= 1;        % maximal/desired velocity [m/s]
 Parameter.v0_pert           = 0;   
 
 Parameter.t_acc            	= 0.5;      % acceleration time in [s]
@@ -78,11 +80,10 @@ BuildingList = [
                %  12 13 3 9
                  
                %  9 12 3 4
-               %  8 10 7 8
-               % 9  11 2 4
-                15 16 5.5 9   %top barriere
-                15 16 1 4.5   %bottom barriere
-                 
+%                 11 13 6 7
+%                 13 15 3 4
+                15 16 3 9   %top barriere
+                10 11 1 7   %bottom barriere
                 ]; % coordinates of building xmin xmax ymin ymax
             
 
@@ -104,7 +105,7 @@ ExitList = [
 %---------------------------------------
 % run simulation
 %---------------------------------------
-EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name);
+% EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name);
 
 
 
