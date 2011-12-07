@@ -3,14 +3,14 @@
 %if nargin == 0
     clear;
     %Marcels:
-%     TwoExitsStandardSetup;
+     TwoExitsStandardSetup;
     
-    %Fabios:
-    [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
-    %plotting parameters
-    PLOTTING.Marking    = 'number'; %'number', 'smiley'
-    PLOTTING.FontSize   = 11;
-    PLOTTING.Color      = 'y';      %agents color
+%     %Fabios:
+%     [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
+%     %plotting parameters
+%     PLOTTING.Marking    = 'number'; %'number', 'smiley'
+%     PLOTTING.FontSize   = 11;
+%     PLOTTING.Color      = 'y';      %agents color
 %end
 
 
