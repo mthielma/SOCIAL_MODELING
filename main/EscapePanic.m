@@ -364,7 +364,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     % save data
     %----------------------------------------------------
     if mod(itime,Parameter.SaveTimeStep)==0
-        filestem = ['../output/',Parameter.Foldername];
+        filestem = ['../+output/',Parameter.Foldername];
         if ~exist(filestem,'dir'); mkdir(filestem); end
         
         filename_full = [filestem,'/',Parameter.Foldername,'_',num2str(itime,'%5.6d')];
