@@ -1,29 +1,30 @@
-% =========================
-% EscapePanic      
-% =========================
-function EscapePanic(Parameter,BuildingList,ExitList,Foldername,Topo_name)
+%=======================
+%     ESCAPE PANIC
+%=======================
 
-if nargin==0
+%function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Plotting)         
+
+%if nargin == 0
     clear;
-    [Parameter,BuildingList,ExitList,Foldername,Topo_name] = SetupModel;
-    %plotting parameters
-    PLOTTING.Marking    = 'number'; %'number', 'smiley'
-    PLOTTING.FontSize   = 11;
-    PLOTTING.Color      = 'y';      %agents color
-end
+    %**************************************************
+    %Marcels:
+%     TwoExitsStandardSetup;
+    %**************************************************
+    %Fabios:
+    [Parameter,BuildingList,ExitList,Plotting] = SetupModel;
+    %**************************************************
+%end
+
 
 % workflow control
-PlotSetup = false;
-PlotEvolution = true;
+PlotSetup       = false;
+PlotEvolution   = true;
 
 % Workflow control
 DirectExitPath = Parameter.DirectExitPath;
 WithAgents = Parameter.WithAgents;
 WithTopo   = Parameter.WithTopo;
 WithFlood  = Parameter.WithFlood;
-
-
-
 
 %==========================================================================
 % add necessary paths
@@ -48,10 +49,10 @@ yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
 % set topography
-if strcmp(Topo_name,'none')
+if strcmp(Parameter.Topo_name,'none')
 Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
 else
-   load(Topo_name);
+   load(Parameter.Topo_name);
    Z_Grid = interp2(XTopo,YTopo,ZTopo,X_Grid,Y_Grid);
 end
 % compute topography gradient
@@ -81,7 +82,7 @@ BuildingList(find(BuildingList(:,3)>=ymax),:) = []; %if building fully outside d
 BuildingList(find(BuildingList(:,2)>xmax),2) = xmax; %adjust building to domain boundary
 BuildingList(find(BuildingList(:,4)>ymax),2) = ymax; %adjust building to domain boundary
 
-BuildingMap = logical(X_Grid*0); BuildingMap_sp = BuildingMap; 
+BuildingMap = logical(X_Grid*0);  BuildingMap_sp = BuildingMap;
 % add buildings to map
 for i=1:size(BuildingList,1)
     BuildingMap(X_Grid>=BuildingList(i,1) & X_Grid<=BuildingList(i,2) & Y_Grid>=BuildingList(i,3) & Y_Grid<=BuildingList(i,4)) = true;
@@ -103,13 +104,25 @@ for i=1:size(ExitList,1)
     ExitMap(X_Grid>=ExitList(i,1) & X_Grid<=ExitList(i,2) & Y_Grid>=ExitList(i,3) & Y_Grid<=ExitList(i,4)) = true;
 end
 
-
 % initialize agents
 nagent  = Parameter.nagent;
 AGENT   = InitializeAgents(nagent,Parameter);
 
 % create random agent distribution
-AGENT   = CreateInitialAgentDistribution(nagent,AGENT,X_Grid,Y_Grid,BuildingMap,BoundaryMap,StartArea,ExitMap);
+if strcmp(Parameter.AgentSetup,'random')
+    AGENT   = CreateInitialAgentDistribution(nagent,AGENT,X_Grid,Y_Grid,BuildingMap,BoundaryMap,StartArea,ExitMap);
+elseif strcmp(Parameter.AgentSetup,'given')
+    cell_array = num2cell(AgentX);
+    [AGENT(1:nagent).LocX]      = cell_array{:};
+    cell_array = num2cell(AgentY);
+    [AGENT(1:nagent).LocY]      = cell_array{:};
+elseif strcmp(Parameter.AgentSetup,'load')
+    load(Parameter.AgentLocationFile);
+    cell_array = num2cell(AgentX);
+    [AGENT(1:nagent).LocX]      = cell_array{:};
+    cell_array = num2cell(AgentY);
+    [AGENT(1:nagent).LocY]      = cell_array{:};
+end
 
 %----------------------------------------------------
 % building locations
@@ -117,21 +130,10 @@ AGENT   = CreateInitialAgentDistribution(nagent,AGENT,X_Grid,Y_Grid,BuildingMap,
 x_Buildings = X_Grid(BuildingMap);
 y_Buildings = Y_Grid(BuildingMap);
 
-
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV3(X_Grid,Y_Grid,BuildingList,Parameter,resolution);
-
-if logical(0)
-   figure(2),clf
-   pcolor(X_Grid,Y_Grid,ArchForce)
-   colorbar
-   axis tight; axis equal;
-   figure(3),clf
-   quiver(X_Grid,Y_Grid,ArchDirX,ArchDirY)
-   axis tight; axis equal;
-end
+[ArchForce,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
 
 %----------------------------------------------------
 % compute shortest path to exit
@@ -145,30 +147,8 @@ elseif (~DirectExitPath && WithTopo)
     [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
 elseif DirectExitPath
     % compute exit direction directly
-    [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(ExitMap,X_Grid,Parameter.v0,Parameter.resolution);
+    [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
 end
-
-if logical(1)
-%    figure(2),clf
-%    pcolor(X_Grid,Y_Grid,ArchForce)
-%    colorbar
-%    axis tight; axis equal;
-%     BuildingMap2 = size(BuildingMap); BuildingMap2 = +BuildingMap;
-%     BuildingMap_sp2 = size(BuildingMap_sp); BuildingMap_sp2 = +BuildingMap_sp;
-   figure(2),clf
-   pcolor(X_Grid,Y_Grid,+BuildingMap)
-   hold on
-   pcolor(X_Grid,Y_Grid,+BuildingMap_sp)
-   
-   figure(3),clf
-   quiver(X_Grid,Y_Grid,Dgradx,Dgrady)
-   axis tight; axis equal;
-   
-   figure(1); hold on;
-   quiver(X_Grid,Y_Grid,Dgradx,Dgrady)
-   axis tight; axis equal;
-end
-
 
 %----------------------------------------------------
 % plot setup
@@ -181,8 +161,7 @@ if PlotSetup
     PlotBuildings(BuildingList,'r');
     PlotBuildings(ExitList,'g');
     % plot agents
-    %         PlotAgents(nagent,AGENT,'y');
-    PlotAgents2(nagent,AGENT,PLOTTING);
+    PlotAgents(nagent,AGENT,'y');
     axis equal
     axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
     box on
@@ -194,7 +173,6 @@ end
 
 %==========================================================================
 % time loop
-
 time=0; itime=0;
 while (time <= maxtime && size(AGENT,2)>0)
     time = time+Parameter.dt;     %actual time
@@ -202,8 +180,9 @@ while (time <= maxtime && size(AGENT,2)>0)
     disp('*****************************************')
     disp(['timestep ',num2str(itime),':    time = ',num2str(time/60),' min'])
     
-    if (nagent~=size(AGENT,2)); error('fc: nagent not equal nr. of agents!'); end
-
+    if sum(isnan([AGENT.LocX]))
+        error('NaN');
+    end
     %----------------------------------------------------
     % compute flooding
     %----------------------------------------------------
@@ -221,8 +200,6 @@ while (time <= maxtime && size(AGENT,2)>0)
     % generate tree
     tree =   kdtree(ReferencePoints);
     
-    % clearvars ReferencePoints
-    
     %----------------------------------------------------
     % compute forces from buildings on all agents (just interpolate the
     % precomputed force field to the agents)
@@ -236,16 +213,6 @@ while (time <= maxtime && size(AGENT,2)>0)
     else
         [AGENT(1:nagent).FxSocialWalls]       = deal(0);
         [AGENT(1:nagent).FySocialWalls]       = deal(0);
-    end
-    
-    if logical(0)
-        figure(2),clf
-        pcolor(X_Grid,Y_Grid,ArchForce)
-        colorbar
-        axis tight; axis equal;
-        figure(3),clf
-        quiver(X_Grid,Y_Grid,ArchDirX,ArchDirY)
-        axis tight; axis equal;
     end
     
     %----------------------------------------------------
@@ -262,11 +229,11 @@ while (time <= maxtime && size(AGENT,2)>0)
     
     xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
     yExitDirAgents = interp2(X_Grid,Y_Grid,Dgrady,[AGENT.LocX],[AGENT.LocY],'*linear');
-    
-    % normalize direction vector
-    dirtot         = sqrt(xExitDirAgents.^2+yExitDirAgents.^2);
-    xExitDirAgents = xExitDirAgents./dirtot;
-    yExitDirAgents = yExitDirAgents./dirtot;
+   
+%     % normalize direction vector
+%     dirtot         = sqrt(xExitDirAgents.^2+yExitDirAgents.^2);
+%     xExitDirAgents = xExitDirAgents./dirtot;
+%     yExitDirAgents = yExitDirAgents./dirtot;
     
     dummy = num2cell(xExitDirAgents);
     [AGENT(1:nagent).xExitDir]       = dummy{:};
@@ -283,6 +250,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         agent_size      = AGENT(iagent).Size;
         velx_agent      = AGENT(iagent).VelX;
         vely_agent      = AGENT(iagent).VelY;
+        
         %-------------------------------------------------
         % check if the agent is outside the domain
         %-------------------------------------------------
@@ -297,7 +265,6 @@ while (time <= maxtime && size(AGENT,2)>0)
         [AGENT,x_others,y_others,others_size] = GetSurroundingAgents(iagent,AGENT,tree);
         
         [Normal,Tangent,DistanceToAgents,num_others] = ComputeDistanceToAgents(x_agent,y_agent,agent_size,x_others,y_others,others_size);
-        if ~isempty(find(DistanceToAgents==0)); error('fc: dividing by zero!'); end
 
         if num_others >0
             % find agents that are too close
@@ -314,6 +281,7 @@ while (time <= maxtime && size(AGENT,2)>0)
                 FxAgentsSocial = 0;
                 FyAgentsSocial = 0;
             end
+            
             %----------------------------------------------------
             % compute physical forces from other agents
             %----------------------------------------------------
@@ -326,7 +294,6 @@ while (time <= maxtime && size(AGENT,2)>0)
                 vely_others = AGENT(AgentTooClose).VelY;
                 
                 [FxPhysAgents,FyPhysAgents] = ComputePhysicalForceAgents(velx_agent,vely_agent,velx_others,vely_others,Parameter,DistTooClose,Normal(indTooClose,:),Tangent(indTooClose,:));
-                
             else
                 FxPhysAgents = 0;
                 FyPhysAgents = 0;
@@ -337,15 +304,17 @@ while (time <= maxtime && size(AGENT,2)>0)
             FxPhysAgents = 0;
             FyPhysAgents = 0;
         end
+        
         %----------------------------------------------------
         % compute physical forces from walls 
         %----------------------------------------------------
-        if Parameter.PhysicalForces
+        if Parameter.PhysicalForces 
             [FxPhysWall,FyPhysWall] = ComputePhysicalForceWalls(x_agent,y_agent,agent_size,velx_agent,vely_agent,x_Buildings,y_Buildings,Parameter);
         else
             FxPhysWall = 0;
             FyPhysWall = 0;
         end
+        
         %----------------------------------------------------
         % assign forces to structure
         %----------------------------------------------------
@@ -372,8 +341,6 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % remove successfull agents
     %----------------------------------------------------
-
-    
     %those who arrived in the exits
     for i=1:size(ExitList,1)
         AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
@@ -390,10 +357,10 @@ while (time <= maxtime && size(AGENT,2)>0)
     % save data
     %----------------------------------------------------
     if mod(itime,Parameter.SaveTimeStep)==0
-        filestem = ['../output/',Foldername];
-        if ~exist(filestem); mkdir(filestem); end
+        filestem = ['../output/',Parameter.Foldername];
+        if ~exist(filestem,'dir'); mkdir(filestem); end
         
-        filename_full = [filestem,'/',Foldername,'_',num2str(itime,'%5.6d')];
+        filename_full = [filestem,'/',Parameter.Foldername,'_',num2str(itime,'%5.6d')];
         
         save(filename_full,'AGENT')
     end
@@ -401,30 +368,32 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % plot
     %----------------------------------------------------
-
-
     if (PlotEvolution && mod(itime,Parameter.PlotTimeStep)==0)
-
+        
         figure(1),clf
-%         hold on
-%         pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
+        hold on
+        %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
         PlotBuildings(BuildingList,'r');
         PlotBuildings(ExitList,'g');
         % plot agents
         
-%         PlotAgents(nagent,AGENT,'y');
-        PlotAgents2(nagent,AGENT,PLOTTING);
+        PlotAgents(nagent,AGENT,'y');
+        for i = 1:nagent
+           text(AGENT(i).LocX,AGENT(i).LocY,num2str(AGENT(i).name)) 
+        end
         
-%        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-%         quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'w')
+        %        quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
+        %
+        % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
+        % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
         box on
-        title(['time = ',num2str(time/60,3),' min'])
+        title(['time = ',num2str(time,'%.2d'),' s'])
         xlabel('x [m]')
         ylabel('y [m]')
-        pause(0.01)
+        
     end
 end
 
