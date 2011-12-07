@@ -25,9 +25,13 @@ for i = 1:nagent
         bla=1;
     end
     
-    if strcmp(Plotting.Marking,'no');
-    elseif strcmp(Plotting.Marking,'number'); agentText = [num2str(AGENT(i).name)];
-    elseif strcmp(Plotting.Marking,'smiley'); agentText = ':-)';
+    if strcmp(Plotting.Marking,'none');
+    elseif strcmp(Plotting.Marking,'number'); 
+        agentText = [num2str(AGENT(i).name)];
+        text(x,y,agentText,'HorizontalAlignment','center','VerticalAlignment','middle','FontSize',10)
+    elseif strcmp(Plotting.Marking,'smiley'); 
+        agentText = ':-)';
+        text(x,y,agentText,'HorizontalAlignment','center','VerticalAlignment','middle','FontSize',12)
     end
-    text(x,y,agentText,'HorizontalAlignment','center','VerticalAlignment','middle','FontSize',11)
+    
 end
