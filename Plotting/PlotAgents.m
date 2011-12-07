@@ -1,7 +1,6 @@
 function PlotAgents(AGENT,Plotting)
 % plot agents as circles with the size of the circle being their radius
 % 
-% nagent: number of agents
 % 
 % AGENT is a structure that needs to have the following fields:
 % .Size: radius of the agent
