@@ -100,7 +100,7 @@ AGENT   = InitializeAgents(nagent,Parameter);
 
 % create random agent distribution
 if strcmp(Parameter.AgentSetup,'random')
-AGENT   = CreateInitialAgentDistribution(nagent,AGENT,X_Grid,Y_Grid,BuildingMap,BoundaryMap,StartArea,ExitMap);
+    AGENT   = CreateInitialAgentDistribution(nagent,AGENT,X_Grid,Y_Grid,BuildingMap,BoundaryMap,StartArea,ExitMap);
 elseif strcmp(Parameter.AgentSetup,'given')
     cell_array = num2cell(AgentX);
     [AGENT(1:nagent).LocX]      = cell_array{:};
