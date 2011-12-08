@@ -20,7 +20,7 @@ for i = 1:nagent
     y      = AGENT(i).LocY;
     name   = AGENT(i).name;
     try
-    if strcmp(Plotting.Color,'rand'); %random color
+    if strcmp(Plotting.Color,'rand') ||  strcmp(Plotting.Color,'one'); %random color   or   one coloured agent
         rectangle('position',[x-radius, y-radius, 2*radius, 2*radius],'curvature',[1 1],'FaceColor',Plotting.cmap(name,:));
     else %all the same color
         rectangle('position',[x-radius, y-radius, 2*radius, 2*radius],'curvature',[1 1],'FaceColor',Plotting.Color);

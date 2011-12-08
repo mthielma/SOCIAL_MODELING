@@ -12,14 +12,19 @@ filename            = 'Model2';
 
 filestem            = ['../+output/',filename,'/'];
 
-savingPlots = logical(1);   save_jpg = logical(0);    save_eps = logical(1);
+savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(0);
 
 FontSize            = 14;
-AgentsMarking       = 'none';           % 'none', 'number', 'smiley'
-AgentsColor         = 'rand';           % agents color: 'y',[0 1 0], or 'rand'
+AgentsMarking       = 'none';       	% 'none', 'number', 'smiley'
+AgentsColor         = 'one';           % agents color: 'y' or [0 1 0] or 'rand' or 'one'
 
 ColorBuildings      = [0.2 0.2 0.2];
 ColorExits          = [0.0 0.4 0.0];
+
+%to follow one single agent:   set AgentsColor = 'one'
+Don                 = 1;                %insert name of Don
+ColorDon            = [1.0 0.0 0.0];
+ColorOthers         = [0.5 0.5 0.5];
 
 %--------------------------------------------------
 
@@ -43,10 +48,19 @@ Plotting.FontSize	= FontSize;
 Plotting.Marking  	= AgentsMarking;
 Plotting.Color    	= AgentsColor;
 
-cmap = hsv(nagent);  %# Creates a nagent-by-3 set of colors from the HSV colormap
 if strcmp(Plotting.Color,'rand')
-    Plotting.cmap   = cmap;
+    cmap = hsv(nagent);  %# Creates a nagent-by-3 set of colors from the HSV colormap
+elseif strcmp(Plotting.Color,'one')
+    cmap = zeros(50,3);
+    for k=1:nagent
+        cmap(k,:) = ColorOthers;
+    end
+    cmap(Don,:) = ColorDon;
+else
+    cmap = 0; %just to define it
 end
+Plotting.cmap   = cmap;
+
 
 % time settings
 maxTime     = Parameter.maxtime*60;    %[s]
@@ -57,7 +71,10 @@ nrTimesteps = maxTime/dt;               %max. number of timesteps (if it did run
 nrFiles     = nrTimesteps/outputStep;   %max. number of output files (if it did run until maxTime)
 % dtFiles     = dt * outputStep;        %timestep between output files [s]
 
+
+
 %loop output files
+i_output = 0; pathDon = zeros(nrFiles,2)*NaN;
 for i=0:outputStep:nrTimesteps
     time = i*dt; %time in [s]
     
@@ -68,7 +85,8 @@ for i=0:outputStep:nrTimesteps
     
     if exist(filestem_full,'file')
         load(filestem_full)
-        
+        i_output = i_output+1;
+
         
         figure(1),clf
         set(cla,'FontSize',Plotting.FontSize)
@@ -79,11 +97,18 @@ for i=0:outputStep:nrTimesteps
         % plot agents
         PlotAgents(AGENT,Plotting);
         
+        if strcmp(AgentsColor,'one') %follow one's path
+            if ~isempty(find([AGENT.name]==Don)) %Don's still alive
+                pathDon(i_output,:) = [ [AGENT([AGENT.name]==Don).LocX] [AGENT([AGENT.name]==Don).LocY] ];
+            end
+            hold on; plot(pathDon(:,1),pathDon(:,2),'Color',ColorDon)
+        end
+        
         % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
         % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
         % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
         axis equal
-%         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
+        axis([Parameter.xmin Parameter.xmax Parameter.ymin Parameter.ymax])
         box on
 %         title(['time = ',num2str(time,'%.2d'),' s'])
         xlabel('x [m]')
@@ -99,7 +124,7 @@ for i=0:outputStep:nrTimesteps
             
             filenameIM = [filestem_save,'/',filename,'_',num_string];
             if save_jpg; print(filenameIM,'-djpeg90','-r300'); end
-            if save_eps; print(filenameIM,'-depsc'); end
+            if save_eps; print(filenameIM,'-depsc2'); end
         end
         
     end
