@@ -94,15 +94,16 @@ for i=0:outputStep:nrTimesteps
         % plot buildings
         PlotBuildings(BuildingList,ColorBuildings);
         PlotBuildings(ExitList,ColorExits);
-        % plot agents
-        PlotAgents(AGENT,Plotting);
-        
+
         if strcmp(AgentsColor,'one') %follow one's path
             if ~isempty(find([AGENT.name]==Don)) %Don's still alive
                 pathDon(i_output,:) = [ [AGENT([AGENT.name]==Don).LocX] [AGENT([AGENT.name]==Don).LocY] ];
             end
             hold on; plot(pathDon(:,1),pathDon(:,2),'Color',ColorDon)
         end
+        
+        % plot agents
+        PlotAgents(AGENT,Plotting);
         
         % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
         % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
