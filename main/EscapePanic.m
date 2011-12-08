@@ -4,7 +4,7 @@
 %=================================
 % Marcel Thielmann & Fabio Crameri
 
-function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Plotting)         
+function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,StartingList,Plotting)         
 
 %if nargin == 0
 %     clear;
@@ -72,8 +72,16 @@ decision_step   = round(Parameter.decision_time/Parameter.dt);
 %---------------------------------------
 % create starting area map for agents
 %---------------------------------------
-StartArea = zeros(size(yvec,2),size(xvec,2));
-StartArea(X_Grid<5) = 1;
+StartingList(find(StartingList(:,1)>=xmax),:) = []; %if set fully outside domain: remove it!
+StartingList(find(StartingList(:,3)>=ymax),:) = []; %if set fully outside domain: remove it!
+StartingList(find(StartingList(:,2)>xmax),2) = xmax; %adjust to domain boundary
+StartingList(find(StartingList(:,4)>ymax),2) = ymax; %adjust to domain boundary
+
+StartArea = logical(X_Grid*0);
+% add buildings to map
+for i=1:size(StartingList,1)
+    StartArea(X_Grid>=StartingList(i,1) & X_Grid<=StartingList(i,2) & Y_Grid>=StartingList(i,3) & Y_Grid<=StartingList(i,4)) = true;
+end
 
 %---------------------------------------
 % create boundary map for later use

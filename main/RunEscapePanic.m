@@ -103,6 +103,12 @@ ExitList                    = [                 % coordinates of exits: xmin xma
                                 19 20 4.5 5.5
                                             ];
        
+% create starting area map for agents
+StartingList                = [             	% coordinates of start area: xmin xmax ymin ymax
+                                0.5 4 1.5 8.5
+                                            ];
+       
+                                        
 %--------------------------------------------------------------------------
 %plotting parameters
 Plotting.PlotEvolution      = true;             % direct plotting
@@ -124,7 +130,7 @@ Plotting.Color              = 'y';           % agents color: 'y' or [0 1 0]
 %---------------------------------------
 % run simulation
 %---------------------------------------
-EscapePanic(Parameter,BuildingList,ExitList,Plotting);
+EscapePanic(Parameter,BuildingList,ExitList,StartingList,Plotting);
 
 
 
