@@ -12,7 +12,7 @@ filename            = 'Model2';
 
 filestem            = ['../+output/',filename,'/'];
 
-savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(0);
+savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(1);
 
 FontSize            = 14;
 AgentsMarking       = 'none';       	% 'none', 'number', 'smiley'
@@ -20,6 +20,7 @@ AgentsColor         = 'one';           % agents color: 'y' or [0 1 0] or 'rand' 
 
 ColorBuildings      = [0.2 0.2 0.2];
 ColorExits          = [0.0 0.4 0.0];
+MarkingExits        = 'EXIT';
 
 %to follow one single agent:   set AgentsColor = 'one'
 Don                 = 1;                %insert name of Don
@@ -65,7 +66,7 @@ Plotting.cmap   = cmap;
 % time settings
 maxTime     = Parameter.maxtime*60;    %[s]
 dt          = Parameter.dt;
-
+ 
 outputStep  = Parameter.SaveTimeStep;
 nrTimesteps = maxTime/dt;               %max. number of timesteps (if it did run until maxTime)
 nrFiles     = nrTimesteps/outputStep;   %max. number of output files (if it did run until maxTime)
@@ -92,8 +93,8 @@ for i=0:outputStep:nrTimesteps
         set(cla,'FontSize',Plotting.FontSize)
         %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
-        PlotBuildings(BuildingList,ColorBuildings);
-        PlotBuildings(ExitList,ColorExits);
+        PlotBuildings(BuildingList,ColorBuildings,'');
+        PlotBuildings(ExitList,ColorExits,MarkingExits);
 
         if strcmp(AgentsColor,'one') %follow one's path
             if ~isempty(find([AGENT.name]==Don)) %Don's still alive
@@ -125,7 +126,7 @@ for i=0:outputStep:nrTimesteps
             
             filenameIM = [filestem_save,'/',filename,'_',num_string];
             if save_jpg; print(filenameIM,'-djpeg90','-r300'); end
-            if save_eps; print(filenameIM,'-depsc2'); end
+            if save_eps; print(filenameIM,'-depsc2','-painters'); end
         end
         
     end
