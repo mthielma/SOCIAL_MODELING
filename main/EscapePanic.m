@@ -178,6 +178,18 @@ if PlotSetup
     ylabel('y [m]')
 end
 
+%----------------------------------------------------
+% save data (INITIAL SETUP)
+%----------------------------------------------------
+if Parameter.Save
+    filestem = ['../+output/',Parameter.Foldername];
+    if ~exist(filestem,'dir'); mkdir(filestem); end
+    
+    filename_full = [filestem,'/',Parameter.Foldername,'_',num2str(0,'%5.6d')];
+    
+    save(filename_full,'AGENT')
+end
+
 
 %==========================================================================
 % time loop
