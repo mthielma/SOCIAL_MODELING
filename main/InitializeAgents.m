@@ -8,6 +8,7 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).name]      = cell_array{:};
 [AGENT(1:nagent).num]       = cell_array{:};
 
+
 % maximum velocity
 v0          = Parameter.v0;
 if isfield(Parameter,'v0_pert')

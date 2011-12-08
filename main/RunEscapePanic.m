@@ -110,7 +110,7 @@ Parameter.PlotTimeStep      = 50;               % plots every PlotTimeStep
 
 Plotting.Marking            = 'none';           % 'none', 'number', 'smiley'
 Plotting.FontSize           = 14;
-Plotting.Color              = 'y';              % agents color
+Plotting.Color              = 'y';           % agents color: 'y' or [0 1 0]
 
 
 
