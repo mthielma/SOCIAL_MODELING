@@ -190,14 +190,14 @@ end
 
 %setup analysis variable
 %Analysis = [num/name startPosX startPosY ExitTime Status]  
-%                                       Status:	'alive':    still running
-%                                               'survived': reached exit 
-%                                               'killed':   e.g. by flood
+%                                       Status:	:   1:  'alive' still running
+%                                                   2:  'survived' reached exit 
+%                                                   3:  'killed' e.g. by flood
 Analysis        = zeros(nagent,5)*NaN;
 Analysis(:,1)   = [AGENT.name]';
 Analysis(:,2)   = [AGENT.LocX]';
 Analysis(:,3)   = [AGENT.LocY]';
-Analysis(:,5)   = 'alive';
+Analysis(:,5)   = 1;
 
 
 
@@ -371,7 +371,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % check if agents are inside walls and move them out
     %----------------------------------------------------
-    AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
+%     AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
     
     %----------------------------------------------------
     % remove successfull agents
@@ -382,7 +382,7 @@ while (time <= maxtime && size(AGENT,2)>0)
             & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4) ).num];
         %save time of agents exit
         Analysis([AGENT(successfull).name],4) = time; %in [s]
-        Analysis([AGENT(successfull).name],5) = 'survived'; %change status
+        Analysis([AGENT(successfull).name],5) = 2; %change status to 'survived'
         
         AGENT(successfull) = []; %remove agents
     end
