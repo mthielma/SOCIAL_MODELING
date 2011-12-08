@@ -6,18 +6,23 @@
 %=========================== 
 clear;
 
+%-- input -----------------------------------------
+
 filename            = 'Model2';
 
 filestem            = ['../+output/',filename,'/'];
+
+savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(0);
 
 Plotting.FontSize	= 14;
 Plotting.Marking  	= 'none';           % 'none', 'number', 'smiley'
 Plotting.Color    	= 'y';              % agents color
 
+%--------------------------------------------------
 
 
-
-
+display('***************')
+display(['saving output files for ',filename])
 
 filestem_full = [filestem,'Setup.mat'];
 if exist(filestem_full,'file')
@@ -26,8 +31,17 @@ else
     error(['Could not find ',filestem_full,' !']);
 end
 
+maxTime     = Parameter.maxtime*60;    %[s]
+dt          = Parameter.dt;
+
+outputStep  = Parameter.SaveTimeStep;
+nrTimesteps = maxTime/dt;               %max. number of timesteps (if it did run until maxTime)
+nrFiles     = nrTimesteps/outputStep;   %max. number of output files (if it did run until maxTime)
+% dtFiles     = dt * outputStep;        %timestep between output files [s]
+
 %loop output files
-for i=1:1:99999
+for i=0:outputStep:nrTimesteps
+    time = i*dt; %time in [s]
     
     num_string = num2str(100000+i);
     num_string(1)='0';
@@ -56,7 +70,24 @@ for i=1:1:99999
 %         title(['time = ',num2str(time,'%.2d'),' s'])
         xlabel('x [m]')
         ylabel('y [m]')
+        
+        if time/60<1; title(['time = ',num2str(time,3),' s']);
+        else title(['time = ',num2str(time/60,3),' min']); end
+        
+        %saving plots
+        if savingPlots
+            filestem_save = ['../+output/',filename,'/+images'];
+            if ~exist(filestem_save,'dir'); mkdir(filestem_save); end
+            
+            filenameIM = [filestem_save,'/',filename,'_',num_string];
+            if save_jpg; print(filenameIM,'-djpeg90','-r300'); end
+            if save_eps; print(filenameIM,'-depsc'); end
+        end
+        
     end
     
     
 end
+
+display('finished plotting output files.')
+display('***************')
