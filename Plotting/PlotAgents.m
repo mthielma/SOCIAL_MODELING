@@ -18,15 +18,20 @@ for i = 1:nagent
     radius = AGENT(i).Size;
     x      = AGENT(i).LocX;
     y      = AGENT(i).LocY;
+    name   = AGENT(i).name;
     try
-    rectangle('position',[x-radius, y-radius, 2*radius, 2*radius],'curvature',[1 1],'FaceColor',Plotting.Color);
+    if strcmp(Plotting.Color,'rand'); %random color
+        rectangle('position',[x-radius, y-radius, 2*radius, 2*radius],'curvature',[1 1],'FaceColor',Plotting.cmap(name,:));
+    else %all the same color
+        rectangle('position',[x-radius, y-radius, 2*radius, 2*radius],'curvature',[1 1],'FaceColor',Plotting.Color);
+    end
     catch
         bla=1;
     end
     
     if strcmp(Plotting.Marking,'none');
     elseif strcmp(Plotting.Marking,'number'); 
-        agentText = [num2str(AGENT(i).name)];
+        agentText = name;
         text(x,y,agentText,'HorizontalAlignment','center','VerticalAlignment','middle','FontSize',10)
     elseif strcmp(Plotting.Marking,'smiley'); 
         agentText = ':-)';

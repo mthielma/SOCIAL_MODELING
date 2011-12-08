@@ -12,11 +12,14 @@ filename            = 'Model2';
 
 filestem            = ['../+output/',filename,'/'];
 
-savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(0);
+savingPlots = logical(1);   save_jpg = logical(0);    save_eps = logical(1);
 
-Plotting.FontSize	= 14;
-Plotting.Marking  	= 'none';           % 'none', 'number', 'smiley'
-Plotting.Color    	= 'y';              % agents color
+FontSize            = 14;
+AgentsMarking       = 'none';           % 'none', 'number', 'smiley'
+AgentsColor         = 'rand';           % agents color: 'y',[0 1 0], or 'rand'
+
+ColorBuildings      = [0.2 0.2 0.2];
+ColorExits          = [0.0 0.4 0.0];
 
 %--------------------------------------------------
 
@@ -31,6 +34,21 @@ else
     error(['Could not find ',filestem_full,' !']);
 end
 
+
+% agent settings
+nagent = Parameter.nagent; %initial number of agents
+
+% plotting settings
+Plotting.FontSize	= FontSize;
+Plotting.Marking  	= AgentsMarking;
+Plotting.Color    	= AgentsColor;
+
+cmap = hsv(nagent);  %# Creates a nagent-by-3 set of colors from the HSV colormap
+if strcmp(Plotting.Color,'rand')
+    Plotting.cmap   = cmap;
+end
+
+% time settings
 maxTime     = Parameter.maxtime*60;    %[s]
 dt          = Parameter.dt;
 
@@ -56,8 +74,8 @@ for i=0:outputStep:nrTimesteps
         set(cla,'FontSize',Plotting.FontSize)
         %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
-        PlotBuildings(BuildingList,'r');
-        PlotBuildings(ExitList,'g');
+        PlotBuildings(BuildingList,ColorBuildings);
+        PlotBuildings(ExitList,ColorExits);
         % plot agents
         PlotAgents(AGENT,Plotting);
         
