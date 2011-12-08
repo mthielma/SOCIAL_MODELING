@@ -184,18 +184,24 @@ end
 if Parameter.Save
     filestem = ['../+output/',Parameter.Foldername];
     if ~exist(filestem,'dir'); mkdir(filestem); end
-    
     filename_full = [filestem,'/',Parameter.Foldername,'_',num2str(0,'%5.6d')];
-    
     save(filename_full,'AGENT')
 end
+
+%setup analysis variable
+%Analysis = [num/name startPosX startPosY ExitTime]
+Analysis        = zeros(nagent,4)*NaN;
+Analysis(:,1)   = [AGENT.name]';
+Analysis(:,2)   = [AGENT.LocX]';
+Analysis(:,3)   = [AGENT.LocY]';
+
 
 
 %==========================================================================
 % time loop
 time=0; itime=0;
 while (time <= maxtime && size(AGENT,2)>0)
-    time = time+Parameter.dt;     %actual time
+    time = time+Parameter.dt;     %actual time [s]
     itime = itime+1;    %nr. timesteps
     disp('*****************************************')
     disp(['timestep ',num2str(itime),':    time = ',num2str(time/60),' min'])
@@ -368,9 +374,14 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     %those who arrived in the exits
     for i=1:size(ExitList,1)
-        AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
-            & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4)  ) = [];
+        successfull = [AGENT(  [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
+            & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4) ).num];
+        %save time of agents exit
+        Analysis([AGENT(successfull).name],4) = time; %in [s]
+        
+        AGENT(successfull) = []; %remove agents
     end
+    
     %remove agents outside model domain
     AGENT(   [AGENT.LocX]>xmax | [AGENT.LocX]<xmin ...
         | [AGENT.LocY]>=ymax | [AGENT.LocY]<ymin  ) = [];
@@ -416,6 +427,11 @@ while (time <= maxtime && size(AGENT,2)>0)
         ylabel('y [m]')
         
     end
+end
+
+% saves analysis
+if Parameter.Save
+    save(['../+output/',Parameter.Foldername,'/Analysis.mat'],'Analysis')
 end
 
 %==========================================================================
