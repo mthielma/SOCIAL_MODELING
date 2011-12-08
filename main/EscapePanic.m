@@ -166,8 +166,8 @@ if PlotSetup
     set(cla,'FontSize',Plotting.FontSize)
     hold on
     % plot buildings
-    PlotBuildings(BuildingList,'r');
-    PlotBuildings(ExitList,'g');
+    PlotBuildings(BuildingList,'r','');
+    PlotBuildings(ExitList,'g','Exit');
     % plot agents
     PlotAgents(AGENT,Plotting);
     axis equal
@@ -400,8 +400,8 @@ while (time <= maxtime && size(AGENT,2)>0)
         hold on
         %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
-        PlotBuildings(BuildingList,'r');
-        PlotBuildings(ExitList,'g');
+        PlotBuildings(BuildingList,'r','');
+        PlotBuildings(ExitList,'g','Exit');
         % plot agents
         PlotAgents(AGENT,Plotting);
         
