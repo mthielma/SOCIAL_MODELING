@@ -141,6 +141,7 @@ The total repulsive force from the architecture can then be written as
 
 
 \subsection{Exits}
+\label{sec:Exits1}
 
 The attractive forces ($f_{iAS}$) in this work are defined in two different ways. For the simple models we use a constant force acting straight towards the attractor, neglecting obstacles in between. A more elaborated and also a more nature like formulation is used later on. It takes into account, that the pedestrians know the shortest path towards the attractive source (e.g. an exit) around any obstacle.
 
@@ -168,7 +169,7 @@ This section is meant to both give an overview of the methods used in this code 
 
 \subsubsection{Repulsive walls}
 
-Eq. \eqref{eq:fiWS} can be rewritten as
+Eq.~\eqref{eq:fiWS} can be rewritten as
 
 \begin{equation}
 	{f_{iWS}} = \left\{ {{A_i}\left( {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} \right)} \right\}{n_{iW}}
@@ -190,18 +191,84 @@ Eq. \eqref{eq:fiWS} can be rewritten as
 
 \subsubsection{Direct exit force}
 
-The simplest version of our code has one exit (Fig. \ref{fig:test1}). The attractive force on the agents is defined to be linear towards the exit, thereby neglecting obstacles in between. The agents will not move towards an opening in an obstacle but toward the exit itself. Moreover, this formulation inhibits the agents of running around a bigger obstacle. This is a strong simplification but suitable to test the code.
-The behavior of the agents towards the repulsive walls and towards each other is satisfactory.
-
 \begin{figure}
 	\begin{center}
-	\includegraphics[width=16cm]{figures/test1000493.jpg}
-	\caption{Simple simulation of an evacuation bottleneck. Agents (yellow) try to exit a room surrounded by repulsive walls (red) with an 1 m-wide door towards an attractive exit (green).}
-	\label{fig:test1}
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model1_direct_1_000000.eps}
+	\qquad
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model1_direct_1_000270.eps}
+	\qquad
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model1_direct_1_001800.eps}
+	\caption{Simple starting model for a room evacuation through a bottleneck. (a) Initial setup, (b) agents arriving at the bottleneck and accumulating in behind and (c) agents blocking each other of exiting at the end of the simulation.}
+	\label{fig:simple1}
 	\end{center}
 \end{figure}
 
+The simplest version of our code has one exit (Fig.~\ref{fig:simple1}). The attractive force on the agents is defined to be linear towards the exit, thereby neglecting obstacles in between. The agents will not move towards an opening in an obstacle but toward the exit itself. Moreover, this formulation inhibits the agents of running around a bigger obstacle. This is a strong simplification but suitable to test the code. The behavior of the agents towards the repulsive walls and towards each other is satisfactory.
+
+A first case ({\it Model1\_linear\_1}) is shown in Fig.~\ref{fig:simple1}. The model setup consists of a $15\times9$ m room that is bounded by repulsive walls. A $1\times1$ m door is the only exit thereof and leads to the attractive main exit of the model. The agents are initially placed randomly in an $3.5\times7$ m area in the left hand side of the domain (Fig.~\ref{fig:simple1}b). The model is not satisfactory, because at the late stage of evacuation there are two agents opposite of each other preventing them to exit the room (Fig.~\ref{fig:simple1}c). The counter parting psychologic social forces cancel all other forces out and therefore both agents remain at their position.
+
+\begin{figure}
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model1_direct_2_000000.eps}
+	\qquad
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model1_direct_2_000270.eps}
+	\qquad
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model1_direct_2_001800.eps}
+	\caption{Model including perturbations for a room evacuation through a bottleneck. (a) Initial setup, (b) agents arriving at the bottleneck and accumulating in behind and (c) agents blocking each other of exiting at the end of the simulation.}
+	\label{fig:simple2}
+	\end{center}
+\end{figure}
+
+In order to introduce some noise into an otherwise perfect model we added several perturbations ({\it Model1\_linear\_2}). The psychologic social force between the agents is perturbed by a random small value in the order of $\pm 0.05$ N. Another complexity is added by characterizing the different agents. Accounting for different appetite and/or stomach behavior, their mass is randomly chosen with a perturbation of $\pm 10$ kg. A bigger radius is subsequently needed for fulfilling mass conservation. Therefore the agent's radius is randomly perturbed by $\pm 0.05$ m. The results of these adjustments are shown in Fig.~\ref{fig:simple2}.
+
+Still the last two pedestrians are disabled of leaving the room because of the counteracting forces they exert on each other. This shows, that the "perfectness" of the model was not the main problem of this occurrence. The main cause of it might be found in the way the attractive exit force is described. The agents are pulled with the exit force directly towards the position of the exit, neglecting possible obstacles in between. Hence, in the case of the two blocked pedestrians, the main force is directed perpendicular to the wall instead of tangential to the wall towards the wall door. The force in this direction is very small and can thus easily be overweighted by the repulsive social force of the opposite agent. The agent is kept at his current position.
+
+A solution of this problem therefore might be found in a different description of the attractive exit force by e.g. a fastest path formulation.
+
+
 \subsubsection{Shortest path formulation}
+
+The shortest path formulation as described in Section~\ref{sec:Exits1} can improve the nature-like behavior of the model dramatically. A new setup is chosen to illustrate this and shown in Fig.~\ref{fig:simple3} and~\ref{fig:simple4}.
+
+\begin{figure}
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model2_direct_1_000000.eps}
+	\qquad
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model2_direct_1_000270.eps}
+	\qquad
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model2_direct_1_001800.eps}
+	\caption{Model with direct exit force formulation for a pedestrian flow around complicated architecture. (a) Initial setup, (b) agents arriving at the barrier walls and accumulating and (c) agents getting stucked and not able to move around an obstacle at the end of the simulation.}
+	\label{fig:simple3}
+	\end{center}
+\end{figure}
+
+The walls are placed in a way that the pedestrians have to move around corners and even away from the exit to finally arrive there. This is not straight forward and a simple exit force formulation is not able to describe the pedestrian flow in such a case (Fig.~\ref{fig:simple3}). The Agents get captured by obstacles with no direct passage towards the exit and are not able to leave such a place. 
+
+The more elaborated shortest path formulation, on the other hand, can describe such a more complicated pedestrian flow in a realistic manner (Fig.~\ref{fig:simple4}). The agents are able to see all possible passages towards an exit in the whole model and are therefore able to chose the fastest way.
+
+\begin{figure}
+	\begin{center}
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model2_fastest_1_000000.eps}
+	\qquad
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model2_fastest_1_000270.eps}
+	\qquad
+	\includegraphics[width=0.7\textwidth]
+	{figures/Model2_fastest_1_000410.eps}
+	\caption{Model including shortest path formulation for a pedestrian flow around complicated architecture. (a) Initial setup, (b) agents moving closely around corners and (c) agents able to move around obstacles in the fastest way and arriving the exit at the end of the simulation.}
+	\label{fig:simple4}
+	\end{center}
+\end{figure}
 
 \subsection{Simple evacuation bottleneck: Two exits}
 \subsection{Evacuation through a road network}
@@ -222,5 +289,24 @@ Christmas Tree!
 \end{document}  
 
 
+%\begin{figure}
+%	\begin{center}
+%	\includegraphics[width=16cm]{figures/Model1_direct_1_000000.eps}
+%	\caption{Simple simulation of an evacuation bottleneck. Agents (yellow) try to exit a room surrounded by repulsive walls (red) with an 1 m-wide door towards an attractive exit (green).}
+%	\label{fig:simple0}
+%	\end{center}
+%\end{figure}
+%
+%\begin{figure}
+%	\begin{center}
+%	\includegraphics[width=1.0\textwidth]
+%	{figures/Model1_direct_1_000000.eps}
+%	\qquad
+%	\includegraphics[width=1.0\textwidth]
+%	{figures/Model1_direct_1_000000.eps}
+%	\caption{caption}
+%	\label{fig:simple1}
+%	\end{center}
+%\end{figure}
 
  
