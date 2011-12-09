@@ -20,6 +20,9 @@ function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,StartingList,Plot
 
 % saves setup
 if Parameter.Save
+    filestem = ['../+output/',Parameter.Foldername];
+    if ~exist(filestem,'dir'); mkdir(filestem); end
+    
     save(['../+output/',Parameter.Foldername,'/Setup.mat'])
 end
 
