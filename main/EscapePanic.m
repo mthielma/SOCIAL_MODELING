@@ -26,6 +26,7 @@ if Parameter.Save
     save(['../+output/',Parameter.Foldername,'/Setup.mat'])
 end
 
+
 % workflow control
 PlotSetup       = false;
 PlotEvolution   = Plotting.PlotEvolution;
@@ -59,7 +60,12 @@ yvec                = ymin:resolution:ymax;
 
 % set topography
 if strcmp(Parameter.Topo_name,'none')
-    Z_Grid = -0*(sin(0.5*X_Grid)+cos(0.7*Y_Grid));
+    A = 1;
+    x0 = 10;
+    y0 = 5;
+    sigma_x = 15;
+    sigma_y = 6;
+    Z_Grid = A.*exp(-1*( (X_Grid-x0).^2/2/sigma_x     + (Y_Grid-y0).^2/2/sigma_y     ));
 else
     load(Parameter.Topo_name);
     Z_Grid = interp2(XTopo,YTopo,ZTopo,X_Grid,Y_Grid);
@@ -161,8 +167,10 @@ if (~DirectExitPath && ~WithTopo)
     % compute shortest path without topography with fast marchng algorithm
     [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
 elseif (~DirectExitPath && WithTopo)
+    % compute shortest path without topography with fast marchng algorithm
+    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
     % compute shortest path with topography with fast marchng algorithm
-    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
+    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
 elseif DirectExitPath
     % compute exit direction directly
     [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
@@ -262,7 +270,9 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     if (~DirectExitPath && WithAgents)
         if (mod(itime,decision_step)==0 || itime==1)
-            [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter);
+            
+            [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,D_orig,Dgradx,Dgrady,Gradient_x,Gradient_y,AGENT,nagent,Parameter);
+            
         end
     elseif (~DirectExitPath && WithAgents && WithFlood)
         error('not yet implemented')
@@ -425,7 +435,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         figure(1),clf
         set(cla,'FontSize',Plotting.FontSize)
         hold on
-        %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
+        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
         PlotBuildings(BuildingList,'r','');
         PlotBuildings(ExitList,'g','Exit');
@@ -433,7 +443,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         PlotAgents(AGENT,Plotting);
         
         % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
+        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
         % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
