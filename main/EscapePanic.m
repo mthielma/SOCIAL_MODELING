@@ -4,7 +4,7 @@
 %=================================
 % Marcel Thielmann & Fabio Crameri
 
-function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Plotting)         
+function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,StartingList,Plotting)         
 
 %if nargin == 0
 %     clear;
@@ -17,6 +17,11 @@ function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,Plotting)
     %**************************************************
 %end
 
+
+% saves setup
+if Parameter.Save
+    save(['../+output/',Parameter.Foldername,'/Setup.mat'])
+end
 
 % workflow control
 PlotSetup       = false;
@@ -67,8 +72,16 @@ decision_step   = round(Parameter.decision_time/Parameter.dt);
 %---------------------------------------
 % create starting area map for agents
 %---------------------------------------
-StartArea = zeros(size(yvec,2),size(xvec,2));
-StartArea(X_Grid<5) = 1;
+StartingList(find(StartingList(:,1)>=xmax),:) = []; %if set fully outside domain: remove it!
+StartingList(find(StartingList(:,3)>=ymax),:) = []; %if set fully outside domain: remove it!
+StartingList(find(StartingList(:,2)>xmax),2) = xmax; %adjust to domain boundary
+StartingList(find(StartingList(:,4)>ymax),2) = ymax; %adjust to domain boundary
+
+StartArea = logical(X_Grid*0);
+% add buildings to map
+for i=1:size(StartingList,1)
+    StartArea(X_Grid>=StartingList(i,1) & X_Grid<=StartingList(i,2) & Y_Grid>=StartingList(i,3) & Y_Grid<=StartingList(i,4)) = true;
+end
 
 %---------------------------------------
 % create boundary map for later use
@@ -161,10 +174,10 @@ if PlotSetup
     set(cla,'FontSize',Plotting.FontSize)
     hold on
     % plot buildings
-    PlotBuildings(BuildingList,'r');
-    PlotBuildings(ExitList,'g');
+    PlotBuildings(BuildingList,'r','');
+    PlotBuildings(ExitList,'g','Exit');
     % plot agents
-    PlotAgents(nagent,AGENT,Plotting);
+    PlotAgents(AGENT,Plotting);
     axis equal
     axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
     box on
@@ -173,12 +186,34 @@ if PlotSetup
     ylabel('y [m]')
 end
 
+%----------------------------------------------------
+% save data (INITIAL SETUP)
+%----------------------------------------------------
+if Parameter.Save
+    filestem = ['../+output/',Parameter.Foldername];
+    if ~exist(filestem,'dir'); mkdir(filestem); end
+    filename_full = [filestem,'/',Parameter.Foldername,'_',num2str(0,'%5.6d')];
+    save(filename_full,'AGENT')
+end
+
+%setup analysis variable
+%Analysis = [num/name startPosX startPosY ExitTime Status]  
+%                                       Status:	:   1:  'alive' still running
+%                                                   2:  'survived' reached exit 
+%                                                   3:  'killed' e.g. by flood
+Analysis        = zeros(nagent,5)*NaN;
+Analysis(:,1)   = [AGENT.name]';
+Analysis(:,2)   = [AGENT.LocX]';
+Analysis(:,3)   = [AGENT.LocY]';
+Analysis(:,5)   = 1;
+
+
 
 %==========================================================================
 % time loop
 time=0; itime=0;
 while (time <= maxtime && size(AGENT,2)>0)
-    time = time+Parameter.dt;     %actual time
+    time = time+Parameter.dt;     %actual time [s]
     itime = itime+1;    %nr. timesteps
     disp('*****************************************')
     disp(['timestep ',num2str(itime),':    time = ',num2str(time/60),' min'])
@@ -344,16 +379,22 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % check if agents are inside walls and move them out
     %----------------------------------------------------
-    AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
+%     AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
     
     %----------------------------------------------------
     % remove successfull agents
     %----------------------------------------------------
     %those who arrived in the exits
     for i=1:size(ExitList,1)
-        AGENT(   [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
-            & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4)  ) = [];
+        successfull = [AGENT(  [AGENT.LocX]>=ExitList(i,1) & [AGENT.LocX]<=ExitList(i,2) ...
+            & [AGENT.LocY]>=ExitList(i,3) & [AGENT.LocY]<=ExitList(i,4) ).num];
+        %save time of agents exit
+        Analysis([AGENT(successfull).name],4) = time; %in [s]
+        Analysis([AGENT(successfull).name],5) = 2; %change status to 'survived'
+        
+        AGENT(successfull) = []; %remove agents
     end
+    
     %remove agents outside model domain
     AGENT(   [AGENT.LocX]>xmax | [AGENT.LocX]<xmin ...
         | [AGENT.LocY]>=ymax | [AGENT.LocY]<ymin  ) = [];
@@ -364,7 +405,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % save data
     %----------------------------------------------------
-    if mod(itime,Parameter.SaveTimeStep)==0
+    if Parameter.Save && mod(itime,Parameter.SaveTimeStep)==0
         filestem = ['../+output/',Parameter.Foldername];
         if ~exist(filestem,'dir'); mkdir(filestem); end
         
@@ -383,10 +424,10 @@ while (time <= maxtime && size(AGENT,2)>0)
         hold on
         %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
         % plot buildings
-        PlotBuildings(BuildingList,'r');
-        PlotBuildings(ExitList,'g');
+        PlotBuildings(BuildingList,'r','');
+        PlotBuildings(ExitList,'g','Exit');
         % plot agents
-        PlotAgents(nagent,AGENT,Plotting);
+        PlotAgents(AGENT,Plotting);
         
         % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
         % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
@@ -399,6 +440,11 @@ while (time <= maxtime && size(AGENT,2)>0)
         ylabel('y [m]')
         
     end
+end
+
+% saves analysis
+if Parameter.Save
+    save(['../+output/',Parameter.Foldername,'/Analysis.mat'],'Analysis')
 end
 
 %==========================================================================

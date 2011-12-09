@@ -45,3 +45,8 @@ NewLocY = num2cell([AGENT(in_building==1).LocY] +AgentShiftY);
 
 [AGENT((in_building==1)).LocX] = NewLocX{:};
 [AGENT((in_building==1)).LocY] = NewLocY{:};
+
+display('***************************')
+display('Agent is moved out of wall!')
+display('***************************')
+pause(1.0)

@@ -10,6 +10,7 @@ clear
 %--------------------------------------------------------------------------
 % run name
 Parameter.Foldername        = 'test1';      % Run name
+Parameter.Save              = logical(0);   % switch for saving output
 Parameter.SaveTimeStep      = 200;          % saves every PlotTimeStep
 
 
@@ -102,6 +103,12 @@ ExitList                    = [                 % coordinates of exits: xmin xma
                                 19 20 4.5 5.5
                                             ];
        
+% create starting area map for agents
+StartingList                = [             	% coordinates of start area: xmin xmax ymin ymax
+                                0.5 4 1.5 8.5
+                                            ];
+       
+                                        
 %--------------------------------------------------------------------------
 %plotting parameters
 Plotting.PlotEvolution      = true;             % direct plotting
@@ -109,7 +116,7 @@ Parameter.PlotTimeStep      = 50;               % plots every PlotTimeStep
 
 Plotting.Marking            = 'none';           % 'none', 'number', 'smiley'
 Plotting.FontSize           = 14;
-Plotting.Color              = 'y';              % agents color
+Plotting.Color              = 'y';           % agents color: 'y' or [0 1 0]
 
 
 
@@ -123,7 +130,7 @@ Plotting.Color              = 'y';              % agents color
 %---------------------------------------
 % run simulation
 %---------------------------------------
-EscapePanic(Parameter,BuildingList,ExitList,Plotting);
+EscapePanic(Parameter,BuildingList,ExitList,StartingList,Plotting);
 
 
 
