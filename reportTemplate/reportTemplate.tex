@@ -2,6 +2,9 @@
 \usepackage{geometry}                
 \geometry{letterpaper}                   
 
+\usepackage{multirow}
+\usepackage{lscape} % stellenweises Querformat TABLE
+
 \usepackage{graphicx}
 \usepackage{amssymb}
 \usepackage{epstopdf}
@@ -164,6 +167,39 @@ In a more sophisticated version of the code, we make use of a fast marching algo
 
 \subsection{Walking speed}
 
+\subsection{Model setups}
+
+In this study, we use a set of different model setups and several different model parameters. The model setups are i) room with one door, ii) a complicated path, iii) room with one door including topography, iv) a room with two doors and finally v) large beach setup with several buildings and topography where finally a flood is included. The different cases are listed together with their model parameters in Table~\ref{tab:Parameters}.
+
+%  \newpage  %TABLE parameters
+
+\begin{landscape}
+\begin{table}  
+	% \centering
+	 \begin{footnotesize}
+	\caption{Models and numerical setups used in this work.}
+	\label{tab:Parameters}
+	\begin{tabular}{p{2.9cm} p{2.0cm} p{2.5cm} p{2.0cm} p{2.0cm} p{2.0cm} p{2.0cm} }
+	\hline
+	 \textbf{Model} & \textbf{Exit force} & \textbf{perturbations} & \textbf{topography} & \textbf{des. vel.} & \textbf{...} & \textbf{...}\\
+	 & formulation & & & $v_{0}$    \\
+	 & & & & m/s &   \\
+	\hline
+		&  \\
+			&   \\
+	\hline
+	{\bf Model1\_direct\_1}	& direct 	& no			& no	& 5.0 & 			\\
+	{\bf Model1\_direct\_2}	& direct 	& size, mass, $\Delta f_{ijS}$ 	& no 	& 5.0 &		\\
+	{\bf Model2\_direct\_1}	& direct 	& size, mass 	& no 	& 5.0	 &				\\
+	{\bf Model2\_shortest\_1}	& sh. path & size, mass 	& no 	& 5.0	 &			\\
+	\hline
+	\end{tabular}
+	
+	{\bf sh. path:} shortest path formulation / {\bf des. vel.:} desired velocity /    \\
+	$^{(a)}$ footnote
+	\end{footnotesize}
+\end{table}
+\end{landscape}
 
 
 \section{Implementation}
