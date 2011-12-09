@@ -14,11 +14,13 @@ filestem            = ['../+output/',filename,'/'];
 
 savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(1);
 
+Dimension           = 2;                % 2: 2-D   or   3: 3-D
 FontSize            = 14;
 AgentsMarking       = 'none';       	% 'none', 'number', 'smiley'
 AgentsColor         = 'one';           % agents color: 'y' or [0 1 0] or 'rand' or 'one'
 
 ColorBuildings      = [0.2 0.2 0.2];
+MarkingBuildings    = '';
 ColorExits          = [0.0 0.4 0.0];
 MarkingExits        = 'EXIT';
 
@@ -31,7 +33,7 @@ ColorOthers         = [0.5 0.5 0.5];
 
 
 display('***************')
-display(['saving output files for ',filename])
+if savingPlots; display(['saving output files for ',filename]); end
 
 filestem_full = [filestem,'Setup.mat'];
 if exist(filestem_full,'file')
@@ -91,42 +93,74 @@ for i=0:outputStep:nrTimesteps
         
         figure(1),clf
         set(cla,'FontSize',Plotting.FontSize)
-        %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
-        % plot buildings
-        PlotBuildings(BuildingList,ColorBuildings,'');
-        PlotBuildings(ExitList,ColorExits,MarkingExits);
-
-        if strcmp(AgentsColor,'one') %follow one's path
-            if ~isempty(find([AGENT.name]==Don)) %Don's still alive
-                pathDon(i_output,:) = [ [AGENT([AGENT.name]==Don).LocX] [AGENT([AGENT.name]==Don).LocY] ];
+        
+        if Dimension==2
+            set(cla,'XGrid','on','YGrid','on');
+            %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
+            % plot buildings
+            PlotBuildings(BuildingList,ColorBuildings,'');
+            PlotBuildings(ExitList,ColorExits,MarkingExits);
+            
+            if strcmp(AgentsColor,'one') %follow one's path
+                if ~isempty(find([AGENT.name]==Don)) %Don's still alive
+                    pathDon(i_output,:) = [ [AGENT([AGENT.name]==Don).LocX] [AGENT([AGENT.name]==Don).LocY] ];
+                end
+                hold on; plot(pathDon(:,1),pathDon(:,2),'Color',ColorDon)
             end
-            hold on; plot(pathDon(:,1),pathDon(:,2),'Color',ColorDon)
+            
+            % plot agents
+            PlotAgents(AGENT,Plotting);
+            
+            % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
+            % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
+            % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
+            axis equal
+            axis([Parameter.xmin Parameter.xmax Parameter.ymin Parameter.ymax])
+            box on
+            %         title(['time = ',num2str(time,'%.2d'),' s'])
+            xlabel('x [m]')
+            ylabel('y [m]')
+        
+        elseif Dimension==3
+            set(cla,'XGrid','on','YGrid','on');
+            PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
+            PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
+            PlotAgents3D(Parameter,Plotting,AGENT)
+            % camlight left;
+            
+            if strcmp(AgentsColor,'one') %follow one's path
+                if ~isempty(find([AGENT.name]==Don)) %Don's still alive
+                    pathDon(i_output,:) = [ [AGENT([AGENT.name]==Don).LocX] [AGENT([AGENT.name]==Don).LocY] ];
+                end
+                hold on; plot3(pathDon(:,1),pathDon(:,2),pathDon(:,1)*0,'Color',ColorDon)  %only for z-level==0 !!!
+            end
+            axis equal
+            xlabel('x [m]'); ylabel('y [m]'); zlabel('z [m]')
+        else
+            error('fc: Unknown Dimension!')
         end
         
-        % plot agents
-        PlotAgents(AGENT,Plotting);
-        
-        % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        % quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
-        % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
-        axis equal
-        axis([Parameter.xmin Parameter.xmax Parameter.ymin Parameter.ymax])
-        box on
-%         title(['time = ',num2str(time,'%.2d'),' s'])
-        xlabel('x [m]')
-        ylabel('y [m]')
-        
+            
         if time/60<1; title(['time = ',num2str(time,3),' s']);
         else title(['time = ',num2str(time/60,3),' min']); end
         
         %saving plots
         if savingPlots
-            filestem_save = ['../+output/',filename,'/+images'];
+            filestem_save       = ['../+output/',filename,'/+images'];
+            filestem_save_eps   = ['../+output/',filename,'/+images/+eps'];
             if ~exist(filestem_save,'dir'); mkdir(filestem_save); end
+            if Dimension==2; 
+                filenameIM = [filestem_save,'/',filename,'_',num_string]; 
+                filenameIMeps = [filestem_save_eps,'/',filename,'_',num_string];
+            elseif Dimension==3; 
+                filenameIM = [filestem_save,'/Dim3_',filename,'_',num_string]; 
+                filenameIMeps = [filestem_save_eps,'/Dim3_',filename,'_',num_string]; 
+            end
             
-            filenameIM = [filestem_save,'/',filename,'_',num_string];
             if save_jpg; print(filenameIM,'-djpeg90','-r300'); end
-            if save_eps; print(filenameIM,'-depsc2','-painters'); end
+            if save_eps; if ~exist(filestem_save_eps,'dir'); mkdir(filestem_save_eps); end
+                print(filenameIMeps,'-depsc2','-painters'); 
+            end
         end
         
     end
