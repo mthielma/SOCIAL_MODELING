@@ -8,7 +8,7 @@ clear;
 
 %-- input -----------------------------------------
 
-filename            = 'Model2';
+filename            = 'Model1_direct_1';
 
 filestem            = ['../+output/',filename,'/'];
 
@@ -83,7 +83,7 @@ for i=0:outputStep:nrTimesteps
     
     num_string = num2str(100000+i);
     num_string(1)='0';
-    filestem_full = [filestem,filename,'_',num_string,'.mat'];
+    filestem_full = [filestem,'/',filename,'_',num_string,'.mat'];
     
     
     if exist(filestem_full,'file')
