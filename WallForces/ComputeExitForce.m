@@ -4,7 +4,13 @@ function [AGENT] = ComputeExitForce(AGENT,Parameter,nagent)
 
 
 % add up social forces from walls and other agents
-social_force = sqrt(([AGENT.FxSocialWalls]+[AGENT.FxSocialAgents]).^2+([AGENT.FySocialWalls]+[AGENT.FySocialAgents]).^2);
+if strcmp(Parameter.ExitForce,'proportional')
+    social_force = sqrt(([AGENT.FxSocialWalls]+[AGENT.FxSocialAgents]).^2+([AGENT.FySocialWalls]+[AGENT.FySocialAgents]).^2);
+elseif strcmp(Parameter.ExitForce,'constant')
+    social_force = 1;
+else
+    error('unknown Parameter.ExitForce!')
+end
 
 % compute the force from the exit
 xForceExit = [AGENT(1:nagent).xExitDir].*social_force.*Parameter.ExitFactor;
