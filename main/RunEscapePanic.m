@@ -59,10 +59,10 @@ Parameter.ExitFactor        = 1;            %for adjusting strength of constant 
 
 %--------------------------------------------------------------------------
 % shortest path computation
-Parameter.DirectExitPath    = false;     	% fast marching algorithm (false); direct exit line (true)
+Parameter.DirectExitPath    = true;     	% fast marching algorithm (false); direct exit line (true)
 
-Parameter.orig_sensitivity	= 3;            % best to leave this fixed
-Parameter.agent_sensitivity	= 2;            % how much are agents taken into account when computing the shortest path? [0: not taken into account - high value: taken into account]
+Parameter.orig_sensitivity	= 1;            % best to leave this fixed
+Parameter.agent_sensitivity	= 2.5;            % how much are agents taken into account when computing the shortest path? [0: not taken into account - high value: taken into account]
 Parameter.topo_sensitivity 	= 1;            % sensitivity of agents to topography
 
 Parameter.decision_time   	= 0.05;         % after which time does an agent redecide on its path?
