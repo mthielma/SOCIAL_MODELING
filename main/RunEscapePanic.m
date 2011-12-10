@@ -54,7 +54,10 @@ Parameter.SocialForces      = true;
 Parameter.pert_social       = 0.0;          % maximal amplitude factor of social agent forces perturbation e.g. 0.05
 Parameter.A                 = 2e3;          %[N]  [2e3 Helbing 2000]
 Parameter.B                 = 0.08;         %[m]  [0.08 Helbing 2000]
-Parameter.ExitFactor        = 1;            %for adjusting strength of constant exit force field
+
+Parameter.ExitForce         = 'constant';   %'constant' or 'proportional'
+Parameter.ExitFactor        = 1;            %for adjusting strength of constant exit force field ...
+                                            % absolute value if ExitForce='constant'
 
 
 %--------------------------------------------------------------------------
