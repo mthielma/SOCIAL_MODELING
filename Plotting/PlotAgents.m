@@ -31,7 +31,7 @@ for i = 1:nagent
     
     if strcmp(Plotting.Marking,'none');
     elseif strcmp(Plotting.Marking,'number'); 
-        agentText = name;
+        agentText = num2str(name);
         text(x,y,agentText,'HorizontalAlignment','center','VerticalAlignment','middle','FontSize',10)
     elseif strcmp(Plotting.Marking,'smiley'); 
         agentText = ':-)';

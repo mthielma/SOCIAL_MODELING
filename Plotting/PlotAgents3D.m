@@ -1,4 +1,4 @@
-function PlotAgents3D_2(Parameter,Plotting,AGENT)
+function PlotAgents3D(Parameter,Plotting,AGENT,Z_Grid)
 
 xmax = Parameter.xmax;
 xmin = Parameter.xmin;
@@ -9,8 +9,9 @@ xvec                = xmin:Parameter.resolution:xmax;
 yvec                = ymin:Parameter.resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
-Z_Grid = zeros(size(X_Grid));
-
+if isempty(Z_Grid)
+    Z_Grid = zeros(size(X_Grid));
+end
 nagents = size(AGENT,2);
 
 % plot agents

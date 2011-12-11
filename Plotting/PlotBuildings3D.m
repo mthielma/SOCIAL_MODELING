@@ -1,6 +1,6 @@
 function PlotBuildings3D(Parameter,BuildingList,ColorBuildings,Marking)
 
-buildingHeight  = Parameter.AgentSize*1.5;
+buildingHeight  = Parameter.AgentSize*3.5;
 resolution      = Parameter.resolution;
 
 xmax = Parameter.xmax;
