@@ -1,4 +1,4 @@
-function [Dgradx_topo,Dgrady_topo,D_topo] = ComputeShortestPathGlobalTopo(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,TopoGradientX,TopoGradientY,Parameter)
+function [Dgradx_topo,Dgrady_topo,D_topo] = ComputeShortestPathGlobalTopo(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,TopoGradientX,TopoGradientY,Parameter)
 
 Debug = false;
 
@@ -10,6 +10,7 @@ F_topo = ones(size(X_Grid))*Parameter.v0;
 % add buildings to map
 % add buildings to map
 F_topo(BuildingMap) = 1e-8;
+F(BuildingMap_boundary==1) = Parameter.v0/3;
 % find indices of exits
 [indx,indy] = find(ExitMap == 1);
 
@@ -38,7 +39,7 @@ end
 
 
 if var(Z_Grid(:))>1e-2;
-    for i = 1:10
+    for i = 1:2
         
         %==============================================================
         % RECOMPUTE WITH TOPOGRAPHY
@@ -47,11 +48,12 @@ if var(Z_Grid(:))>1e-2;
         slope = TopoGradientX.*Dgradx_topo+TopoGradientY.*Dgrady_topo;
         
         % compute maximum velocity due to slope
-        PreFac = (Parameter.v0./exp(-3.5*0.05));
-        F_topo = PreFac.*exp(-3.5.*abs(slope+0.05));
+        PreFac = (Parameter.v0./exp(-Parameter.slope_f*Parameter.slope_crit));
+        F_topo = PreFac.*exp(-Parameter.slope_f.*abs(slope+Parameter.slope_crit));
         
         % add buildings to map
         F_topo(BuildingMap) = 1e-8;
+        F(BuildingMap_boundary==1) = Parameter.v0/3;
         
         [D_topo]=msfm(F_topo, ExitPoints);
         alpha = 0.7;
@@ -70,13 +72,16 @@ if var(Z_Grid(:))>1e-2;
             figure(99),clf
             hold on
             pcolor(X_Grid,Y_Grid,Z_Grid), shading flat
+            colormap('gray')
             startx = zeros(17,1);
             starty = 1:0.5:9;
-            contour(X_Grid,Y_Grid,slope)
-            streamline(X_Grid,Y_Grid,Dgradx_topo,Dgrady_topo,startx,starty)
-            %quiver(X_Grid,Y_Grid,Dgradx_topo,Dgrady_topo,'w')
+            %contour(X_Grid,Y_Grid,slope)
+            quiver(X_Grid,Y_Grid,Dgradx_topo,Dgrady_topo,'b')
+            h = streamline(X_Grid,Y_Grid,Dgradx_topo,Dgrady_topo,startx,starty);
+            set(h, 'Color', 'red');
             title([num2str(err_val),num2str(max(slope(:)))])
             axis equal, axis tight
+            pause
         end
     end
 end
