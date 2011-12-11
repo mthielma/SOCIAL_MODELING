@@ -2,6 +2,10 @@
 \usepackage{geometry}                
 \geometry{letterpaper}                   
 
+%\usepackage[latin1]{inputenc}
+%\usepackage[english]{babel}
+%\usepackage[T1]{fontenc} 
+
 \usepackage{multirow}
 \usepackage{lscape} % stellenweises Querformat TABLE
 
@@ -32,8 +36,7 @@
 \bigskip
 
 
-\large We hereby agree to make our source code for this project freely available for download from the web pages of the SOMS chair. Furthermore, we assure that all source code is written by ourselves and is not violating any copyright restrictions.
-Several external packages are used that are freely available at Matlab FileExchange under a BSU license. 
+\large We hereby agree to make our source code for this project freely available for download from the web pages of the SOMS chair. Furthermore, we assure that all source code is written by ourselves and is not violating any copyright restrictions. We clearly state in the text, which external packages we used that were not written by ourselves. Those packages are freely available at Matlab FileExchange and are published under a BSU license. 
 \begin{center}
 
 \bigskip
@@ -85,11 +88,7 @@ Several external packages are used that are freely available at Matlab FileExcha
 
 \section{Abstract}
 
-Hei M\"ase, we should first define what we mean by social and physical forces. I'm not sure if there is something like social forces between an agent and a wall. I mean normally there is not...
 
-Hei Fäbu, in dem Helbing paper gibts definitiv social forces zwischen Wand und den agents. Irgendwie soll das ausdrücken, dass die agents nicht so nah an der Wand laufen wollen. Wir können aber auch argumentieren, dass diese Kräfte in ner Paniksituation ziemlich wurscht sind.
-
-I don't know how to make bold characters
 
 \section{Individual contributions}
 Marcel: 376 bugs
@@ -119,8 +118,7 @@ The psychological repulsive force defined here for the walls/buildings can be wr
 where $A_i$ and $B_i$ are constants, $n_{iW}$ is the normalized vector pointing from the pedestrian to the wall, $d_{iW}$ is the distance in between and $r_i$ is the size (i.e. radius) of the pedestrian (Helbing et al., 2000).
 
 \subsubsection{Physical forces}
-
-The physical wall forces can be divided into a normal force and a tangential force acting from the wall and written as
+As in the case of physical inter-agent forces, an agent is subject to physical forces from the walls if it comes too close to a wall. The physical wall forces can be divided into a normal force $f_{iWPn}$ and a tangential force $f_{iWPt}$ acting from the wall and are written as:
 
 \begin{equation}
 	{f_{iWPn}} = \left\{ {kg\left( {{r_i} - {d_{iW}}} \right)} \right\}{n_{iW}}
@@ -136,7 +134,7 @@ and
 
 respectively. Here, the function $g$ is zero if the pedestrian does not touch the wall, $k$ and $\kappa$ are large constants and $(v_i \cdot t_{iW})$ is the tangential velocity difference.
 
-The total repulsive force from the architecture can then be written as
+The total repulsive force from the architecture $f_{iW}$ can then be written as
 
 \begin{equation}
 	{f_{iW}} = {f_{iWS}} + {f_{iWPn}} - {f_{iWPt}} .
@@ -153,19 +151,61 @@ In our model, the sole attractive force is the exit force. As for the social for
 While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect at all the decision process of a human agent, since obstacles between the agent and the exit are always taken into account. Second, 
 
 \subsubsection{Shortest path formulation}
-
-Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. One of the earliest solutions to this problem was presented by Dykstra (reference). Shebian (right name? reference?) presented a fast and efficient method to solve a certain class of shortest path problems, which  is called the Fast marching method. It is a special case of level set methods and solve the Eikonal equation (equation?). 
+Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. One of the earliest solutions to this problem was presented by Dykstra (reference). Shebian (right name? reference?) presented a fast and efficient method to solve a certain class of shortest path problems, which  is called the Fast marching method. It is a special case of level set methods and solve the Eikonal equation (equation?). In geophysics, the Eikonal equation is used to describe the 
 
 This equation describes the We can essentially apply this algorithm to our problem
 
 In a more sophisticated version of the code, we make use of a fast marching algorithm that takes into account walls as being regions with a low velocity. We compute the shortest path
 
+\subsection{Pedestrian walking speed}
+The free (unobstructed by obstacles) walking speed of pedestrians is determined by several factors:
+\begin{enumerate}
+\item the conditions of the ground
+\item the situation of an agent (e.g. panic)
+\item the forces acting on an agent
+\end{enumerate}
+In our model, we assume the conditions of the ground to be the same everywhere, meaning that there is no effect of ground roughness on the velocity of the agent. However, as we intend to include topography in our model, we introduce a walking speed function that is dependent on the slope $S$ of the ground (TOBLER):
+\begin{equation}
+	v(S) = A_{S} \exp{\left( -B_S | S + S_{crit} |  \right)}\mbox{,}
+\end{equation}
+where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocites.\\
+To account for the impact of psychological and physical forces on pedestrian walking speed, HELBING (2000) used the following equation for the change of agent velocity in time:
+\begin{equation}
+	\frac{d \mathbf{v}_i}{dt} = \frac{v_i^0\mathbf{e}_i - v_i(t)}{\tau_i} - \sum_{j(\ne i)}f_{iW} - \sum_{j(\ne i)}f_{iA}\mbox{,}
+\end{equation}
+where $v_i^0\mathbf{e}_i$ is the desired velocity in the desired direction.
 
-\subsection{Flood}
 
-\subsection{Topography}
+\section{Implementation}\label{sec:implementation}
+
+This section is meant to both give an overview of the methods used in this code as well as to provide a documentation of the code. Therefore, some details are mentioned here that might not be crucial for any code that simulates pedestrian dynamics, but are needed in our implementation. 
+
+\subsection{Initialization of Buildings and Agents}
+
+\subsection{Agents}
+
+\subsubsection{Agent forces}
+
+\subsection{Architecture}
+
+\subsubsection{Repulsive walls}
+
+Eq.~\eqref{eq:fiWS} can be rewritten as
+
+\begin{equation}
+	{f_{iWS}} = \left\{ {{A_i}\left( {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} \right)} \right\}{n_{iW}}
+	\label{eq:fiWS2}
+\end{equation}
+
+\subsubsection{Exit forces}
+
+In this section, we show two approaches to tackle the problem of the psychological exit force. Using small and rather simple models, we show the differences that arise from the different implementations. We then choose one of
 
 \subsection{Walking speed}
+
+\subsection{Flooding}
+
+\section{Simulation Results and Discussion}
 
 \subsection{Model setups}
 
@@ -202,39 +242,6 @@ In this study, we use a set of different model setups and several different mode
 \end{landscape}
 
 
-\section{Implementation}
-
-This section is meant to both give an overview of the methods used in this code as well as to provide a documentation of the code. Therefore, some details are mentioned here that might not be crucial for any code that simulates pedestrian dynamics, but are needed in our implementation. 
-
-\subsection{Initialization of Buildings and Agents}
-
-\subsection{Agents}
-
-\subsubsection{Agent forces}
-
-
-\subsection{Architecture}
-
-\subsubsection{Repulsive walls}
-
-Eq.~\eqref{eq:fiWS} can be rewritten as
-
-\begin{equation}
-	{f_{iWS}} = \left\{ {{A_i}\left( {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} \right)} \right\}{n_{iW}}
-	\label{eq:fiWS2}
-\end{equation}
-
-\subsubsection{Exit forces}
-
-In this section, we show two approaches to tackle the problem of the psychological exit force. Using small and rather simple models, we show the differences that arise from the different implementations. We then choose one of
-
-\subsection{Walking speed}
-
-\subsection{Flooding}
-
-
-
-\section{Simulation Results and Discussion}
 
 \subsection{Simple evacuation bottleneck: One exit}
 
@@ -278,8 +285,7 @@ In order to introduce some noise into an otherwise perfect model we added severa
 
 Still the last two pedestrians are disabled of leaving the room because of the counteracting forces they exert on each other. This shows, that the "perfectness" of the model was not the main problem of this occurrence. The main cause of it might be found in the way the attractive exit force is described. The agents are pulled with the exit force directly towards the position of the exit, neglecting possible obstacles in between. Hence, in the case of the two blocked pedestrians, the main force is directed perpendicular to the wall instead of tangential to the wall towards the wall door. The force in this direction is very small and can thus easily be overweighted by the repulsive social force of the opposite agent. The agent is kept at his current position.
 
-A solution of this problem therefore might be found in a different description of the attractive exit force by e.g. a fastest path formulation.
-
+A solution of this problem therefore might be found in a different description of the attractive exit force by e.g. using a shortest path formulation.
 
 \subsubsection{Shortest path formulation}
 
@@ -295,14 +301,14 @@ The shortest path formulation as described in Section~\ref{sec:Exits1} can impro
 	\qquad
 	\includegraphics[width=0.7\textwidth]
 	{figures/Model2_direct_1_001800.eps}
-	\caption{Model with direct exit force formulation for a pedestrian flow around complicated architecture. (a) Initial setup, (b) agents arriving at the barrier walls and accumulating and (c) agents getting stucked and not able to move around an obstacle at the end of the simulation.}
+	\caption{Model with direct exit force formulation for a pedestrian flow around complicated architecture. (a) Initial setup, (b) agents arriving at the barrier walls and accumulating and (c) agents getting stuck and not able to move around an obstacle at the end of the simulation.}
 	\label{fig:simple3}
 	\end{center}
 \end{figure}
 
 The walls are placed in a way that the pedestrians have to move around corners and even away from the exit to finally arrive there. This is not straight forward and a simple exit force formulation is not able to describe the pedestrian flow in such a case (Fig.~\ref{fig:simple3}). The Agents get captured by obstacles with no direct passage towards the exit and are not able to leave such a place. 
 
-The more elaborated shortest path formulation, on the other hand, can describe such a more complicated pedestrian flow in a realistic manner (Fig.~\ref{fig:simple4}). The agents are able to see all possible passages towards an exit in the whole model and are therefore able to chose the fastest way.
+The more elaborated shortest path formulation, on the other hand, can describe such a more complicated pedestrian flow in a realistic manner (Fig.~\ref{fig:simple4}). The agents are able to see all possible passages towards an exit in the whole model and are therefore able to choose the fastest way.
 
 \begin{figure}
 	\begin{center}
@@ -319,8 +325,42 @@ The more elaborated shortest path formulation, on the other hand, can describe s
 	\end{center}
 \end{figure}
 
-\subsection{Simple evacuation bottleneck: One exit with topography}
 \subsection{Simple evacuation bottleneck: Two exits}
+As we saw in the one-exit models, the shortest path formalism led to a more realistic behaviour of the agents. In a second step, we now extended the model by introducing one additional exit, leaving out the additional obstacles. In a first step, we used the shortest path procedure to determine the desired direction of the agent. As this did not lead to the desired agent behaviour (see sec. \ref{sec:two_exits1}), we had to extend the shortest path procedure by additionally taking agents into account (the procedure is described in section \ref{sec:implementation}). This led to a significant improvement in agent behaviour. As we additionally have to deal with topography in our model, we then introduced a small topography in our model to assess its effect on agent behaviour. In the three following subsection, we shortly show and discuss the results of the different setups.
+\subsubsection{Shortest path exit force}\label{sec:two_exits1}
+Here, the exit direction of the agents is given by the shortest path algorithm, which has proven to yield better results compared to the direct path approach. Instead of having one gap in the wall as before, we now have two gaps in the wall. Additionally, the exit was switched slightly towards the lower gap. This makes the lower gap more preferable, since the path to the exit through this gap is shorter.\\
+As one can see in fig.\ref{fig:two_exits1}, the shortest path algorithm results in a rather unrealistic behaviour of the agents: Instead of opting for the upper gap in case the lower gap is blocked by other agents, all agents choose the lower gap.
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPath_000050.eps}
+	\qquad
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPath_001550.eps}
+	\qquad
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPath_001900.eps}
+	\caption{Snapshots of the time evolution of a simple two-exit model using the shortest path algorithm to determine the exit direction. As can be seen, the simple shortest path formalism doesn't work in a realistic manner, since all the agents opt for the closest exit regardless of other agents blocking the way. For a better illustration, we chose one agent (named Don) and plot his path through the model domain. As one can see, Don never changes his direction on the way to the exit.}
+	\label{fig:two_exits1}
+\end{figure}
+This behaviour is clearly not what one could observe in reality, since at least some agents would prefer the upper gap and reach the exit significantly faster than in our simulation. We therefore had to adjust the shortest path procedure to account for agents blocking the way.
+\subsubsection{Shortest path exit force with agents taken into account}
+In the second simulation, we used the extended shortest path procedure to determine the exit direction of the agents. We tried different combinations of the sensitivity of the agents to other agents blocking the way. The (in our opinion) best results were obtained when we reduced the estimated velocity at a node by a factor of 2.5. In fig.\ref{fig:two_exits2}, it can be seen that the behaviour of the agents is much more realistic than before. In this simulation, agents frequently redecide on the path to be taken and change from the lower to the upper gap or vice versa if either of those gaps is blocked.
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgents_000650.eps}
+	\qquad
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgents_001350.eps}
+	\qquad
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgents_002300.eps}
+	\caption{Snapshots of the time evolution of a simple two-exit model using the shortest path algorithm to determine the exit direction. In this case, agents blocking the way to the exit are taken into account. This enables the agents to redecide on the path taken to the exit depending on the agent density in between. The path of our example agent Don clearly shows this process. At first, Don chooses a path that keeps him in between both exits due to the agents in front of him. Then, as crowding at the lower exit occurs, he decides to go towards the upper exit, but then redecides as the lower exit becomes less crowded again.}
+	\label{fig:two_exits2}
+\end{figure}
+\subsubsection{Shortest path exit force with agents and topography taken into account}
+In this last simulation, we tested the influence of topography on agent behaviour. For this reason, we introduced a slight topography in our model. The topography is essentially a two-dimensional Gaussian curve, which is given by the equation:
+\begin{equation}
+	z(x,y) = A\exp \left(- \frac{\left(x-x_0\right)^2}{2\sigma_x} + \frac{\left(y-y_0\right)^2}{2\sigma_y}\right)
+\end{equation}
+In this simulation, we chose $A = 1 $m, $x_0 = 10$m, $y_0 = 5$m, $\sigma_x = 15$m and $\sigma_y = 6$m.
+
+
 \subsection{Evacuation through a road network}
 \subsection{Evacuation through a road network with topography and flooding}
 \subsection{Evacuation of a beach in the case of a tsunami event}
