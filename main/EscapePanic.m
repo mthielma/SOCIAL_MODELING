@@ -66,6 +66,13 @@ if strcmp(Parameter.Topo_name,'none')
     sigma_x = 15;
     sigma_y = 6;
     Z_Grid = A.*exp(-1*( (X_Grid-x0).^2/2/sigma_x     + (Y_Grid-y0).^2/2/sigma_y     ));
+elseif strcmp(Parameter.Topo_name,'off')
+    A = 0;  %set off
+    x0 = 10;
+    y0 = 5;
+    sigma_x = 15;
+    sigma_y = 6;
+    Z_Grid = A.*exp(-1*( (X_Grid-x0).^2/2/sigma_x     + (Y_Grid-y0).^2/2/sigma_y     ));
 else
     load(Parameter.Topo_name);
     Z_Grid = interp2(XTopo,YTopo,ZTopo,X_Grid,Y_Grid);
