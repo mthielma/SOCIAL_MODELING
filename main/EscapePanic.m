@@ -444,7 +444,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         PlotAgents(AGENT,Plotting);
         
         % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
+        %quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
         % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
@@ -452,7 +452,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         title(['time = ',num2str(time,'%.2d'),' s'])
         xlabel('x [m]')
         ylabel('y [m]')
-        
+        pause(0.01)
     end
 end
 
