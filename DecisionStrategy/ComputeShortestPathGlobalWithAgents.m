@@ -1,12 +1,23 @@
-function [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,AGENT,nagent,Parameter)
+
+function [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,D_orig,Dgradx,Dgrady,TopoGradientX,TopoGradientY,AGENT,nagent,Parameter)
 Debug = false;
 
 BuildingMap = logical(BuildingMap);
 % set initial speed map
 F_agent = ones(size(X_Grid))*Parameter.v0;
 
+% consider topo
+% recompute the velocity field based on the slope
+slope = TopoGradientX.*Dgradx+TopoGradientY.*Dgrady;
+
+% compute maximum velocity due to slope
+PreFac = (Parameter.v0./exp(-Parameter.slope_f*Parameter.slope_crit));
+F_agent = PreFac.*exp(-Parameter.slope_f.*abs(slope+Parameter.slope_crit));
+
 % add buildings to map
 F_agent(BuildingMap) = 1e-8;
+F_agent(BuildingMap_boundary==1) = Parameter.v0/3;
+
 
 %==============================================================
 % Exits
@@ -58,8 +69,6 @@ Dmix = (D_agent+ Parameter.orig_sensitivity.*D_orig);
 Dgradtot = sqrt(Dgradx.^2+Dgrady.^2);
 Dgradx   = -Dgradx./Dgradtot;
 Dgrady   = -Dgrady./Dgradtot;
-
-
 
 
 if Debug

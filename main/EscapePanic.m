@@ -18,15 +18,6 @@ function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,StartingList,Plot
 %end
 
 
-% saves setup
-if Parameter.Save
-    filestem = ['../+output/',Parameter.Foldername];
-    if ~exist(filestem,'dir'); mkdir(filestem); end
-    
-    save(['../+output/',Parameter.Foldername,'/Setup.mat'])
-end
-
-
 % workflow control
 PlotSetup       = false;
 PlotEvolution   = Plotting.PlotEvolution;
@@ -59,23 +50,26 @@ yvec                = ymin:resolution:ymax;
 [X_Grid,Y_Grid]     = meshgrid(xvec,yvec);
 
 % set topography
-if strcmp(Parameter.Topo_name,'none')
-    A = 1;
+if (strcmp(Parameter.Topo_name,'none') && WithTopo)
+    A = 2;
     x0 = 10;
     y0 = 5;
     sigma_x = 15;
     sigma_y = 6;
-    Z_Grid = A.*exp(-1*( (X_Grid-x0).^2/2/sigma_x     + (Y_Grid-y0).^2/2/sigma_y     ));
-elseif strcmp(Parameter.Topo_name,'off')
-    A = 0;  %set off
-    x0 = 10;
-    y0 = 5;
-    sigma_x = 15;
-    sigma_y = 6;
-    Z_Grid = A.*exp(-1*( (X_Grid-x0).^2/2/sigma_x     + (Y_Grid-y0).^2/2/sigma_y     ));
+    Z_Grid = A.*exp(-1*( (X_Grid-x0).^2/2/sigma_x     + (Y_Grid-y0).^2/2/sigma_y ));
+elseif (strcmp(Parameter.Topo_name,'none') && ~WithTopo)
+    Z_Grid = 0.*X_Grid;
 else
     load(Parameter.Topo_name);
     Z_Grid = interp2(XTopo,YTopo,ZTopo,X_Grid,Y_Grid);
+end
+
+% saves setup
+if Parameter.Save
+    filestem = ['../+output/',Parameter.Foldername];
+    if ~exist(filestem,'dir'); mkdir(filestem); end
+    
+    save(['../+output/',Parameter.Foldername,'/Setup.mat'])
 end
 
 % compute topography gradient
@@ -442,7 +436,7 @@ while (time <= maxtime && size(AGENT,2)>0)
         figure(1),clf
         set(cla,'FontSize',Plotting.FontSize)
         hold on
-        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
+        contour(X_Grid,Y_Grid,Z_Grid)
         % plot buildings
         PlotBuildings(BuildingList,'r','');
         PlotBuildings(ExitList,'g','Exit');

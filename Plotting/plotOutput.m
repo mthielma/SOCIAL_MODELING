@@ -70,6 +70,7 @@ maxTime     = Parameter.maxtime*60;    %[s]
 dt          = Parameter.dt;
  
 outputStep  = Parameter.SaveTimeStep;
+outputStep  = 10;
 nrTimesteps = maxTime/dt;               %max. number of timesteps (if it did run until maxTime)
 nrFiles     = nrTimesteps/outputStep;   %max. number of output files (if it did run until maxTime)
 % dtFiles     = dt * outputStep;        %timestep between output files [s]
@@ -98,6 +99,10 @@ for i=0:outputStep:nrTimesteps
             set(cla,'XGrid','on','YGrid','on');
             %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
             % plot buildings
+            h = contourf(X_Grid,Y_Grid,Z_Grid,40,'EdgeColor','none');
+            colorbar
+            lighting flat
+            colormap('jet')
             PlotBuildings(BuildingList,ColorBuildings,'');
             PlotBuildings(ExitList,ColorExits,MarkingExits);
             
@@ -123,22 +128,33 @@ for i=0:outputStep:nrTimesteps
         
         elseif Dimension==3
             set(cla,'XGrid','on','YGrid','on');
+            %PlotBuildings3D_Topo(Parameter,BuildingList,ColorBuildings,Z_Grid,MarkingBuildings)
+            %PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
+            %PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
+            PlotAgents3D(Parameter,Plotting,AGENT,Z_Grid)
+            PlotTopography3D(X_Grid,Y_Grid,Z_Grid)
             PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
             PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
-            PlotAgents3D(Parameter,Plotting,AGENT)
             % camlight left;
             
             if strcmp(AgentsColor,'one') %follow one's path
                 if ~isempty(find([AGENT.name]==Don)) %Don's still alive
                     pathDon(i_output,:) = [ [AGENT([AGENT.name]==Don).LocX] [AGENT([AGENT.name]==Don).LocY] ];
                 end
-                hold on; plot3(pathDon(:,1),pathDon(:,2),pathDon(:,1)*0,'Color',ColorDon)  %only for z-level==0 !!!
+                ind = ~isnan(pathDon(:,1));
+                pathZ = interp2(X_Grid,Y_Grid,Z_Grid,pathDon(ind,1),pathDon(ind,2));
+                hold on; plot3(pathDon(ind,1),pathDon(ind,2),pathZ,'Color',ColorDon)  %only for z-level==0 !!!
+                % set viewpoint
+                view([-82 14])
             end
             axis equal
             xlabel('x [m]'); ylabel('y [m]'); zlabel('z [m]')
         else
             error('fc: Unknown Dimension!')
         end
+        
+        
+        
         
             
         if time/60<1; title(['time = ',num2str(time,3),' s']);
