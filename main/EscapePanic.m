@@ -57,7 +57,7 @@ if (strcmp(Parameter.Topo_name,'none') && WithTopo)
     sigma_x = 15;
     sigma_y = 6;
     Z_Grid = A.*exp(-1*( (X_Grid-x0).^2/2/sigma_x     + (Y_Grid-y0).^2/2/sigma_y ));
-elseif (strcmp(Parameter.Topo_name,'none') && ~WithTopo)
+elseif (strcmp(Parameter.Topo_name,'none') && ~WithTopo) || strcmp(Parameter.Topo_name,'off')
     Z_Grid = 0.*X_Grid;
 else
     load(Parameter.Topo_name);
