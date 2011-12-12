@@ -8,7 +8,7 @@ clear;
 
 %-- input -----------------------------------------
 
-filename            = 'Model1_direct_1';
+filename            = 'Model2_direct_1b';
 
 filestem            = ['../+output/',filename,'/'];
 
@@ -17,7 +17,7 @@ savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(1);
 Dimension           = 2;                % 2: 2-D   or   3: 3-D
 FontSize            = 14;
 AgentsMarking       = 'none';       	% 'none', 'number', 'smiley'
-AgentsColor         = 'one';           % agents color: 'y' or [0 1 0] or 'rand' or 'one'
+AgentsColor         = [0.75 0.75 0];           % agents color: 'y' or [0.75 0.75 0] or 'rand' or 'one'
 
 ColorBuildings      = [0.2 0.2 0.2];
 MarkingBuildings    = '';
