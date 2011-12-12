@@ -79,7 +79,7 @@ Parameter.Enlarge           = 0.2;          % enlarge buildings for shortest pat
 
 %--------------------------------------------------------------------------
 % topography
-Parameter.Topo_name         = 'none';       % topography file to be loaded (if there is none, use 'none')
+Parameter.Topo_name         = 'none';       % topography file to be loaded (if there is none, use 'none'), to set it off use 'off'
 
 % parameters for slope-dependent velocity
 Parameter.slope_f           = 3.5;
