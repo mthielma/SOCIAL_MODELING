@@ -8,19 +8,20 @@ clear;
 
 %-- input -----------------------------------------
 
-filename            = 'Model2_direct_1b';
+filename            = 'Model2_fastest_3';
 
 filestem            = ['../+output/',filename,'/'];
 
 savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(1);
 
-Dimension           = 2;                % 2: 2-D   or   3: 3-D
+Dimension           = 3;                % 2: 2-D   or   3: 3-D
 FontSize            = 14;
 AgentsMarking       = 'none';       	% 'none', 'number', 'smiley'
 AgentsColor         = [0.75 0.75 0];           % agents color: 'y' or [0.75 0.75 0] or 'rand' or 'one'
 
 ColorBuildings      = [0.2 0.2 0.2];
 MarkingBuildings    = '';
+buildingHeight      = 1.5;              %times agent height
 ColorExits          = [0.0 0.4 0.0];
 MarkingExits        = 'EXIT';
 
@@ -99,10 +100,12 @@ for i=0:outputStep:nrTimesteps
             set(cla,'XGrid','on','YGrid','on');
             %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
             % plot buildings
-            h = contourf(X_Grid,Y_Grid,Z_Grid,40,'EdgeColor','none');
-            colorbar
-            lighting flat
-            colormap('jet')
+            if sum(sum(Z_Grid))~=0
+                h = contourf(X_Grid,Y_Grid,Z_Grid,40,'EdgeColor','none');
+                colorbar
+                lighting flat
+                colormap('jet')
+            end
             PlotBuildings(BuildingList,ColorBuildings,'');
             PlotBuildings(ExitList,ColorExits,MarkingExits);
             
@@ -125,14 +128,18 @@ for i=0:outputStep:nrTimesteps
             %         title(['time = ',num2str(time,'%.2d'),' s'])
             xlabel('x [m]')
             ylabel('y [m]')
+            grid on
         
         elseif Dimension==3
+            Parameter.buildingHeight  = Parameter.AgentSize*buildingHeight;
             set(cla,'XGrid','on','YGrid','on');
             %PlotBuildings3D_Topo(Parameter,BuildingList,ColorBuildings,Z_Grid,MarkingBuildings)
             %PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
             %PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
             PlotAgents3D(Parameter,Plotting,AGENT,Z_Grid)
-            PlotTopography3D(X_Grid,Y_Grid,Z_Grid)
+            if sum(sum(Z_Grid))~=0
+                PlotTopography3D(X_Grid,Y_Grid,Z_Grid)
+            end
             PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
             PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
             % camlight left;
