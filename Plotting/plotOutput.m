@@ -14,7 +14,7 @@ filestem            = ['../+output/',filename,'/'];
 
 savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(1);
 
-Dimension           = 3;                % 2: 2-D   or   3: 3-D
+Dimension           = 2;                % 2: 2-D   or   3: 3-D
 FontSize            = 16;
 AgentsMarking       = 'none';       	% 'none', 'number', 'smiley'
 AgentsColor         = 'one';           % agents color: 'y' or [0 1 0] or 'rand' or 'one'
@@ -99,8 +99,8 @@ for i=0:outputStep:nrTimesteps
             set(cla,'XGrid','on','YGrid','on');
             %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
             % plot buildings
-            h = contourf(X_Grid,Y_Grid,Z_Grid,40,'EdgeColor','none');
-            colorbar
+            h = contour(X_Grid,Y_Grid,Z_Grid,[0.5 1 1.5 2],'k--');
+            clabel(h,'FontSize',14)
             lighting flat
             colormap('jet')
             PlotBuildings(BuildingList,ColorBuildings,'');
