@@ -358,8 +358,17 @@ In this last simulation, we tested the influence of topography on agent behaviou
 \begin{equation}
 	z(x,y) = A\exp \left(- \frac{\left(x-x_0\right)^2}{2\sigma_x} + \frac{\left(y-y_0\right)^2}{2\sigma_y}\right)
 \end{equation}
-In this simulation, we chose $A = 1 $m, $x_0 = 10$m, $y_0 = 5$m, $\sigma_x = 15$m and $\sigma_y = 6$m.
-
+In this simulation, we chose $A = 4 $m, $x_0 = 10$m, $y_0 = 5$m, $\sigma_x = 15$m and $\sigma_y = 6$m. In figure ???, three snapshots from the time evolution of the simulation are shown. The introduction of topography has the effect that queuing in front of the exits is reduced, as agents already split up due to the topography present, which affects both agent speed and exit direction. This effect is similar to the effect of an obstacle in front of an exit (REFERENCE??), as the agents are partly sorted before they reach the exit. As expected, we can also observe the tendency that the agents "decide" rather early on the lower or upper exit respectively and do not switch exit in a more advanced stage of the simulation. Note that the time for all agents to reach the exit increases by $\approx$ 60 \%.
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgentsTopo_001290.eps}
+	\qquad
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgentsTopo_002400.eps}
+	\qquad
+	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgentsTopo_003700.eps}
+	\caption{Snapshots of the time evolution of a simple two-exit model using the shortest path algorithm to determine the exit direction. Solid lines show ground elevation. In this case, agents blocking the way to the exit as well as topography are taken into account. In the simulation, we can observe a kind of presorting due to the topography effect. The path of our example agent Don clearly shows this behaviour.}
+	\label{fig:two_exits3}
+\end{figure}
 
 \subsection{Evacuation through a road network}
 \subsection{Evacuation through a road network with topography and flooding}
