@@ -1,4 +1,4 @@
-function [Dgradx_topo,Dgrady_topo,D_topo] = ComputeShortestPathGlobalTopo(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,TopoGradientX,TopoGradientY,Parameter)
+function [Dgradx_topo,Dgrady_topo,D_topo] = ComputeShortestPathGlobalTopo(FloodMap,FloodMap_deep,BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,TopoGradientX,TopoGradientY,Parameter)
 
 Debug = false;
 
@@ -6,11 +6,17 @@ tol = 1e-3;
 %==============================================================
 % FIRST GUESS
 %==============================================================
+
 F_topo = ones(size(X_Grid))*Parameter.v0;
-% add buildings to map
+
+% add building boundaries to map
+F(BuildingMap_boundary==1) = Parameter.v0/3;
+% add flood to map
+F(FloodMap) = Parameter.FloodSpeed;
+F(FloodMap_deep) = 1e-8;
 % add buildings to map
 F_topo(BuildingMap) = 1e-8;
-F(BuildingMap_boundary==1) = Parameter.v0/3;
+
 % find indices of exits
 [indx,indy] = find(ExitMap == 1);
 

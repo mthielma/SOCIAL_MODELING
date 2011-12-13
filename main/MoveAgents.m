@@ -27,12 +27,16 @@ t_acc = [AGENT.t_acc]';
 
 % velocity change in x-direction
 v0_x                    = V_max_agent .* [AGENT(1:nagent).xExitDir]';
-dvi_x                   = ( (v0_x - [AGENT.VelX]')./t_acc + [AGENT.FxSocialWalls]'./m + [AGENT.FxSocialAgents]'./m + [AGENT.FxPhysAgents]'./m + [AGENT.FxPhysWall]'./m + [AGENT.xForceExit]'./m) .*dt;	%change of velocity
+dvi_x                   = ( (v0_x - [AGENT.VelX]')./t_acc + [AGENT.FxSocialWalls]'./m + ...
+                                [AGENT.FxSocialAgents]'./m + [AGENT.FxPhysAgents]'./m + ...
+                                [AGENT.FxPhysWall]'./m + [AGENT.xForceExit]'./m + [AGENT.FxSocialFlood]'./m) .*dt;	%change of velocity
 v_x                     = v0_x + dvi_x;
 
 % velocity change in y-direction
 v0_y                    = V_max_agent .* [AGENT(1:nagent).yExitDir]';
-dvi_y                   = ( (v0_y - [AGENT.VelY]')./t_acc + [AGENT.FySocialWalls]'./m + [AGENT.FySocialAgents]'./m + [AGENT.FyPhysAgents]'./m + [AGENT.FyPhysWall]'./m + [AGENT.yForceExit]'./m) .*dt;	%change of velocity
+dvi_y                   = ( (v0_y - [AGENT.VelY]')./t_acc + [AGENT.FySocialWalls]'./m + ...
+                                [AGENT.FySocialAgents]'./m + [AGENT.FyPhysAgents]'./m + ...
+                                [AGENT.FyPhysWall]'./m + [AGENT.yForceExit]'./m + [AGENT.FySocialFlood]'./m) .*dt;	%change of velocity
 v_y                     = v0_y + dvi_y;
 
 % compute total velocity and direction of agent
