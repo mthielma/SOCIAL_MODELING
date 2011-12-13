@@ -22,7 +22,7 @@ BuildingWidthX = 10;
 BuildingWidthY = 12;
 BeachWidth = 30;
 BeachHeight = 5;
-MaxElevation = 20;
+MaxElevation = 10;
 
 %--------------------------------------------------------------------------
 % numerical parameter
@@ -34,7 +34,7 @@ Parameter.dt                = 0.01;         % time step in [s]
 
 %--------------------------------------------------------------------------
 % number of agents
-Parameter.nagent            = 1000;           % number of agents
+Parameter.nagent            = 1;           % number of agents
 
 % agent parameters (can be perturbed with a random perturbation)
 Parameter.AgentSetup        = 'random';     % 'random' 'given' 'load'
@@ -106,9 +106,9 @@ Parameter.slope_crit        = 0.05;
 %--------------------------------------------------------------------------
 % model domain
 Parameter.xmin              = 0;
-Parameter.xmax              = 130;
+Parameter.xmax              = 110;
 Parameter.ymin              = 0;
-Parameter.ymax              = 130;
+Parameter.ymax              = 110;
 
 % create building list (if not given)
 
@@ -149,7 +149,7 @@ StartingList                = [             	% coordinates of start area: xmin x
 %--------------------------------------------------------------------------
 %plotting parameters
 Plotting.PlotEvolution      = true;             % direct plotting
-Parameter.PlotTimeStep      = 10;               % plots every PlotTimeStep
+Parameter.PlotTimeStep      = 1;               % plots every PlotTimeStep
 
 Plotting.Marking            = 'none';           % 'none', 'number', 'smiley'
 Plotting.FontSize           = 14;
