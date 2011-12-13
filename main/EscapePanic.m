@@ -517,17 +517,18 @@ while (time <= maxtime && size(AGENT,2)>0)
         figure(1),clf
         set(cla,'FontSize',Plotting.FontSize)
         hold on
-        contour(X_Grid,Y_Grid,Z_Grid)
-        contour(X_Grid,Y_Grid,+FloodMap); %colorbar; colormap('winter');
-        contour(X_Grid,Y_Grid,+FloodMap_deep); %colorbar; colormap('bone');
+        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat, colorbar
+        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
+        contour(X_Grid,Y_Grid,double(FloodMap),[1 1],'b-'); %colorbar; colormap('winter');
+        contourf(X_Grid,Y_Grid,double(FloodMap_deep),[1 1],'r-'); %colorbar; colormap('bone');
         % plot buildings
-        PlotBuildings(BuildingList,'r','');
+        PlotBuildings(BuildingList,'k','');
         PlotBuildings(ExitList,'g','Exit');
         % plot agents
         PlotAgents(AGENT,Plotting);
         
         % quiver([AGENT(1:nagent).LocX],[AGENT(1:nagent).LocY],[AGENT(1:nagent).xExitDir],[AGENT(1:nagent).yExitDir],'r')
-        %quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
+        
         % quiver([AGENT.LocX],[AGENT.LocY],[AGENT.DirX],[AGENT.DirY],'r-')
         axis equal
         axis([min(X_Grid(:)) max(X_Grid(:)) min(Y_Grid(:)) max(Y_Grid(:))])
@@ -535,6 +536,8 @@ while (time <= maxtime && size(AGENT,2)>0)
         title(['time = ',num2str(time,'%.2d'),' s'])
         xlabel('x [m]')
         ylabel('y [m]')
+        %axis([AGENT(1).LocX-10 AGENT(1).LocX+10 AGENT(1).LocY-10 AGENT(1).LocY+10])
+        
         pause(0.01)
     end
 end
