@@ -35,7 +35,7 @@ ExitPoints = [indx';indy'];
 % unfortunately, we have to loop over the agents so far...
 for iagent = 1:nagent
    Inside = (X_Grid-AGENT(iagent).LocX).*(X_Grid-AGENT(iagent).LocX)+(Y_Grid-AGENT(iagent).LocY).*(Y_Grid-AGENT(iagent).LocY);
-   F_agent(Inside<AGENT(iagent).Size) = F_agent(Inside<AGENT(iagent).Size)*1/Parameter.agent_sensitivity;
+   F_agent(Inside<AGENT(iagent).Size.^2) = F_agent(Inside<AGENT(iagent).Size.^2)*1/Parameter.agent_sensitivity;
 end
 
 % use fast marching algorithm to compute distance to exit
