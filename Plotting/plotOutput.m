@@ -14,14 +14,14 @@ filestem            = ['../+output/',filename,'/'];
 
 savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(1);
 
-Dimension           = 2;                % 2: 2-D   or   3: 3-D
+Dimension           = 3;                % 2: 2-D   or   3: 3-D
 FontSize            = 14;
 AgentsMarking       = 'none';       	% 'none', 'number', 'smiley'
 AgentsColor         = [0.75 0.75 0];           % agents color: 'y' or [0.75 0.75 0] or 'rand' or 'one'
 
 ColorBuildings      = [0.2 0.2 0.2];
 MarkingBuildings    = '';
-buildingHeight      = 1.5;              %times agent height
+buildingHeight      = 3.5;              %times agent height e.g. 1.5
 ColorExits          = [0.0 0.4 0.0];
 MarkingExits        = 'EXIT';
 
@@ -136,10 +136,11 @@ for i=0:outputStep:nrTimesteps
             %PlotBuildings3D_Topo(Parameter,BuildingList,ColorBuildings,Z_Grid,MarkingBuildings)
             %PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
             %PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
-            PlotAgents3D(Parameter,Plotting,AGENT,Z_Grid)
             if sum(sum(Z_Grid))~=0
                 PlotTopography3D(X_Grid,Y_Grid,Z_Grid)
             end
+            PlotAgents3D(Parameter,Plotting,AGENT,Z_Grid)
+            PlotFlood3D(Parameter,X_Grid,Y_Grid,Z_Grid,time)
             PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
             PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
             % camlight left;
