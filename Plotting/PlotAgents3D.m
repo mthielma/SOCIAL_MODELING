@@ -34,6 +34,7 @@ for i = 1:nagents
         'SpecularStrength',0.9,'SpecularExponent',25,'BackFaceLighting','lit');
 %     camlight left;
 %     shading flat
+    hold on
 end
 
 % axis equal

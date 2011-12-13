@@ -8,7 +8,7 @@ clear;
 
 %-- input -----------------------------------------
 
-filename            = 'test1';
+filename            = 'Model1_direct_2b';
 
 filestem            = ['../+output/',filename,'/'];
 
@@ -21,7 +21,7 @@ AgentsColor         = [0.75 0.75 0];           % agents color: 'y' or [0.75 0.75
 
 ColorBuildings      = [0.2 0.2 0.2];
 MarkingBuildings    = '';
-buildingHeight      = 1.5;              %times agent height
+buildingHeight      = 3.5;              %times agent height e.g. 1.5
 ColorExits          = [0.0 0.4 0.0];
 MarkingExits        = 'EXIT';
 
@@ -104,8 +104,8 @@ for i=0:outputStep:nrTimesteps
 %                 colorbar
 %                 colormap('gray')
                 h = contour(X_Grid,Y_Grid,Z_Grid); colormap('bone')
+                PlotFlood(Parameter,X_Grid,Y_Grid,Z_Grid,time)
             end
-            PlotFlood(Parameter,X_Grid,Y_Grid,Z_Grid,time)
             PlotBuildings(BuildingList,ColorBuildings,'');
             PlotBuildings(ExitList,ColorExits,MarkingExits);
             
@@ -136,9 +136,12 @@ for i=0:outputStep:nrTimesteps
             %PlotBuildings3D_Topo(Parameter,BuildingList,ColorBuildings,Z_Grid,MarkingBuildings)
             %PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
             %PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
-            PlotAgents3D(Parameter,Plotting,AGENT,Z_Grid)
             if sum(sum(Z_Grid))~=0
                 PlotTopography3D(X_Grid,Y_Grid,Z_Grid)
+            end
+            PlotAgents3D(Parameter,Plotting,AGENT,Z_Grid)
+            if sum(sum(Z_Grid))~=0
+                PlotFlood3D(Parameter,X_Grid,Y_Grid,Z_Grid,time)
             end
             PlotBuildings3D(Parameter,BuildingList,ColorBuildings,MarkingBuildings)
             PlotBuildings3D(Parameter,ExitList,ColorExits,MarkingExits); hold on;
