@@ -1,13 +1,20 @@
-function [Dgradx,Dgrady,D] = ComputeShortestPathGlobal(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,v0,resolution)
+function [Dgradx,Dgrady,D] = ComputeShortestPathGlobal(FloodMap,FloodMap_deep,BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter)
 
 Debug =false;
+resolution  = Parameter.resolution;
+v0          = Parameter.v0;
 
 % set initial speed map
 F = ones(size(X_Grid))*v0;
-% add buildings to map
+
+%add building boundaries to map
+F(BuildingMap_boundary==1) = v0/3;
+% add flood to map
+F(FloodMap) = Parameter.FloodSpeed;
+F(FloodMap_deep) = 1e-8;
 % add buildings to map
 F(BuildingMap) = 1e-8;
-F(BuildingMap_boundary==1) = v0/3;
+
 
 %==============================================================
 % Shortest path w/o topo
