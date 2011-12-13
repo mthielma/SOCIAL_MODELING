@@ -9,6 +9,10 @@ cell_array = num2cell(1:nagent);
 [AGENT(1:nagent).num]       = cell_array{:};
 
 
+% status
+[AGENT(1:nagent).Status] 	= deal(1);   %[1: dry/ok  2: wet/ok]
+
+
 % maximum velocity
 v0          = Parameter.v0;
 if isfield(Parameter,'v0_pert')
@@ -87,3 +91,4 @@ end
 [AGENT(1:nagent).yForceExit]     = deal(0);
 [AGENT(1:nagent).LocX]           = deal(0);
 [AGENT(1:nagent).LocY]           = deal(0);
+[AGENT(1:nagent).LocZ]           = deal(0);

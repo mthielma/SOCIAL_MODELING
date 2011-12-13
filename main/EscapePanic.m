@@ -1,21 +1,21 @@
 %=================================
 %          ESCAPE PANIC
-% 
+%       including flooding
 %=================================
 % Marcel Thielmann & Fabio Crameri
 
 function [AGENT] = EscapePanic(Parameter,BuildingList,ExitList,StartingList,Plotting)         
 
-%if nargin == 0
+% if nargin == 0
 %     clear;
-    %**************************************************
-    %Marcels:
+%     **************************************************
+%     Marcels:
 %     TwoExitsStandardSetup;
-    %**************************************************
-    %Fabios:
-%     [Parameter,BuildingList,ExitList,Plotting] = SetupModel;
-    %**************************************************
-%end
+%     **************************************************
+%     Fabios:
+%     [Parameter,BuildingList,ExitList,StartingList,Plotting] = SetupModel;
+%     **************************************************
+% end
 
 
 % workflow control
@@ -26,6 +26,8 @@ DirectExitPath  = Parameter.DirectExitPath;
 WithAgents      = Parameter.WithAgents;
 WithTopo        = Parameter.WithTopo;
 WithFlood       = Parameter.WithFlood;
+Z_flood         = Parameter.z0_flood;    dzdt_flood = Parameter.dzdt_flood;
+dangerousDepth  = Parameter.dangerousDepth;
 
 %==========================================================================
 % add necessary paths
@@ -158,7 +160,21 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,ArchD,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
+[ArchForce,~,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
+
+
+%----------------------------------------------------
+% create flood map
+%----------------------------------------------------
+%compute height
+Z_flood_deep = Z_flood - dangerousDepth;
+
+%create floodmap
+FloodMap = logical(X_Grid*0); FloodMap_deep = FloodMap;
+FloodHeightMap = ones(size(Z_Grid))*Z_flood;
+FloodMap(FloodHeightMap>Z_Grid) = 1;
+FloodHeightMap_deep = ones(size(Z_Grid))*Z_flood_deep;
+FloodMap_deep(FloodHeightMap_deep>Z_Grid) = 1;
 
 %----------------------------------------------------
 % compute shortest path to exit
@@ -166,12 +182,12 @@ y_Buildings = Y_Grid(BuildingMap);
 BuildingMap_boundary = zeros(size(BuildingMap)); BuildingMap_boundary(BuildingMap~=BuildingMap_sp) = 1;
 if (~DirectExitPath && ~WithTopo)
     % compute shortest path without topography with fast marchng algorithm
-    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
+    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(FloodMap,FloodMap_deep,BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter);
 elseif (~DirectExitPath && WithTopo)
     % compute shortest path without topography with fast marchng algorithm
-    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobal(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
+    [~,~,D_orig] = ComputeShortestPathGlobal(FloodMap,FloodMap_deep,BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Parameter);
     % compute shortest path with topography with fast marchng algorithm
-    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
+    [Dgradx,Dgrady,D_orig] = ComputeShortestPathGlobalTopo(FloodMap,FloodMap_deep,BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,Gradient_x,Gradient_y,Parameter);
 elseif DirectExitPath
     % compute exit direction directly
     [Dgradx,Dgrady] = ComputeShortestPathGlobalDirect(BuildingMap,ExitMap,X_Grid,Y_Grid,Parameter.v0,Parameter.resolution);
@@ -233,11 +249,50 @@ while (time <= maxtime && size(AGENT,2)>0)
     if sum(isnan([AGENT.LocX]))
         error('NaN');
     end
+    
+    %----------------------------------------------------
+    % interpolate z-level Agent
+    %----------------------------------------------------
+    agent_Locz = interp2(X_Grid,Y_Grid,Z_Grid,[AGENT.LocX],[AGENT.LocY],'*linear');
+    dummy                     	= num2cell(agent_Locz);
+    [AGENT(1:nagent).LocZ]  	= dummy{:};
+    
     %----------------------------------------------------
     % compute flooding
     %----------------------------------------------------
     if WithFlood
-       error('not yet implemented') 
+        %compute height
+        Z_flood  = Z_flood + dzdt_flood*Parameter.dt;
+        Z_flood_deep = Z_flood - dangerousDepth;
+        
+        %create floodmap
+        FloodMap = logical(X_Grid*0); FloodMap_deep = FloodMap;
+        FloodHeightMap = ones(size(Z_Grid))*Z_flood;
+        FloodMap(FloodHeightMap>Z_Grid) = 1;
+        FloodHeightMap_deep = ones(size(Z_Grid))*Z_flood_deep;
+        FloodMap_deep(FloodHeightMap_deep>Z_Grid) = 1;
+        
+        % compute forces from flood
+        if (Z_flood>min(min(Z_Grid))) % for shallow part
+            [FloodForce,~,FloodDirX,FloodDirY] = f_FloodForce(X_Grid,Y_Grid,FloodMap,Parameter,resolution);
+            % compute forces from flood (2nd part) on all agents
+            % and interpolate it to the agent
+            [FxSocialFlood,FySocialFlood] = ComputeSocialForcesStatic_flood(AGENT,X_Grid,Y_Grid,FloodForce,FloodDirX,FloodDirY,Parameter);
+            dummy                                 = num2cell(FxSocialFlood);
+            [AGENT(1:nagent).FxSocialFlood]       = dummy{:};
+            dummy                                 = num2cell(FySocialFlood);
+            [AGENT(1:nagent).FySocialFlood]       = dummy{:};
+        end
+        if (Z_flood_deep>min(min(Z_Grid))) % for deep part
+            [FloodForce_deep,~,FloodDirX_deep,FloodDirY_deep] = f_FloodForce(X_Grid,Y_Grid,FloodMap_deep,Parameter,resolution);
+            % compute forces from flood (2nd part) on all agents
+            % and interpolate it to the agent
+            [FxSocialFlood_deep,FySocialFlood_deep] = ComputeSocialForcesStatic_flood(AGENT,X_Grid,Y_Grid,FloodForce_deep,FloodDirX_deep,FloodDirY_deep,Parameter);
+            dummy                             	= num2cell([AGENT(1:nagent).FxSocialFlood] + FxSocialFlood_deep);
+            [AGENT(1:nagent).FxSocialFlood]     = dummy{:}; %add to shallow flood force
+            dummy                              	= num2cell([AGENT(1:nagent).FySocialFlood] + FySocialFlood_deep);
+            [AGENT(1:nagent).FySocialFlood]     = dummy{:}; %add to shallow flood force
+        end
     end
     
     %----------------------------------------------------
@@ -251,8 +306,8 @@ while (time <= maxtime && size(AGENT,2)>0)
     tree =   kdtree(ReferencePoints);
     
     %----------------------------------------------------
-    % compute forces from buildings on all agents (just interpolate the
-    % precomputed force field to the agents)
+    % compute forces from buildings (2nd part) on all agents 
+    % and interpolate it to the agent
     %----------------------------------------------------
     if Parameter.SocialForces
         [FxSocialWalls,FySocialWalls] = ComputeSocialForcesStatic(AGENT,X_Grid,Y_Grid,ArchForce,ArchDirX,ArchDirY,Parameter);
@@ -271,12 +326,14 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     if (~DirectExitPath && WithAgents)
         if (mod(itime,decision_step)==0 || itime==1)
-            
-            [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,D_orig,Dgradx,Dgrady,Gradient_x,Gradient_y,AGENT,nagent,Parameter);
-            
+            [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgents(BuildingMap,BuildingMap_boundary,...
+                ExitMap,X_Grid,Y_Grid,D_orig,Dgradx,Dgrady,Gradient_x,Gradient_y,AGENT,nagent,Parameter);
         end
     elseif (~DirectExitPath && WithAgents && WithFlood)
-        error('not yet implemented')
+        if (mod(itime,decision_step)==0 || itime==1)
+            [Dgradx,Dgrady] = ComputeShortestPathGlobalWithAgentsFlood(FloodMap,FloodMap_deep,BuildingMap,BuildingMap_boundary,...
+                ExitMap,X_Grid,Y_Grid,D_orig,Dgradx,Dgrady,Gradient_x,Gradient_y,AGENT,nagent,Parameter);
+        end
     end
     
     xExitDirAgents = interp2(X_Grid,Y_Grid,Dgradx,[AGENT.LocX],[AGENT.LocY],'*linear');
@@ -384,7 +441,18 @@ while (time <= maxtime && size(AGENT,2)>0)
     % compute exit force
     %----------------------------------------------------
     [AGENT] = ComputeExitForce(AGENT,Parameter,nagent);
-   
+       
+    %----------------------------------------------------
+    % check if agents in flood
+    %----------------------------------------------------
+    wet = [AGENT( [AGENT.LocZ]<=Z_flood ).num];
+    if ~isempty(wet)
+        for iwet=1:size(wet,2)
+            AGENT(wet(1,iwet)).Status = 2; %wet
+            AGENT(wet(1,iwet)).VMax = Parameter.FloodSpeed; %decrease max. speed by half VMax
+        end
+    end
+        
     %----------------------------------------------------
     % move agents
     %----------------------------------------------------
@@ -396,7 +464,7 @@ while (time <= maxtime && size(AGENT,2)>0)
 %     AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
     
     %----------------------------------------------------
-    % remove successfull agents
+    % remove successfull/dead agents
     %----------------------------------------------------
     %those who arrived in the exits
     for i=1:size(ExitList,1)
@@ -413,9 +481,22 @@ while (time <= maxtime && size(AGENT,2)>0)
     AGENT(   [AGENT.LocX]>xmax | [AGENT.LocX]<xmin ...
         | [AGENT.LocY]>=ymax | [AGENT.LocY]<ymin  ) = [];
     
-    nagent = size(AGENT,2); %update number of agents after removing some of them
-    cell_array = num2cell(1:nagent); [AGENT(1:nagent).num] = cell_array{:}; %update correct numbering from 1:nagent
 
+    %remove agents in deep water
+    drowned = [AGENT( [AGENT.LocZ]<=Z_flood_deep ).num];
+    if ~isempty(drowned)
+        %save time of agents exit
+        Analysis([AGENT(drowned).name],4) = time; %in [s]
+        Analysis([AGENT(drowned).name],5) = 3; %change status to 'drowned'
+        
+        AGENT(drowned) = []; %remove agents
+    end
+    
+    
+    nagent = size(AGENT,2); %update number of agents after removing some of them
+    cell_array = num2cell(1:nagent); [AGENT(1:nagent).num] = cell_array{:}; %update correct numbering from 1:nagent    
+    
+    
     %----------------------------------------------------
     % save data
     %----------------------------------------------------
@@ -437,6 +518,8 @@ while (time <= maxtime && size(AGENT,2)>0)
         set(cla,'FontSize',Plotting.FontSize)
         hold on
         contour(X_Grid,Y_Grid,Z_Grid)
+        contour(X_Grid,Y_Grid,+FloodMap); %colorbar; colormap('winter');
+        contour(X_Grid,Y_Grid,+FloodMap_deep); %colorbar; colormap('bone');
         % plot buildings
         PlotBuildings(BuildingList,'r','');
         PlotBuildings(ExitList,'g','Exit');
