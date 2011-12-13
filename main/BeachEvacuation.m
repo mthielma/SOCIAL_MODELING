@@ -65,9 +65,22 @@ Parameter.A                 = 2e3;          %[N]  [2e3 Helbing 2000]
 Parameter.B                 = 0.08;         %[m]  [0.08 Helbing 2000]
 Parameter.ExitFactor        = 1;            %for adjusting strength of constant exit force field
 Parameter.ExitForce = 'constant';
+
+%--------------------------------------------------------------------------
+% flooding
+Parameter.WithFlood         = true;        % true or false, determines if flood is taken into account for shortest path computation
+
+Parameter.z0_flood          = 0;            % [m]
+Parameter.dzdt_flood        = 0.01;         % rising speed of flood [m/s]
+Parameter.dangerousDepth    = 0.2;          % [m]
+Parameter.FloodSpeed        = Parameter.v0/2; % agents speed in shallow water [m/s]
+
+Parameter.A_flood           = 5e2;          %[N]
+Parameter.B_flood           = 0.08;         %[m]
+
 %--------------------------------------------------------------------------
 % shortest path computation
-Parameter.DirectExitPath    = true;     	% fast marching algorithm (false); direct exit line (true)
+Parameter.DirectExitPath    = false;     	% fast marching algorithm (false); direct exit line (true)
 
 Parameter.orig_sensitivity	= 1;            % best to leave this fixed
 Parameter.agent_sensitivity	= 2.5;            % how much are agents taken into account when computing the shortest path? [0: not taken into account - high value: taken into account]
@@ -75,9 +88,8 @@ Parameter.topo_sensitivity 	= 1;            % sensitivity of agents to topograph
 
 Parameter.decision_time   	= 0.05;         % after which time does an agent redecide on its path?
 
-Parameter.WithAgents        = false;        % true or false, determines if agents are taken into account for shortest path computation
-Parameter.WithTopo          = false;        % true or false, determines if topography is taken into account for shortest path computation
-Parameter.WithFlood         = false;        % true or false, determines if flood is taken into account for shortest path computation
+Parameter.WithAgents        = true;        % true or false, determines if agents are taken into account for shortest path computation
+Parameter.WithTopo          = true;        % true or false, determines if topography is taken into account for shortest path computation
 
 Parameter.Enlarge           = 0.2;          % enlarge buildings for shortest path formulation
 
