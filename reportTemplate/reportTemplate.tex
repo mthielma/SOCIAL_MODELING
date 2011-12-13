@@ -91,8 +91,7 @@
 
 
 \section{Individual contributions}
-Marcel: 376 bugs
-Fabio: 376 bugfixes
+No one wrote the individual contributions.
 
 \section{Introduction and Motivations}
 
@@ -105,6 +104,8 @@ Fabio: 376 bugfixes
 
 
 \subsection{Walls}
+
+For a pedestrian panic to occur, walls are needed. They bound a certain amount of space, which might become small when filled with people. They further produce bottlenecks at positions where a room suddenly gets smaller or where there is an exit at which pedestrians are accumulated. From nature we know two main behaviors regarding walls: People usually don't like to walk too close to a wall and people can not walk through a wall. Therefore there are two forces to consider, when modeling such a feature, psychologic and physical forces, respectively.
 
 \subsubsection{Psychological forces}
 
@@ -151,11 +152,17 @@ In our model, the sole attractive force is the exit force. As for the social for
 While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect at all the decision process of a human agent, since obstacles between the agent and the exit are always taken into account. Second, 
 
 \subsubsection{Shortest path formulation}
+
 Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. One of the earliest solutions to this problem was presented by Dykstra (reference). Shebian (right name? reference?) presented a fast and efficient method to solve a certain class of shortest path problems, which  is called the Fast marching method. It is a special case of level set methods and solve the Eikonal equation (equation?). In geophysics, the Eikonal equation is used to describe the 
 
 This equation describes the We can essentially apply this algorithm to our problem
 
 In a more sophisticated version of the code, we make use of a fast marching algorithm that takes into account walls as being regions with a low velocity. We compute the shortest path
+
+
+\subsection{Flood}
+
+In model cases were we use a rising flood, another repulsive force is added. The flood will rise with time and adjust laterally depending on the local topography. Agents will try to prevent going into water, but are able to walk through it until a certain depth level.
 
 \subsection{Pedestrian walking speed}
 The free (unobstructed by obstacles) walking speed of pedestrians is determined by several factors:
@@ -175,11 +182,14 @@ To account for the impact of psychological and physical forces on pedestrian wal
 \end{equation}
 where $v_i^0\mathbf{e}_i$ is the desired velocity in the desired direction.
 
+
 \section{Implementation}\label{sec:implementation}
 
 This section is meant to both give an overview of the methods used in this code as well as to provide a documentation of the code. Therefore, some details are mentioned here that might not be crucial for any code that simulates pedestrian dynamics, but are needed in our implementation. 
 
 \subsection{Initialization of Buildings and Agents}
+
+Buildings and Agents are initialized in the parameter file.
 
 \subsection{Agents}
 
@@ -187,20 +197,30 @@ This section is meant to both give an overview of the methods used in this code 
 
 \subsection{Architecture}
 
-\subsubsection{Repulsive walls}
+The architecture in our models consist of repulsive walls and attractive exits.
 
-Eq.~\eqref{eq:fiWS} can be rewritten as
+\subsubsection{Repulsive walls}
+\label{sec:WallsImplementation}
+
+Repulsive walls are added using a list of minimum and maximum values in x- and y-direction. Therefore only square buildings are implemented in the current version of the code. The single buildings are then put together into a building map, where we calculate the distance between every free point in the model domain (not covered by a building) and the nearest wall. From this distance we calculate the psychologic wall force on all agents and, if they touch the wall, the physical wall forces as well. Eq.~\eqref{eq:fiWS} for the psychologic wall force can be rewritten as
 
 \begin{equation}
-	{f_{iWS}} = \left\{ {{A_i}\left( {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} \right)} \right\}{n_{iW}}
+	{f_{iWS}} = \left\{ {{A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} } \right\}{n_{iW}}
 	\label{eq:fiWS2}
 \end{equation}
 
+which allows for calculating the first part already before starting the time loop. The second part is then added later on.
+
 \subsubsection{Exit forces}
+
+In this section, we show two approaches to tackle the problem of the psychological exit force. Using small and rather simple models, we show the differences that arise from the different implementations. We then choose one of
 
 \subsection{Walking speed}
 
+
 \subsection{Flooding}
+
+The flooding is similarly implemented as the repulsive walls described in Section~\ref{sec:WallsImplementation}. The top of the water level is repulsive by a magnitude lower value than those of the walls. Agents are allowed to cross this first waterfront, if they overcome this repulsive force. In the shallow water, the desired velocity ($v_0$) is reduced to half the value than on land. Agents might go deeper and deeper into the water until there is a second waterfront at a certain water depth level (0.2 m depth). This is also a repulsive front by the same value as walls this time. If agents still cross this front, they are subsequently removed from the model and sadly declared as drowned.
 
 \section{Simulation Results and Discussion}
 
@@ -247,13 +267,13 @@ In this study, we use a set of different model setups and several different mode
 \begin{figure}
 	\begin{center}
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model1_direct_1_000000.eps}
+	{figures/Model1_direct_1b_000000.eps}
 	\qquad
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model1_direct_1_000270.eps}
+	{figures/Model1_direct_1b_000550.eps}
 	\qquad
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model1_direct_1_001800.eps}
+	{figures/Model1_direct_1b_001800.eps}
 	\caption{Simple starting model for a room evacuation through a bottleneck. (a) Initial setup, (b) agents arriving at the bottleneck and accumulating in behind and (c) agents blocking each other of exiting at the end of the simulation.}
 	\label{fig:simple1}
 	\end{center}
@@ -266,13 +286,13 @@ A first case ({\it Model1\_linear\_1}) is shown in Fig.~\ref{fig:simple1}. The m
 \begin{figure}
 	\begin{center}
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model1_direct_2_000000.eps}
+	{figures/Model1_direct_2b_000000.eps}
 	\qquad
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model1_direct_2_000270.eps}
+	{figures/Model1_direct_2b_000550.eps}
 	\qquad
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model1_direct_2_001800.eps}
+	{figures/Model1_direct_2b_001800.eps}
 	\caption{Model including perturbations for a room evacuation through a bottleneck. (a) Initial setup, (b) agents arriving at the bottleneck and accumulating in behind and (c) agents blocking each other of exiting at the end of the simulation.}
 	\label{fig:simple2}
 	\end{center}
@@ -355,17 +375,8 @@ In this last simulation, we tested the influence of topography on agent behaviou
 \begin{equation}
 	z(x,y) = A\exp \left(- \frac{\left(x-x_0\right)^2}{2\sigma_x} + \frac{\left(y-y_0\right)^2}{2\sigma_y}\right)
 \end{equation}
-In this simulation, we chose $A = 4 $m, $x_0 = 10$m, $y_0 = 5$m, $\sigma_x = 15$m and $\sigma_y = 6$m. In figure ???, three snapshots from the time evolution of the simulation are shown. The introduction of topography has the effect that queuing in front of the exits is reduced, as agents already split up due to the topography present, which affects both agent speed and exit direction. This effect is similar to the effect of an obstacle in front of an exit (REFERENCE??), as the agents are partly sorted before they reach the exit. As expected, we can also observe the tendency that the agents "decide" rather early on the lower or upper exit respectively and do not switch exit in a more advanced stage of the simulation. Note that the time for all agents to reach the exit increases by $\approx$ 60 \%.
-\begin{figure}
-	\centering
-	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgentsTopo_001290.eps}
-	\qquad
-	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgentsTopo_002400.eps}
-	\qquad
-	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgentsTopo_003700.eps}
-	\caption{Snapshots of the time evolution of a simple two-exit model using the shortest path algorithm to determine the exit direction. Solid lines show ground elevation. In this case, agents blocking the way to the exit as well as topography are taken into account. In the simulation, we can observe a kind of presorting due to the topography effect. The path of our example agent Don clearly shows this behaviour.}
-	\label{fig:two_exits3}
-\end{figure}
+In this simulation, we chose $A = 1 $m, $x_0 = 10$m, $y_0 = 5$m, $\sigma_x = 15$m and $\sigma_y = 6$m.
+
 
 \subsection{Evacuation through a road network}
 \subsection{Evacuation through a road network with topography and flooding}
