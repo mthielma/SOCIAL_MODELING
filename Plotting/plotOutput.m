@@ -8,11 +8,11 @@ clear;
 
 %-- input -----------------------------------------
 
-filename            = 'Model2_fastest_3';
+filename            = 'test1';
 
 filestem            = ['../+output/',filename,'/'];
 
-savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(1);
+savingPlots = logical(0);   save_jpg = logical(1);    save_eps = logical(1);
 
 Dimension           = 3;                % 2: 2-D   or   3: 3-D
 FontSize            = 14;
@@ -71,7 +71,6 @@ maxTime     = Parameter.maxtime*60;    %[s]
 dt          = Parameter.dt;
  
 outputStep  = Parameter.SaveTimeStep;
-outputStep  = 10;
 nrTimesteps = maxTime/dt;               %max. number of timesteps (if it did run until maxTime)
 nrFiles     = nrTimesteps/outputStep;   %max. number of output files (if it did run until maxTime)
 % dtFiles     = dt * outputStep;        %timestep between output files [s]
