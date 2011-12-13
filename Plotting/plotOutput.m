@@ -12,9 +12,9 @@ filename            = 'test1';
 
 filestem            = ['../+output/',filename,'/'];
 
-savingPlots = logical(0);   save_jpg = logical(1);    save_eps = logical(1);
+savingPlots = logical(1);   save_jpg = logical(1);    save_eps = logical(1);
 
-Dimension           = 3;                % 2: 2-D   or   3: 3-D
+Dimension           = 2;                % 2: 2-D   or   3: 3-D
 FontSize            = 14;
 AgentsMarking       = 'none';       	% 'none', 'number', 'smiley'
 AgentsColor         = [0.75 0.75 0];           % agents color: 'y' or [0.75 0.75 0] or 'rand' or 'one'
@@ -100,11 +100,12 @@ for i=0:outputStep:nrTimesteps
             %pcolor(X_Grid,Y_Grid,Z_Grid),shading flat,colorbar
             % plot buildings
             if sum(sum(Z_Grid))~=0
-                h = contourf(X_Grid,Y_Grid,Z_Grid,40,'EdgeColor','none');
-                colorbar
-                lighting flat
-                colormap('jet')
+%                 h = contourf(X_Grid,Y_Grid,Z_Grid,40,'EdgeColor','none');
+%                 colorbar
+%                 colormap('gray')
+                h = contour(X_Grid,Y_Grid,Z_Grid); colormap('bone')
             end
+            PlotFlood(Parameter,X_Grid,Y_Grid,Z_Grid,time)
             PlotBuildings(BuildingList,ColorBuildings,'');
             PlotBuildings(ExitList,ColorExits,MarkingExits);
             
