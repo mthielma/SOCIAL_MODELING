@@ -2,6 +2,8 @@
 \usepackage{geometry}                
 \geometry{letterpaper}                   
 
+\usepackage{natbib}
+
 %\usepackage[latin1]{inputenc}
 %\usepackage[english]{babel}
 %\usepackage[T1]{fontenc} 
@@ -110,7 +112,7 @@ Except for special circumstances, people do not like to move too close to each o
 		\label{eq:fijS}
 \end{equation}
 
-where $A_i$ and $B_i$ are constants, ${\bf n}_{ij} = ({\bf r}_i - {\bf r}_j)/d_{ij}$ is the normalized vector pointing from pedestrian $j$ to pedestrian $i$, $d_{ij}$ is the distance between the pedestrians center of mass and $r_i$ is the size (i.e. radius) of the pedestrian (Helbing et al., 2000). 
+where $A_i$ and $B_i$ are constants, ${\bf n}_{ij} = ({\bf r}_i - {\bf r}_j)/d_{ij}$ is the normalized vector pointing from pedestrian $j$ to pedestrian $i$, $d_{ij}$ is the distance between the pedestrians center of mass and $r_i$ is the size (i.e. radius) of the pedestrian \citep{Helbing2000}. 
 
 \subsubsection{Physical forces}
 
@@ -128,7 +130,7 @@ and a tangential force between two sliding agents given by
 		\label{eq:fijPt}
 \end{equation}
 
-Here, the function $g$ is zero if the pedestrians do not touch each other, $k$ and $\kappa$ are large constants and $\Delta v_{ji}^t = ({\bf v}_j - {\bf v}_i)\cdot {\bf t}_{ij}$ is the tangential velocity difference (Helbing et al., 2000).
+Here, the function $g$ is zero if the pedestrians do not touch each other, $k$ and $\kappa$ are large constants and $\Delta v_{ji}^t = ({\bf v}_j - {\bf v}_i)\cdot {\bf t}_{ij}$ is the tangential velocity difference \citep{Helbing2000}.
 
 When the different forces are added together, we obtain the total social force applied on an agent
 
@@ -181,7 +183,7 @@ The total repulsive force from the architecture $f_{iW}$ can then be written as
 \subsection{Exits}
 \label{sec:Exits1}
 
-In our model, the sole attractive force is the exit force. As for the social forces, it is rather a psychological force representing the will of each agent to reach the exit. In this work, we chose the value of the exit force to be proportional to the sum of the other psychological forces (in our code, one can choose a proportionality constant to adjust the exit force). To determine the direction of the exit force, we used two different approaches: i) the agent is drawn directly towards the exit, regardless of any obstacles in between him and an exit, and ii) the agent decides on its walking direction based on the estimate of the time it needs to reach the exit.
+In our model, the sole attractive force is the exit force. As for the social forces, it is rather a psychological force representing the will of each agent to reach the exit. In this work, we chose the value of the exit force to be proportional to the sum of the other psychological forces (in our code, one can choose a proportionality constant to adjust the exit force). To determine the direction of the exit force, we used two different approaches: i) the agent is drawn directly towards the exit, regardless of any obstacles in between him and an exit, and ii) the agent decides on its walking direction based on the estimate of the time it needs to reach the exit (e.g. \citet{Graf,Kneidl}).
 
 While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect at all the decision process of a human agent, since obstacles between the agent and the exit are always taken into account. Second, 
 
@@ -210,7 +212,7 @@ In our model, we assume the conditions of the ground to be the same everywhere, 
 	v(S) = A_{S} \exp{\left( -B_S | S + S_{crit} |  \right)}\mbox{,}
 \end{equation}
 where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocites.\\
-To account for the impact of psychological and physical forces on pedestrian walking speed, HELBING (2000) used the following equation for the change of agent velocity in time:
+To account for the impact of psychological and physical forces on pedestrian walking speed, \citet{Helbing2000} used the following equation for the change of agent velocity in time:
 \begin{equation}
 	\frac{d \mathbf{v}_i}{dt} = \frac{v_i^0\mathbf{e}_i - v_i(t)}{\tau_i} - \sum_{j(\ne i)}f_{iW} - \sum_{j(\ne i)}f_{iA}\mbox{,}
 \end{equation}
@@ -381,10 +383,15 @@ The more elaborated shortest path formulation, on the other hand, can describe s
 \end{figure}
 
 \subsection{Simple evacuation bottleneck: Two exits}
-As we saw in the one-exit models, the shortest path formalism led to a more realistic behaviour of the agents. In a second step, we now extended the model by introducing one additional exit, leaving out the additional obstacles. In a first step, we used the shortest path procedure to determine the desired direction of the agent. As this did not lead to the desired agent behaviour (see sec. \ref{sec:two_exits1}), we had to extend the shortest path procedure by additionally taking agents into account (the procedure is described in section \ref{sec:implementation}). This led to a significant improvement in agent behaviour. As we additionally have to deal with topography in our model, we then introduced a small topography in our model to assess its effect on agent behaviour. In the three following subsection, we shortly show and discuss the results of the different setups.
+
+As we saw in the one-exit models, the shortest path formalism led to a more realistic behaviour of the agents. In a second step, we now extended the model by introducing one additional exit, leaving out the additional obstacles. In a first step, we used the shortest path procedure to determine the desired direction of the agent. As this did not lead to the desired agent behaviour (see Section~\ref{sec:two_exits1}), we had to extend the shortest path procedure by additionally taking agents into account (the procedure is described in Section~\ref{sec:implementation}). This led to a significant improvement in agent behaviour. As we additionally have to deal with topography in our model, we then introduced a small topography in our model to assess its effect on agent behaviour. In the three following subsection, we shortly show and discuss the results of the different setups.
+
 \subsubsection{Shortest path exit force}\label{sec:two_exits1}
-Here, the exit direction of the agents is given by the shortest path algorithm, which has proven to yield better results compared to the direct path approach. Instead of having one gap in the wall as before, we now have two gaps in the wall. Additionally, the exit was switched slightly towards the lower gap. This makes the lower gap more preferable, since the path to the exit through this gap is shorter.\\
-As one can see in fig.\ref{fig:two_exits1}, the shortest path algorithm results in a rather unrealistic behaviour of the agents: Instead of opting for the upper gap in case the lower gap is blocked by other agents, all agents choose the lower gap.
+
+Here, the exit direction of the agents is given by the shortest path algorithm, which has proven to yield better results compared to the direct path approach. Instead of having one gap in the wall as before, we now have two gaps in the wall. Additionally, the exit was switched slightly towards the lower gap. This makes the lower gap more preferable, since the path to the exit through this gap is shorter.
+
+As one can see in Fig.~\ref{fig:two_exits1}, the shortest path algorithm results in a rather unrealistic behaviour of the agents: Instead of opting for the upper gap in case the lower gap is blocked by other agents, all agents choose the lower gap.
+
 \begin{figure}
 	\centering
 	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPath_000050.eps}
@@ -395,9 +402,10 @@ As one can see in fig.\ref{fig:two_exits1}, the shortest path algorithm results 
 	\caption{Snapshots of the time evolution of a simple two-exit model using the shortest path algorithm to determine the exit direction. As can be seen, the simple shortest path formalism doesn't work in a realistic manner, since all the agents opt for the closest exit regardless of other agents blocking the way. For a better illustration, we chose one agent (named Don) and plot his path through the model domain. As one can see, Don never changes his direction on the way to the exit.}
 	\label{fig:two_exits1}
 \end{figure}
+
 This behaviour is clearly not what one could observe in reality, since at least some agents would prefer the upper gap and reach the exit significantly faster than in our simulation. We therefore had to adjust the shortest path procedure to account for agents blocking the way.
 \subsubsection{Shortest path exit force with agents taken into account}
-In the second simulation, we used the extended shortest path procedure to determine the exit direction of the agents. We tried different combinations of the sensitivity of the agents to other agents blocking the way. The (in our opinion) best results were obtained when we reduced the estimated velocity at a node by a factor of 2.5. In fig.\ref{fig:two_exits2}, it can be seen that the behaviour of the agents is much more realistic than before. In this simulation, agents frequently redecide on the path to be taken and change from the lower to the upper gap or vice versa if either of those gaps is blocked.
+In the second simulation, we used the extended shortest path procedure to determine the exit direction of the agents. We tried different combinations of the sensitivity of the agents to other agents blocking the way. The (in our opinion) best results were obtained when we reduced the estimated velocity at a node by a factor of 2.5. In Fig.~\ref{fig:two_exits2}, it can be seen that the behaviour of the agents is much more realistic than before. In this simulation, agents frequently re-decide on the path to be taken and change from the lower to the upper gap or vice versa if either of those gaps is blocked.
 \begin{figure}
 	\centering
 	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgents_000650.eps}
@@ -408,50 +416,63 @@ In the second simulation, we used the extended shortest path procedure to determ
 	\caption{Snapshots of the time evolution of a simple two-exit model using the shortest path algorithm to determine the exit direction. In this case, agents blocking the way to the exit are taken into account. This enables the agents to redecide on the path taken to the exit depending on the agent density in between. The path of our example agent Don clearly shows this process. At first, Don chooses a path that keeps him in between both exits due to the agents in front of him. Then, as crowding at the lower exit occurs, he decides to go towards the upper exit, but then redecides as the lower exit becomes less crowded again.}
 	\label{fig:two_exits2}
 \end{figure}
+
 \subsubsection{Shortest path exit force with agents and topography taken into account}
+
 In this last simulation, we tested the influence of topography on agent behaviour. For this reason, we introduced a slight topography in our model. The topography is essentially a two-dimensional Gaussian curve, which is given by the equation:
+
 \begin{equation}
 	z(x,y) = A\exp \left(- \frac{\left(x-x_0\right)^2}{2\sigma_x} + \frac{\left(y-y_0\right)^2}{2\sigma_y}\right)
 \end{equation}
-In this simulation, we chose $A = 1 $m, $x_0 = 10$m, $y_0 = 5$m, $\sigma_x = 15$m and $\sigma_y = 6$m.
+
+In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 15$ m and $\sigma_y = 6$ m.
 
 
 \subsection{Evacuation through a road network}
+
 \subsection{Evacuation through a road network with topography and flooding}
+
 \subsection{Evacuation of a beach in the case of a tsunami event}
 
 \section{Summary and Outlook}
 
-Christmas Tree!
 
 \section{References}
 
-- Helbing 2000
 
+\bibliographystyle{plainnat}
+%\bibliography{/Users/fabio/ETH/Vorlesungen/SOCIAL_MODELING/reportTemplate/bib/socialmodelling}
+
+
+\begin{thebibliography}{3}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Graf and Krebs(2010)]{Graf}
+D.~Graf and M.~Krebs.
+\newblock Train boarding platform simulation.
+\newblock Modelling and Simulating Social Systems with MATLAB, ETHZ, 2010.
+
+\bibitem[Helbing et~al.(2000)Helbing, Farkas, and Vicsek]{Helbing2000}
+D.~Helbing, I.~Farkas, and T.~Vicsek.
+\newblock Simulating dynamical features of escape panic.
+\newblock \emph{Nature}, 407\penalty0 (6803):\penalty0 487--490, 2000.
+
+\bibitem[Kneidl and Borrmann(2011)]{Kneidl}
+A.~Kneidl and A.~Borrmann.
+\newblock How do pedestrians find their way? results of an experimental study
+  with students compared to simulation results.
+\newblock In \emph{Conference on Emergency Evacuation}. Warsaw, Poland, 2011.
+
+\end{thebibliography}
 
 
 
 \end{document}  
 
 
-%\begin{figure}
-%	\begin{center}
-%	\includegraphics[width=16cm]{figures/Model1_direct_1_000000.eps}
-%	\caption{Simple simulation of an evacuation bottleneck. Agents (yellow) try to exit a room surrounded by repulsive walls (red) with an 1 m-wide door towards an attractive exit (green).}
-%	\label{fig:simple0}
-%	\end{center}
-%\end{figure}
-%
-%\begin{figure}
-%	\begin{center}
-%	\includegraphics[width=1.0\textwidth]
-%	{figures/Model1_direct_1_000000.eps}
-%	\qquad
-%	\includegraphics[width=1.0\textwidth]
-%	{figures/Model1_direct_1_000000.eps}
-%	\caption{caption}
-%	\label{fig:simple1}
-%	\end{center}
-%\end{figure}
 
  
