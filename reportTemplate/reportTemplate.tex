@@ -227,6 +227,10 @@ To account for the impact of psychological and physical forces on pedestrian wal
 where $v_i^0\mathbf{e}_i$ is the desired velocity in the desired direction.
 
 
+
+
+
+
 \section{Implementation}\label{sec:implementation}
 
 This section is meant to both give an overview of the methods used in this code as well as to provide a documentation of the code. Therefore, some details are mentioned here that might not be crucial for any code that simulates pedestrian dynamics, but are needed in our implementation. 
@@ -270,11 +274,16 @@ In this section, we show two approaches to tackle the problem of the psychologic
 
 The flooding is similarly implemented as the repulsive walls described in Section~\ref{sec:WallsImplementation}. The top of the water level is repulsive by a magnitude lower value than those of the walls. Agents are allowed to cross this first waterfront, if they overcome this repulsive force. In the shallow water, the desired velocity ($v_0$) is reduced to half the value than on land. Agents might go deeper and deeper into the water until there is a second waterfront at a certain water depth level (0.2 m depth). This is also a repulsive front by the same value as walls this time. If agents still cross this front, they are subsequently removed from the model and sadly declared as drowned.
 
+\subsection{Computational efficiency of the code}
+
+The code is highly vectorized and pushed towards high efficiency in order to be able to model a very large area including many agents in an acceptable amount of time. Although it is not parallelized, it solves computationally expensive calculations in a very short time. Displaying data is done separately after computation.
+
+
 \section{Simulation Results and Discussion}
 
 \subsection{Model setups}
 
-In this study, we use a set of different model setups and several different model parameters. The model setups are i) room with one door, ii) a complicated path, iii) room with one door including topography, iv) a room with two doors and finally v) large beach setup with several buildings and topography where finally a flood is included. The different cases are listed together with their model parameters in Table~\ref{tab:Parameters}.
+In this study, we use a set of different model setups and several different model parameters. The model setups are i) room with one door, ii) a complicated path, iii) room with one door including topography, iv) a room with two doors and finally v) large beach setup with several buildings and topography where finally a flood is included. The different cases are listed together with their model parameters in Table~\ref{tab:Parameters}. Resolution test indicate the spatial resolution of $0.1$ m is sufficient and used throughout all the model setups. A constant time step of $0.01$ s turned out to be sufficiently small and is used in all the models.
 
 %  \newpage  %TABLE parameters
 
