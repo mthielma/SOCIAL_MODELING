@@ -8,7 +8,7 @@ clear;
 
 %-- input -----------------------------------------
 
-filename            = 'Model1_direct_2b';
+filename            = 'beach_1';
 
 filestem            = ['../+output/',filename,'/'];
 
@@ -80,6 +80,7 @@ nrFiles     = nrTimesteps/outputStep;   %max. number of output files (if it did 
 %loop output files
 i_output = 0; pathDon = zeros(nrFiles,2)*NaN;
 for i=0:outputStep:nrTimesteps
+% for i=3000:3000
     time = i*dt; %time in [s]
     
     num_string = num2str(100000+i);
@@ -103,8 +104,12 @@ for i=0:outputStep:nrTimesteps
 %                 h = contourf(X_Grid,Y_Grid,Z_Grid,40,'EdgeColor','none');
 %                 colorbar
 %                 colormap('gray')
-                h = contour(X_Grid,Y_Grid,Z_Grid); colormap('bone')
+
                 PlotFlood(Parameter,X_Grid,Y_Grid,Z_Grid,time)
+                hold on
+                [c,h] = contour(X_Grid,Y_Grid,Z_Grid,'LineColor',[0.4 0.4 0.4],'LineStyle','--');
+                hold on
+                
             end
             PlotBuildings(BuildingList,ColorBuildings,'');
             PlotBuildings(ExitList,ColorExits,MarkingExits);
