@@ -201,21 +201,29 @@ In a more sophisticated version of the code, we make use of a fast marching algo
 In model cases were we use a rising flood, another repulsive force is added. The flood will rise with time and adjust laterally depending on the local topography. Agents will try to prevent going into water, but are able to walk through it until a certain depth level.
 
 \subsection{Pedestrian walking speed}
+
 The free (unobstructed by obstacles) walking speed of pedestrians is determined by several factors:
+
 \begin{enumerate}
 \item the conditions of the ground
 \item the situation of an agent (e.g. panic)
 \item the forces acting on an agent
 \end{enumerate}
+
 In our model, we assume the conditions of the ground to be the same everywhere, meaning that there is no effect of ground roughness on the velocity of the agent. However, as we intend to include topography in our model, we introduce a walking speed function that is dependent on the slope $S$ of the ground (TOBLER):
+
 \begin{equation}
 	v(S) = A_{S} \exp{\left( -B_S | S + S_{crit} |  \right)}\mbox{,}
 \end{equation}
-where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocites.\\
+
+where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocities.
+
 To account for the impact of psychological and physical forces on pedestrian walking speed, \citet{Helbing2000} used the following equation for the change of agent velocity in time:
+
 \begin{equation}
 	\frac{d \mathbf{v}_i}{dt} = \frac{v_i^0\mathbf{e}_i - v_i(t)}{\tau_i} - \sum_{j(\ne i)}f_{iW} - \sum_{j(\ne i)}f_{iA}\mbox{,}
 \end{equation}
+
 where $v_i^0\mathbf{e}_i$ is the desired velocity in the desired direction.
 
 
@@ -351,13 +359,13 @@ The shortest path formulation as described in Section~\ref{sec:Exits1} can impro
 \begin{figure}
 	\begin{center}
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model2_direct_1_000000.eps}
+	{figures/Model2_direct_1b_000000.eps}
 	\qquad
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model2_direct_1_000270.eps}
+	{figures/Model2_direct_1b_000350.eps}
 	\qquad
 	\includegraphics[width=0.7\textwidth]
-	{figures/Model2_direct_1_001800.eps}
+	{figures/Model2_direct_1b_001800.eps}
 	\caption{Model with direct exit force formulation for a pedestrian flow around complicated architecture. (a) Initial setup, (b) agents arriving at the barrier walls and accumulating and (c) agents getting stuck and not able to move around an obstacle at the end of the simulation.}
 	\label{fig:simple3}
 	\end{center}
