@@ -98,10 +98,44 @@ No one wrote the individual contributions.
 \section{Description of the Model}
 
 \subsection{Agent}
+
+The agents in our model represent ordinary pedestrians that are panically trying to derive an exit. Number, size, mass and max. velocity of each agent can be changed for different model setups. The agents are subject to different forces that are social and physical forces from other agents and from surrounding walls.
+
 \subsubsection{Psychological forces}
+
+Except for special circumstances, people do not like to move too close to each other. This can be represented by a repulsive force of a pedestrian to another. The psychologic social forces between two agents that are not touching each other can thus be described as
+
+\begin{equation}
+	{{\bf f}_{ijS}} = \left\{ {{A_i}\exp \left[ {\frac{{\left( {{r_{ij}} - {d_{ij}}} \right)}}{{{B_i}}}} \right] } \right\}{{\bf n}_{ij}} 
+		\label{eq:fijS}
+\end{equation}
+
+where $A_i$ and $B_i$ are constants, ${\bf n}_{ij} = ({\bf r}_i - {\bf r}_j)/d_{ij}$ is the normalized vector pointing from pedestrian $j$ to pedestrian $i$, $d_{ij}$ is the distance between the pedestrians center of mass and $r_i$ is the size (i.e. radius) of the pedestrian (Helbing et al., 2000). 
 
 \subsubsection{Physical forces}
 
+In the case of physical contact between two pedestrians, there is two forces which one has to consider for a model of the present study. There is the normal force acting between the two colliding bodies, preventing them to merge, which can be formulated as
+
+\begin{equation}
+	{{\bf f}_{ijPn}} = {kg\left( {{r_{ij}} - {d_{ij}}} \right)} {{\bf n}_{ij}}
+		\label{eq:fijPn}
+\end{equation}
+
+and a tangential force between two sliding agents given by
+
+\begin{equation}
+	{{\bf f}_{ijPt}} = \kappa g\left( {{r_{ij}} - {d_{ij}}} \right)\Delta v_{ji}^t{{\bf t}_{ij}} .
+		\label{eq:fijPt}
+\end{equation}
+
+Here, the function $g$ is zero if the pedestrians do not touch each other, $k$ and $\kappa$ are large constants and $\Delta v_{ji}^t = ({\bf v}_j - {\bf v}_i)\cdot {\bf t}_{ij}$ is the tangential velocity difference (Helbing et al., 2000).
+
+When the different forces are added together, we obtain the total social force applied on an agent
+
+\begin{equation}
+	{{\bf f}_{ij}} = {{\bf f}_{ijS}} + {{\bf f}_{ijPn}} + {{\bf f}_{ijPt}} .
+		\label{eq:fij}
+\end{equation}
 
 \subsection{Walls}
 
@@ -112,7 +146,7 @@ For a pedestrian panic to occur, walls are needed. They bound a certain amount o
 The psychological repulsive force defined here for the walls/buildings can be written in mathematical terms as
 
 \begin{equation}
-	{f_{iWS}} = \left\{ {{A_i}\exp \left[ {\frac{{\left( {{r_i} - {d_{iW}}} \right)}}{{{B_i}}}} \right]} \right\}{n_{iW}} ,
+	{{\bf f}_{iWS}} = \left\{ {{A_i}\exp \left[ {\frac{{\left( {{r_i} - {d_{iW}}} \right)}}{{{B_i}}}} \right]} \right\}{{\bf n}_{iW}} ,
 	\label{eq:fiWS}
 \end{equation}
 
@@ -122,14 +156,14 @@ where $A_i$ and $B_i$ are constants, $n_{iW}$ is the normalized vector pointing 
 As in the case of physical inter-agent forces, an agent is subject to physical forces from the walls if it comes too close to a wall. The physical wall forces can be divided into a normal force $f_{iWPn}$ and a tangential force $f_{iWPt}$ acting from the wall and are written as:
 
 \begin{equation}
-	{f_{iWPn}} = \left\{ {kg\left( {{r_i} - {d_{iW}}} \right)} \right\}{n_{iW}}
+	{{\bf f}_{iWPn}} = \left\{ {kg\left( {{r_i} - {d_{iW}}} \right)} \right\}{{\bf n}_{iW}}
 	\label{eq:fiWPn}
 \end{equation}
 
 and
 
 \begin{equation}
-	{f_{iWPt}} = \left\{ {\kappa g\left( {{r_i} - {d_{iW}}} \right)\left( {{v_i} \cdot {t_{iW}}} \right)} \right\}{t_{iW}} ,
+	{{\bf f}_{iWPt}} = \left\{ {\kappa g\left( {{r_i} - {d_{iW}}} \right)\left( {{{\bf v}_i} \cdot {{\bf t}_{iW}}} \right)} \right\}{{\bf t}_{iW}} ,
 	\label{eq:fiWPt}
 \end{equation}
 
@@ -138,7 +172,7 @@ respectively. Here, the function $g$ is zero if the pedestrian does not touch th
 The total repulsive force from the architecture $f_{iW}$ can then be written as
 
 \begin{equation}
-	{f_{iW}} = {f_{iWS}} + {f_{iWPn}} - {f_{iWPt}} .
+	{{\bf f}_{iW}} = {{\bf f}_{iWS}} + {{\bf f}_{iWPn}} - {{\bf f}_{iWPt}} .
 	\label{eq:fiW}
 \end{equation}
 
@@ -189,11 +223,15 @@ This section is meant to both give an overview of the methods used in this code 
 
 \subsection{Initialization of Buildings and Agents}
 
-Buildings and Agents are initialized in the parameter file.
+Buildings and Agents (and other input parameters) are initialized in using a simple parameter file. 
 
 \subsection{Agents}
 
+Agents are initially distributed randomly in a defined area. Both number of agents and the placing area can be set initially.
+
 \subsubsection{Agent forces}
+
+
 
 \subsection{Architecture}
 
@@ -205,7 +243,7 @@ The architecture in our models consist of repulsive walls and attractive exits.
 Repulsive walls are added using a list of minimum and maximum values in x- and y-direction. Therefore only square buildings are implemented in the current version of the code. The single buildings are then put together into a building map, where we calculate the distance between every free point in the model domain (not covered by a building) and the nearest wall. From this distance we calculate the psychologic wall force on all agents and, if they touch the wall, the physical wall forces as well. Eq.~\eqref{eq:fiWS} for the psychologic wall force can be rewritten as
 
 \begin{equation}
-	{f_{iWS}} = \left\{ {{A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} } \right\}{n_{iW}}
+	{f_{iWS}} = \left\{ {{A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} } \right\}{{\bf n}_{iW}}
 	\label{eq:fiWS2}
 \end{equation}
 
