@@ -32,8 +32,8 @@ if sum(sum(FloodMap))~=0
      % plot flood
      hold on
      contourf(X_Grid,Y_Grid,FloodActualHeightMap,[0 dangerousDepth]);
-%      colorbar('jet') 
-     set(gca, 'CLim', [0, 10*dangerousDepth]);
+     colormap(flipud(jet)) 
+     set(gca, 'CLim', [-3*dangerousDepth, dangerousDepth]);
      
      hold on
 end
