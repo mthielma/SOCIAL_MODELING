@@ -96,15 +96,14 @@
 No one wrote the individual contributions.
 
 \section{Introduction and Motivations}
-
+Locations close to water bodies (rivers, lakes) have always been naturally preferred for human settlements, since they provide i) water, ii) food through the animals inhabiting the water body and iii) transportation ways. In earlier times the settlements were usually located at a certain distance from the water body to prevent the settlement to be seriously affected by flooding. With the increase of inhabitants, those settlements grew closer to the water body, thus making it more vulnerable to flooding events.When a part of a city has to be evacuated because of a flooding event, it is important to have information about the social behavior of the inhabitants. Based on this information, more effective evacuation procedures can be developed that might be crucial in reducing possible fatalities.
+I this project, we developed a code to simulate such events. The code is based on existing findings about the behaviour of pedestrians in crowds and was extended (inspired by the work of REFERENCE) to take different additional effects in to account. In this study, we tested the effects of several additions in a set of small and simple models and then applied the code to a larger domain, where we investigated the evacuation of a beach which is about to be flooded. 
 \section{Description of the Model}
-
-\subsection{Agent}
-
-The agents in our model represent ordinary pedestrians that are panically trying to derive an exit. Number, size, mass and max. velocity of each agent can be changed for different model setups. The agents are subject to different forces that are social and physical forces from other agents and from surrounding walls.
+In the following, we describe the theory that provides the basis for our model. The model itself is a continuous model, meaning that each pedestrian is modeled as a separate agent. The agents in our model are panically trying to derive an exit. Number, size, mass and max. velocity of each agent can be changed for different model setups. The movement of each agent is driven by a set of forces which will be described in the following. In the following, the different forces are described in relation to their origin. 
+\subsection{Agent Forces}
+Agent forces can be divided into psychological and physical forces. Psychological forces are meant to mimic the will of each agent, whereas physical forces arise when agents actually touch each other.
 
 \subsubsection{Psychological forces}
-
 Except for special circumstances, people do not like to move too close to each other. This can be represented by a repulsive force of a pedestrian to another. The psychologic social forces between two agents that are not touching each other can thus be described as
 
 \begin{equation}
@@ -139,7 +138,7 @@ When the different forces are added together, we obtain the total social force a
 		\label{eq:fij}
 \end{equation}
 
-\subsection{Walls}
+\subsection{Wall forces}
 
 For a pedestrian panic to occur, walls are needed. They bound a certain amount of space, which might become small when filled with people. They further produce bottlenecks at positions where a room suddenly gets smaller or where there is an exit at which pedestrians are accumulated. From nature we know two main behaviors regarding walls: People usually don't like to walk too close to a wall and people can not walk through a wall. Therefore there are two forces to consider, when modeling such a feature, psychologic and physical forces, respectively.
 
@@ -184,20 +183,13 @@ The total repulsive force from the architecture $f_{iW}$ can then be written as
 \label{sec:Exits1}
 
 In our model, the sole attractive force is the exit force. As for the social forces, it is rather a psychological force representing the will of each agent to reach the exit. In this work, we chose the value of the exit force to be proportional to the sum of the other psychological forces (in our code, one can choose a proportionality constant to adjust the exit force). To determine the direction of the exit force, we used two different approaches: i) the agent is drawn directly towards the exit, regardless of any obstacles in between him and an exit, and ii) the agent decides on its walking direction based on the estimate of the time it needs to reach the exit (e.g. \citet{Graf,Kneidl}).
-
-While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect at all the decision process of a human agent, since obstacles between the agent and the exit are always taken into account. Second, 
+While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect at all the decision processes of a human agent, since obstacles between the agent and the exit are always taken into account. Second, this implementation might result in agents being trapped in corners, which is not realistic. For the second implementation, we used a shortest path algorithm to compute the estimated time to the exit.
 
 \subsubsection{Shortest path formulation}
-
-Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. One of the earliest solutions to this problem was presented by Dykstra (reference). Shebian (right name? reference?) presented a fast and efficient method to solve a certain class of shortest path problems, which  is called the Fast marching method. It is a special case of level set methods and solve the Eikonal equation (equation?). In geophysics, the Eikonal equation is used to describe the 
-
-This equation describes the We can essentially apply this algorithm to our problem
-
-In a more sophisticated version of the code, we make use of a fast marching algorithm that takes into account walls as being regions with a low velocity. We compute the shortest path
-
+Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. One of the earliest solutions to this problem was presented by Dykstra (reference). Shebian (right name? reference?) presented a fast and efficient method to solve a certain class of shortest path problems, which is called the Fast marching method. It is a special case of level set methods and solves the Eikonal equation. 
+In geophysics, the Eikonal equation is used to describe the propagation of a wavefront through a medium. The problem of pedestrians finding the shortest path to an exit is a very similar one. 
 
 \subsection{Flood}
-
 In model cases were we use a rising flood, another repulsive force is added. The flood will rise with time and adjust laterally depending on the local topography. Agents will try to prevent going into water, but are able to walk through it until a certain depth level.
 
 \subsection{Pedestrian walking speed}
@@ -214,6 +206,7 @@ In our model, we assume the conditions of the ground to be the same everywhere, 
 
 \begin{equation}
 	v(S) = A_{S} \exp{\left( -B_S | S + S_{crit} |  \right)}\mbox{,}
+	\label{eq:walking_speed}
 \end{equation}
 
 where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocities.
@@ -222,6 +215,7 @@ To account for the impact of psychological and physical forces on pedestrian wal
 
 \begin{equation}
 	\frac{d \mathbf{v}_i}{dt} = \frac{v_i^0\mathbf{e}_i - v_i(t)}{\tau_i} - \sum_{j(\ne i)}f_{iW} - \sum_{j(\ne i)}f_{iA}\mbox{,}
+	\label{eq:vel}
 \end{equation}
 
 where $v_i^0\mathbf{e}_i$ is the desired velocity in the desired direction.
@@ -261,23 +255,28 @@ Repulsive walls are added using a list of minimum and maximum values in x- and y
 	\label{eq:fiWS2}
 \end{equation}
 
-which allows for calculating the first part already before starting the time loop. The second part is then added later on.
+which allows for calculating the first part already before starting the time loop. The second part is then added later on in the agent loop.
 
 \subsubsection{Exit forces}
-
-In this section, we show two approaches to tackle the problem of the psychological exit force. Using small and rather simple models, we show the differences that arise from the different implementations. We then choose one of
+As mentioned above, we tested several different methodes to mimic the desire of an agent to reach the exit. All methods use a shortest path algorithm which was downloaded from the Matlab File Exchange. We then implemented 5 different ways to compute the desired direction to the exit of an agent:
+\begin{description}
+\item{\textbf{Direct exit direction: }}In this case, all nodes in our domain are assigned a constant velocity $v_0$, which is equal to the unperturbed maximal velocity of the agents. Using the fast marching algorithm, we then obtain the estimated time it takes to go from each node to the exit. Taking the gradient of this field in both x- and y-direction and normalizing them yields the desired direction of the agents.
+\item{\textbf{Shortest path with buildings taken into account: }} In this case, we set the velocity at the nodes where a building is located to a very small value ($10^{-8}$). Setting this value to 0 results in numerical errors, since the travel time would then become infinite at those nodes. This approach also results in an exit direction that is perpendicular to the building walls at the nodes that are part of a building wall. This is actually desirable, as it adds an additional "desire" to the agent to stay away from a wall.
+\item{\textbf{Shortest path with buildings and other agents taken into account: }} The extension of this
+\item{\textbf{Shortest path with buildings,other agents and topography taken into account: }}
+\item{\textbf{Shortest path with buildings,other agents,topography and flood taken into account: }}
+\end{description}
 
 \subsection{Walking speed}
-
+The implementation of the slope-dependent walking speed is relatively straight-forward. We assumed that the slope-dependency of the velocity only applies to the maximum velocity of an agent, therefore we only reduced its maximum velocity. We are aware that this is not entirely true, but as the agents usually reach their maximum velocity very fast, we assumed that our assumption is to first order accurate. To compute the slope of the terrain, we had to project the direction of the agent onto the gradient field in x- and y-direction (which was interpolated to the agent using linear interpolation). Using eq.\eqref{eq:walking_speed}, we then computed the maximum velocity and limited the velocity of the agent resulting from eq.\eqref{eq:vel} to this velocity.
 
 \subsection{Flooding}
 
 The flooding is similarly implemented as the repulsive walls described in Section~\ref{sec:WallsImplementation}. The top of the water level is repulsive by a magnitude lower value than those of the walls. Agents are allowed to cross this first waterfront, if they overcome this repulsive force. In the shallow water, the desired velocity ($v_0$) is reduced to half the value than on land. Agents might go deeper and deeper into the water until there is a second waterfront at a certain water depth level (0.2 m depth). This is also a repulsive front by the same value as walls this time. If agents still cross this front, they are subsequently removed from the model and sadly declared as drowned.
 
 \subsection{Computational efficiency of the code}
-
-The code is highly vectorized and pushed towards high efficiency in order to be able to model a very large area including many agents in an acceptable amount of time. Although it is not parallelized, it solves computationally expensive calculations in a very short time. Displaying data is done separately after computation.
-
+The code is highly vectorized and pushed towards high efficiency in order to be able to model a very large area including many agents in an acceptable amount of time. Although it is not parallelized, it solves computationally expensive calculations in a relatively short time. We assume that inter-agent forces are only relevant in a certain range around the agent. This assumption is justified by the fact that pedestrians only have a limited range of sight in a crowd and that they tend to focus their attention on other pedestrians nearby. We therefore assume that only psychological forces from agents in a box with five meters edge length are relevant. To determine the number of agents inside that box, we make use of a very efficient kdtree implementation found on the Matlab File Exchange. The kdtree algorithm is an algorithm that allows for fast and efficient range searches, which is why we make use of it here.
+Data visualization is done separately after computation. It actually takes more time than the computation itself. Since we do not need to visualize every timestep, we did not have a significant problem with this issue.
 
 \section{Simulation Results and Discussion}
 
