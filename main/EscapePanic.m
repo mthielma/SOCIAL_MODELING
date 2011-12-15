@@ -517,8 +517,8 @@ while (time <= maxtime && size(AGENT,2)>0)
         figure(1),clf
         set(cla,'FontSize',Plotting.FontSize)
         hold on
-        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat, colorbar
-        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
+%        pcolor(X_Grid,Y_Grid,Z_Grid),shading flat, colorbar
+%        quiver(X_Grid,Y_Grid,Dgradx,Dgrady,'b')
         contour(X_Grid,Y_Grid,double(FloodMap),[1 1],'b-'); %colorbar; colormap('winter');
         contourf(X_Grid,Y_Grid,double(FloodMap_deep),[1 1],'r-'); %colorbar; colormap('bone');
         % plot buildings
