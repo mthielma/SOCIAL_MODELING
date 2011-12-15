@@ -1,3 +1,5 @@
+% function [XTopo,YTopo,ZTopo] = CreateTopo(Parameter,BeachWidth,BeachHeight,MaxElevation)
+
 % Create topography
 
 [XTopo,YTopo] = meshgrid(Parameter.xmin:Parameter.xmax,Parameter.ymin:Parameter.ymax);
@@ -28,6 +30,8 @@ z2 = 0*y2;
 x = [x_bt(:);x1';x2'];
 y = [y_bt(:);y1';y2'];
 z = [z_bt(:);z1';z2'];
+
+z = max(-0.4,z);
 
 ZTopo = 0*XTopo;
 ZTopo(:) = griddata(x,y,z,XTopo,YTopo);

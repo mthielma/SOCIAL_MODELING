@@ -1,5 +1,7 @@
 function PlotTopography3D(X_Grid,Y_Grid,Z_Grid)
 
+display('...plotting topography')
+
     hs2=surfl(X_Grid,Y_Grid,Z_Grid); set(hs2,'EdgeColor','none');
     colormap('gray')
     

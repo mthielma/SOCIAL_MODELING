@@ -160,7 +160,7 @@ y_Buildings = Y_Grid(BuildingMap);
 %----------------------------------------------------
 % compute forces from buildings (static)
 %----------------------------------------------------
-[ArchForce,~,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
+[ArchForce,ArchD,ArchDirX,ArchDirY] = ArchitectureForceV2(X_Grid,Y_Grid,BuildingMap,Parameter,resolution);
 
 
 %----------------------------------------------------
@@ -461,7 +461,7 @@ while (time <= maxtime && size(AGENT,2)>0)
     %----------------------------------------------------
     % check if agents are inside walls and move them out
     %----------------------------------------------------
-%     AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
+    AGENT = CheckAgentsInBuildings(AGENT,BuildingList,X_Grid,Y_Grid,ArchDirX,ArchDirY,ArchD);
     
     %----------------------------------------------------
     % remove successfull/dead agents

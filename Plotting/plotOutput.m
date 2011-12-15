@@ -8,7 +8,7 @@ clear;
 
 %-- input -----------------------------------------
 
-filename            = 'beach_1';
+filename            = 'BeachEvacuationOneExitStreetWidth1_Flood0_1_Exit3';
 
 filestem            = ['../+output/',filename,'/'];
 
@@ -21,7 +21,7 @@ AgentsColor         = [0.75 0.75 0];           % agents color: 'y' or [0.75 0.75
 
 ColorBuildings      = [0.2 0.2 0.2];
 MarkingBuildings    = '';
-buildingHeight      = 3.5;              %times agent height e.g. 1.5
+buildingHeight      = 27;  %3.5*2;              %times agent height e.g. 1.5
 ColorExits          = [0.0 0.4 0.0];
 MarkingExits        = 'EXIT';
 
@@ -80,7 +80,7 @@ nrFiles     = nrTimesteps/outputStep;   %max. number of output files (if it did 
 %loop output files
 i_output = 0; pathDon = zeros(nrFiles,2)*NaN;
 for i=0:outputStep:nrTimesteps
-% for i=3000:3000
+% for i=500:500
     time = i*dt; %time in [s]
     
     num_string = num2str(100000+i);
@@ -162,6 +162,10 @@ for i=0:outputStep:nrTimesteps
                 % set viewpoint
                 view([-82 14])
             end
+            
+            % set viewpoint
+%             view([-16 42])
+            
             axis equal
             xlabel('x [m]'); ylabel('y [m]'); zlabel('z [m]')
         else
