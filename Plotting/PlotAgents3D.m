@@ -1,5 +1,7 @@
 function PlotAgents3D(Parameter,Plotting,AGENT,Z_Grid)
 
+display('...plotting agents')
+
 xmax = Parameter.xmax;
 xmin = Parameter.xmin;
 ymax = Parameter.ymax;

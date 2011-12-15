@@ -1,5 +1,7 @@
 function PlotFlood3D(Parameter,X_Grid,Y_Grid,Z_Grid,time)
 
+display('...plotting flood')
+
 ColorFlood_shallow  = [0.0 0.6 1.0];
 ColorFlood_deep     = [0.0 0.2 0.8];
 

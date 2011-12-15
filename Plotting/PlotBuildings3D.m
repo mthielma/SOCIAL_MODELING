@@ -1,5 +1,7 @@
 function PlotBuildings3D(Parameter,BuildingList,ColorBuildings,Marking)
 
+display('...plotting buildings')
+
 buildingHeight  = Parameter.buildingHeight;
 resolution      = Parameter.resolution;
 
@@ -58,7 +60,7 @@ data3d(:,:,4) = zeros(size(data));
 % z3d(:,:,2) = 1;
 
 isovalue = 0.9;
-
+hold on
 [f,v] = isosurface(x3d,y3d,z3d,data3d,isovalue);
 p = patch('Faces',f,'Vertices',v);
 
