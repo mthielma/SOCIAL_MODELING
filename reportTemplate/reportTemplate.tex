@@ -3,7 +3,7 @@
 \geometry{letterpaper}                   
 
 \usepackage{natbib}
-
+\usepackage{standalone}
 %\usepackage[latin1]{inputenc}
 %\usepackage[english]{babel}
 %\usepackage[T1]{fontenc} 
@@ -17,6 +17,12 @@
 \usepackage{natbib}
 \usepackage{amssymb, amsmath}
 \DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\usepackage{color}
+\usepackage{listings}
+\setlength{\parindent}{0pt}
+\sloppy
+
 
 %\title{Title}
 %\author{Name 1, Name 2}
@@ -96,7 +102,8 @@
 No one wrote the individual contributions.
 
 \section{Introduction and Motivations}
-Locations close to water bodies (rivers, lakes) have always been naturally preferred for human settlements, since they provide i) water, ii) food through the animals inhabiting the water body and iii) transportation ways. In earlier times the settlements were usually located at a certain distance from the water body to prevent the settlement to be seriously affected by flooding. With the increase of inhabitants, those settlements grew closer to the water body, thus making it more vulnerable to flooding events.When a part of a city has to be evacuated because of a flooding event, it is important to have information about the social behavior of the inhabitants. Based on this information, more effective evacuation procedures can be developed that might be crucial in reducing possible fatalities.
+Locations close to water bodies (rivers, lakes) have always been naturally preferred for human settlements, since they provide i) water, ii) food through the animals inhabiting the water body and iii) transportation ways. In earlier times the settlements were usually located at a certain distance from the water body to prevent the settlement to be seriously affected by flooding. With the increase of inhabitants, those settlements grew closer to the water body, thus making it more vulnerable to flooding events.
+When a part of a city has to be evacuated because of a flooding event, it is important to have information about the social behavior of the inhabitants. Based on this information, more effective evacuation procedures can be developed that might be crucial in reducing possible fatalities.
 I this project, we developed a code to simulate such events. The code is based on existing findings about the behaviour of pedestrians in crowds and was extended (inspired by the work of REFERENCE) to take different additional effects in to account. In this study, we tested the effects of several additions in a set of small and simple models and then applied the code to a larger domain, where we investigated the evacuation of a beach which is about to be flooded. 
 \section{Description of the Model}
 In the following, we describe the theory that provides the basis for our model. The model itself is a continuous model, meaning that each pedestrian is modeled as a separate agent. The agents in our model are panically trying to derive an exit. Number, size, mass and max. velocity of each agent can be changed for different model setups. The movement of each agent is driven by a set of forces which will be described in the following. In the following, the different forces are described in relation to their origin. 
@@ -485,7 +492,49 @@ A.~Kneidl and A.~Borrmann.
 
 \end{thebibliography}
 
+\begin{appendix}
+\section{Code structure and source code}
+In fig ???., the basic structure of our code is shown. We split the code description in several different parts to provide a bit more readability. In principle, we tried to put most of the computations in separate functions. The input data and parameters necessary to run the simulation are all set in a separate input file, which then calls the actual simulation function. Rather than plotting the results "on the fly", the necessary data is saved regularly. visualization is done in an postprocessing step.
+\subsection{Input file}
+In our input file, the user can set all the parameters that are needed
+\subsection{Simulation function}
+The simulation function that is called by the input file runs the entire simulation, saves the output and plots intermediate results if desired. Before entering the time loop, a number of actions is performed (see fig.\ref{fig:pre-loop}). The computation of all forces that do not change throughout the simulation is done here. After the pre-loop stage, we enter the time loop. In here, we perform a number of computations for all agents, before entering an agent loop, in which we compute individual and agent-specific parameters (see fig.\ref{fig:EscapePanic}). After completing the time loop, some parameters for later analysis are save and the function exits. 
+\begin{figure}
+\centering
+\includegraphics[height=0.5\textheight]{figures/PreLoopComputations}
+\caption{Flow diagram of the pre-loop computations in EscapePanic.m. Actions that are drawn in parallel belong to an if-loop.}
+\label{fig:pre-loop}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textheight]{figures/EscapePanic}
+\caption{Flow diagram of the main simulation function EscapePanic.m. Actions that are drawn in parallel belong to an if-loop.}
+\label{fig:EscapePanic}
+\end{figure}
 
+Source code files are listed in the order of their appearance.
+\begin{landscape}
+\include{SourceCode/EscapePanic}
+\include{SourceCode/InitializeAgents}
+\include{SourceCode/ArchitectureForceV2}
+\include{SourceCode/ComputeShortestPathDirect}
+\include{SourceCode/ComputeShortestPathGlobal}
+\include{SourceCode/ComputeShortestPathGlobalTopo}
+\include{SourceCode/ComputeSocialForcesStatic_flood}
+\include{SourceCode/ComputeSocialForcesStatic}
+\include{SourceCode/ComputeShortestPathGlobalWithAgents}
+\include{SourceCode/ComputeShortestPathGlobalWithAgentsFlood}
+\include{SourceCode/GetSurroundingAgents}
+\include{SourceCode/ComputeDistanceToAgents}
+\include{SourceCode/ComputeSocialForcesDynamic}
+\include{SourceCode/ComputePhysicalForceAgents}
+\include{SourceCode/ComputePhysicalForceWalls}
+\include{SourceCode/ComputeExitForce}
+\include{SourceCode/MoveAgents}
+\include{SourceCode/CheckAgentsInBuildings}
+\end{landscape}
+
+\end{appendix}
 
 \end{document}  
 
