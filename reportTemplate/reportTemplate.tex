@@ -257,7 +257,7 @@ The architecture in our models consist of repulsive walls and attractive exits.
 Repulsive walls are added using a list of minimum and maximum values in x- and y-direction. Therefore only square buildings are implemented in the current version of the code. The single buildings are then put together into a building map, where we calculate the distance between every free point in the model domain (not covered by a building) and the nearest wall. From this distance we calculate the psychologic wall force on all agents and, if they touch the wall, the physical wall forces as well. Eq.~\eqref{eq:fiWS} for the psychologic wall force can be rewritten as
 
 \begin{equation}
-	{f_{iWS}} = \left\{ {{A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} } \right\}{{\bf n}_{iW}}
+	{f_{iWS}} = \left\{ { {A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right]} } \right\}{{\bf n}_{iW}} \cdot \left\{ { \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} \right\}{{\bf n}_{iW}}
 	\label{eq:fiWS2}
 \end{equation}
 
