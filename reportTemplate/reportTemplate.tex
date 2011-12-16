@@ -257,7 +257,7 @@ The architecture in our models consist of repulsive walls and attractive exits.
 Repulsive walls are added using a list of minimum and maximum values in x- and y-direction. Therefore only square buildings are implemented in the current version of the code. The single buildings are then put together into a building map, where we calculate the distance between every free point in the model domain (not covered by a building) and the nearest wall. From this distance we calculate the psychologic wall force on all agents and, if they touch the wall, the physical wall forces as well. Eq.~\eqref{eq:fiWS} for the psychologic wall force can be rewritten as
 
 \begin{equation}
-	{f_{iWS}} = \left\{ {{A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} } \right\}{{\bf n}_{iW}}
+	{f_{iWS}} = \left\{ { {A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right]} } \right\}{{\bf n}_{iW}} \cdot \left\{ { \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} \right\}{{\bf n}_{iW}}
 	\label{eq:fiWS2}
 \end{equation}
 
@@ -461,6 +461,8 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 	\label{fig:beach_initial}
 \end{figure}
 
+Fig.~\ref{fig:beach_initial} shows the initial model setup that consists of $55\times110$ m wide box, several beach houses and a anti-flood wall in the back including a relatively wide exit. Topography is included in this setup shown by the topography contours. This is needed for a flood to rise over time until the water reaches the only exit of the model. One thousand people are initially placed at the beach close to the water (or in the water). At the model begin, the flood starts to rise and the people immediately start to panically escape the beach area towards the exit. The beach houses in between hinder them (depending on the model setup) to do so in a sufficiently short time. The goal of this setup is to evaluate the escape possibilities from the beach depending on the width of the streets between each house parcel. Therefore we here present four different models using different parcel spacings.
+
 \begin{figure}
 	\centering
 	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth7_Flood0_1_000700.eps}
@@ -469,6 +471,8 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 	\caption{Wide beach house setup: different time steps show the approach of the flood and the escaping pedestrians.}
 	\label{fig:beach_1}
 \end{figure}
+
+Fig.~\ref{fig:beach_1} shows the model evolution using a wide parcel spacing of 7 m. In this experiment, pedestrians do not have problems in escaping the rising flood: Their escape path is very easy and thus also sufficiently short. People do not accumulate to much, because there are no dramatic bottlenecks.
 
 \begin{figure}
 	\centering
@@ -479,6 +483,8 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 	\label{fig:beach_2}
 \end{figure}
 
+A slightly denser setup is shown in Fig.~\ref{fig:beach_2}. The spacing between two adjacent parcels is here 5 m wide. People again seem to be able to escape well.
+
 \begin{figure}
 	\centering
 	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth3_Flood0_1_000700.eps}
@@ -487,6 +493,8 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 	\caption{Narrow beach house setup: different time steps show the approach of the flood and the escaping pedestrians.}
 	\label{fig:beach_3}
 \end{figure}
+
+Fig.~\ref{fig:beach_3} presents an experiment with a narrow 3 m spacing between each house parcel. The pedestrians coming from the wide beach start to accumulate slightly at the house fronts in order to escape through the narrow paths. This slightly reduces the escape efficiency of this model.
 
 \begin{figure}
 	\centering
@@ -497,6 +505,8 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 	\label{fig:beach_4}
 \end{figure}
 
+Finally, the model setup with the narrowest house spacing (1 m between adjacent parcels) is shown in Fig.~\ref{fig:beach_4}. People now dramatically start to accumulate and the entering of the streets from the beach starts to become a bottleneck. Since the pedestrians are sensitive to the accumulation of a lot of people, they start to re-decide their exit path and try to find other ways out. This leads to a dense flow of people running on the beach parallel to the beach front until they eventually decide to head into a narrow street. This effectively hinders fast evacuation and hence, many people are caught by the rising water.
+
 \begin{figure}
 	\centering
 	\includegraphics[width=1.1\textwidth]{figures/AnalysisMULTI_BeachEvacuationOneExitStreetWidth1_Flood0_1.eps}
@@ -504,9 +514,16 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 	\label{fig:analysis_1}
 \end{figure}
 
+To decide on the amount of buildings per beach area it is useful to look at the number of people that are able to exit the area in a sufficient short amount of time. This is done in Fig.~\ref{fig:analysis_1}, where the cumulative amount of people is plotted that are either able to exit the model domain or that are caught by the flood. Important is here the number of persons that are able to leave in a certain amount of time. The values are marked in Fig.~\ref{fig:analysis_1}, which shows decreasing values from 41 exits per time down to 18 exits per time by increasing the density of the house parcels. The amount of exits per time in the very dense model is so low, that a dramatical amount of people are drowned in the flood.
+
+This leads us to the conclusion that the house parcel spacing needs to be larger than 1 m and can be as narrow as 3 m to guarantee economical prosperity that goes along with tourist savety.
+
 
 \section{Summary and Outlook}
 
+In this work we present an efficient numerical code that solves pedestrian flow and panic behaviour for large scale model setups as well as for a big number of agents. The model accuracy is benchmarked using a set of small model setups. Finally, the code is used give guidance in deciding about the beach house parcel spacing close to a beach. This is done by considering a possible flooding (i.e. rise of water level) and the subsequently upcoming escape panic. Parcel spacings of 3 m are shown to be sufficient, whereas a spacing of only 1 m leads to many dead people caused by the flood.
+
+Still there are numerical issues which might be solved in future. The shortest path formulation that takes the position of the agents into account might be improved. It is not realistic, that one agent knows the positions of all the other pedestrians in the whole model domain, nor will he be able to decide physically correct on the shortest path in reality.
 
 \section{References}
 
