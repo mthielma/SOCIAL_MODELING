@@ -1,0 +1,27 @@
+\lstset{basicstyle=\footnotesize\ttfamily}
+    
+\begin{lstlisting}[breaklines]
+%=======================================
+% This is GetSurroundingAgents.m
+%=======================================
+function [AGENT,x_others,y_others,others_size] = GetSurroundingAgents(iagent,AGENT,tree)
+
+% generate the Boxes per Agent
+Boxes       = zeros(2,2);
+Boxes(1,1)  = [AGENT(iagent).LocX]-[AGENT(iagent).BoxSize]./2;
+Boxes(2,1)  = [AGENT(iagent).LocY]-[AGENT(iagent).BoxSize]./2;
+Boxes(1,2)  = [AGENT(iagent).LocX]+[AGENT(iagent).BoxSize]./2;
+Boxes(2,2)  = [AGENT(iagent).LocY]+[AGENT(iagent).BoxSize]./2;
+
+pointsidx 	= kdtree_range(tree,Boxes);
+
+% remove the agent itself
+pointsidx(pointsidx==[AGENT(iagent).num]) = [];
+AGENT(iagent).SurroundingAgents = pointsidx;
+
+% Compute the distance to the other agents in the box
+surr_agents = AGENT(iagent).SurroundingAgents;
+x_others    = [AGENT(surr_agents).LocX]';
+y_others    = [AGENT(surr_agents).LocY]';
+others_size = [AGENT(surr_agents).Size]';
+\end{lstlisting}

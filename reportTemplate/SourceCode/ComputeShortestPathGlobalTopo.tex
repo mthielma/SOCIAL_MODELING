@@ -1,0 +1,101 @@
+\lstset{basicstyle=\footnotesize\ttfamily}
+    
+\begin{lstlisting}[breaklines]
+%=============================================
+% This is Compute ShortestPathGlobalTopo
+%=============================================
+function [Dgradx_topo,Dgrady_topo,D_topo] = ComputeShortestPathGlobalTopo(FloodMap,FloodMap_deep,BuildingMap,BuildingMap_boundary,ExitMap,X_Grid,Y_Grid,Z_Grid,D_orig,TopoGradientX,TopoGradientY,Parameter)
+
+Debug = false;
+
+tol = 1e-3;
+%==============================================================
+% FIRST GUESS
+%==============================================================
+
+F_topo = ones(size(X_Grid))*Parameter.v0;
+
+% add building boundaries to map
+F(BuildingMap_boundary==1) = Parameter.v0/3;
+% add flood to map
+F(FloodMap) = Parameter.FloodSpeed;
+F(FloodMap_deep) = 1e-8;
+% add buildings to map
+F_topo(BuildingMap) = 1e-8;
+
+% find indices of exits
+[indx,indy] = find(ExitMap == 1);
+
+ExitPoints = [indx';indy'];
+% use fast marching algorithm to compute distance to exit
+[D_topo]= msfm(F_topo, ExitPoints);
+
+% D_topo  = D_topo-D_orig;
+% D_topo = D_topo./max(D_topo(~BuildingMap)); % scale to max (except building values)
+% compute gradient in time -> this gives us the direction
+[Dgradx_orig,Dgrady_orig] = gradient(D_topo,Parameter.resolution,Parameter.resolution);
+
+% scale direction vectors to normal
+Dgradtot = sqrt(Dgradx_orig.^2+Dgrady_orig.^2);
+Dgradx_topo   = -Dgradx_orig./Dgradtot;
+Dgrady_topo   = -Dgrady_orig./Dgradtot;
+
+if Debug
+    figure(99),clf
+    hold on
+    pcolor(X_Grid,Y_Grid,Z_Grid), shading flat
+    quiver(X_Grid,Y_Grid,Dgradx_topo,Dgrady_topo)
+    axis equal, axis tight
+end
+
+
+
+if var(Z_Grid(:))>1e-2;
+    for i = 1:5
+
+        %==============================================================
+        % RECOMPUTE WITH TOPOGRAPHY
+        %==============================================================
+        % recompute the velocity field based on the slope
+        slope = TopoGradientX.*Dgradx_topo+TopoGradientY.*Dgrady_topo;
+
+        % compute maximum velocity due to slope
+        PreFac = (Parameter.v0./exp(-Parameter.slope_f*Parameter.slope_crit));
+        F_topo = PreFac.*exp(-Parameter.slope_f.*abs(slope+Parameter.slope_crit));
+
+        % add buildings to map
+        F_topo(BuildingMap) = 1e-8;
+        F(BuildingMap_boundary==1) = Parameter.v0/3;
+
+        [D_topo]=msfm(F_topo, ExitPoints);
+        alpha = 0.7;
+        D_Topo = ((1-alpha).*D_orig + alpha.*D_topo);
+        [Dgradx_topo,Dgrady_topo] = gradient(D_topo,Parameter.resolution,Parameter.resolution);
+        % scale direction vectors to normal
+        Dgradtot = sqrt(Dgradx_topo.^2+Dgrady_topo.^2);
+        Dgradx_topo   = -Dgradx_topo./Dgradtot;
+        Dgrady_topo   = -Dgrady_topo./Dgradtot;
+
+
+        err_val = norm(D_topo-D_orig);
+        D_orig = D_topo;
+
+        if Debug
+            figure(99),clf
+            hold on
+            pcolor(X_Grid,Y_Grid,Z_Grid), shading flat
+            colormap('gray')
+            startx = zeros(17,1);
+            starty = 1:0.5:9;
+            %contour(X_Grid,Y_Grid,slope)
+            quiver(X_Grid,Y_Grid,Dgradx_topo,Dgrady_topo,'b')
+            h = streamline(X_Grid,Y_Grid,Dgradx_topo,Dgrady_topo,startx,starty);
+            set(h, 'Color', 'red');
+            title([num2str(err_val),num2str(max(slope(:)))])
+            axis equal, axis tight
+            pause
+        end
+    end
+end
+bla = 1;
+\end{lstlisting}
