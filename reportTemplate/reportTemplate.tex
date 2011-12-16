@@ -111,6 +111,7 @@ In the following, we describe the theory that provides the basis for our model. 
 Agent forces can be divided into psychological and physical forces. Psychological forces are meant to mimic the will of each agent, whereas physical forces arise when agents actually touch each other.
 
 \subsubsection{Psychological forces}
+
 Except for special circumstances, people do not like to move too close to each other. This can be represented by a repulsive force of a pedestrian to another. The psychologic social forces between two agents that are not touching each other can thus be described as
 
 \begin{equation}
@@ -197,6 +198,7 @@ Finding the shortest path between two points is a mathematical problem that has 
 In geophysics, the Eikonal equation is used to describe the propagation of a wavefront through a medium. The problem of pedestrians finding the shortest path to an exit is a very similar one. 
 
 \subsection{Flood}
+
 In model cases were we use a rising flood, another repulsive force is added. The flood will rise with time and adjust laterally depending on the local topography. Agents will try to prevent going into water, but are able to walk through it until a certain depth level.
 
 \subsection{Pedestrian walking speed}
@@ -213,7 +215,6 @@ In our model, we assume the conditions of the ground to be the same everywhere, 
 
 \begin{equation}
 	v(S) = A_{S} \exp{\left( -B_S | S + S_{crit} |  \right)}\mbox{,}
-	\label{eq:walking_speed}
 \end{equation}
 
 where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocities.
@@ -222,7 +223,6 @@ To account for the impact of psychological and physical forces on pedestrian wal
 
 \begin{equation}
 	\frac{d \mathbf{v}_i}{dt} = \frac{v_i^0\mathbf{e}_i - v_i(t)}{\tau_i} - \sum_{j(\ne i)}f_{iW} - \sum_{j(\ne i)}f_{iA}\mbox{,}
-	\label{eq:vel}
 \end{equation}
 
 where $v_i^0\mathbf{e}_i$ is the desired velocity in the desired direction.
@@ -282,6 +282,7 @@ The implementation of the slope-dependent walking speed is relatively straight-f
 The flooding is similarly implemented as the repulsive walls described in Section~\ref{sec:WallsImplementation}. The top of the water level is repulsive by a magnitude lower value than those of the walls. Agents are allowed to cross this first waterfront, if they overcome this repulsive force. In the shallow water, the desired velocity ($v_0$) is reduced to half the value than on land. Agents might go deeper and deeper into the water until there is a second waterfront at a certain water depth level (0.2 m depth). This is also a repulsive front by the same value as walls this time. If agents still cross this front, they are subsequently removed from the model and sadly declared as drowned.
 
 \subsection{Computational efficiency of the code}
+
 The code is highly vectorized and pushed towards high efficiency in order to be able to model a very large area including many agents in an acceptable amount of time. Although it is not parallelized, it solves computationally expensive calculations in a relatively short time. We assume that inter-agent forces are only relevant in a certain range around the agent. This assumption is justified by the fact that pedestrians only have a limited range of sight in a crowd and that they tend to focus their attention on other pedestrians nearby. We therefore assume that only psychological forces from agents in a box with five meters edge length are relevant. To determine the number of agents inside that box, we make use of a very efficient kdtree implementation found on the Matlab File Exchange. The kdtree algorithm is an algorithm that allows for fast and efficient range searches, which is why we make use of it here.
 Data visualization is done separately after computation. It actually takes more time than the computation itself. Since we do not need to visualize every timestep, we did not have a significant problem with this issue.
 
@@ -329,15 +330,15 @@ In this study, we use a set of different model setups and several different mode
 
 \begin{figure}
 	\begin{center}
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model1_direct_1b_000000.eps}
 	\qquad
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model1_direct_1b_000550.eps}
 	\qquad
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model1_direct_1b_001800.eps}
-	\caption{Simple starting model for a room evacuation through a bottleneck. (a) Initial setup, (b) agents arriving at the bottleneck and accumulating in behind and (c) agents blocking each other of exiting at the end of the simulation.}
+	\caption{Time evolution of simple starting model for a room evacuation through a bottleneck. Initial setup (top), agents arriving at the bottleneck and accumulating in behind (middle) and agents blocking each other of exiting at the end of the simulation (bottom).}
 	\label{fig:simple1}
 	\end{center}
 \end{figure}
@@ -348,15 +349,15 @@ A first case ({\it Model1\_linear\_1}) is shown in Fig.~\ref{fig:simple1}. The m
 
 \begin{figure}
 	\begin{center}
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model1_direct_2b_000000.eps}
 	\qquad
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model1_direct_2b_000550.eps}
 	\qquad
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model1_direct_2b_001800.eps}
-	\caption{Model including perturbations for a room evacuation through a bottleneck. (a) Initial setup, (b) agents arriving at the bottleneck and accumulating in behind and (c) agents blocking each other of exiting at the end of the simulation.}
+	\caption{Time evolution of model including perturbations for a room evacuation through a bottleneck. Initial setup (top), agents arriving at the bottleneck and accumulating in behind (middle) and agents blocking each other of exiting at the end of the simulation (bottom).}
 	\label{fig:simple2}
 	\end{center}
 \end{figure}
@@ -373,15 +374,15 @@ The shortest path formulation as described in Section~\ref{sec:Exits1} can impro
 
 \begin{figure}
 	\begin{center}
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model2_direct_1b_000000.eps}
 	\qquad
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model2_direct_1b_000350.eps}
 	\qquad
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model2_direct_1b_001800.eps}
-	\caption{Model with direct exit force formulation for a pedestrian flow around complicated architecture. (a) Initial setup, (b) agents arriving at the barrier walls and accumulating and (c) agents getting stuck and not able to move around an obstacle at the end of the simulation.}
+	\caption{Time evolution of model with direct exit force formulation for a pedestrian flow around complicated architecture. Initial setup (top), agents arriving at the barrier walls and accumulating  (middle) and agents getting stuck and not able to move around an obstacle at the end of the simulation (bottom).}
 	\label{fig:simple3}
 	\end{center}
 \end{figure}
@@ -392,15 +393,15 @@ The more elaborated shortest path formulation, on the other hand, can describe s
 
 \begin{figure}
 	\begin{center}
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model2_fastest_1_000000.eps}
 	\qquad
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model2_fastest_1_000270.eps}
 	\qquad
-	\includegraphics[width=0.7\textwidth]
+	\includegraphics[width=0.6\textwidth]
 	{figures/Model2_fastest_1_000410.eps}
-	\caption{Model including shortest path formulation for a pedestrian flow around complicated architecture. (a) Initial setup, (b) agents moving closely around corners and (c) agents able to move around obstacles in the fastest way and arriving the exit at the end of the simulation.}
+	\caption{Time evolution of model including shortest path formulation for a pedestrian flow around complicated architecture. Initial setup (top), agents moving closely around corners (middle) and agents able to move around obstacles in the fastest way and arriving the exit at the end of the simulation (bottom).}
 	\label{fig:simple4}
 	\end{center}
 \end{figure}
@@ -429,6 +430,7 @@ As one can see in Fig.~\ref{fig:two_exits1}, the shortest path algorithm results
 This behaviour is clearly not what one could observe in reality, since at least some agents would prefer the upper gap and reach the exit significantly faster than in our simulation. We therefore had to adjust the shortest path procedure to account for agents blocking the way.
 \subsubsection{Shortest path exit force with agents taken into account}
 In the second simulation, we used the extended shortest path procedure to determine the exit direction of the agents. We tried different combinations of the sensitivity of the agents to other agents blocking the way. The (in our opinion) best results were obtained when we reduced the estimated velocity at a node by a factor of 2.5. In Fig.~\ref{fig:two_exits2}, it can be seen that the behaviour of the agents is much more realistic than before. In this simulation, agents frequently re-decide on the path to be taken and change from the lower to the upper gap or vice versa if either of those gaps is blocked.
+
 \begin{figure}
 	\centering
 	\includegraphics[width=0.6\textwidth]{figures/TwoExitsShortestPathWithAgents_000650.eps}
@@ -457,8 +459,78 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 
 \subsection{Evacuation of a beach in the case of a tsunami event}
 
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth7_Flood0_1_000000.eps}
+		\qquad
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth7_Flood0_1_006300.eps}
+	\caption{Initial condition of the beach evacuation model: 1000 pedestrians (yellow circles) swimming or lying in the sun (top). Final stage of evacuation model: last surviving pedestrian arrives at exit just before the flood reaches him. Black squares indicating beach houses or anti-flood wall, green square is the exit, grey contours indicating topography and blue contour indicates water covered surface for shallow (cyan) and deep water (dark blue), respectively.}
+	\label{fig:beach_initial}
+\end{figure}
+
+Fig.~\ref{fig:beach_initial} shows the initial model setup that consists of $55\times110$ m wide box, several beach houses and a anti-flood wall in the back including a relatively wide exit. Topography is included in this setup shown by the topography contours. This is needed for a flood to rise over time until the water reaches the only exit of the model. One thousand people are initially placed at the beach close to the water (or in the water). At the model begin, the flood starts to rise and the people immediately start to panically escape the beach area towards the exit. The beach houses in between hinder them (depending on the model setup) to do so in a sufficiently short time. The goal of this setup is to evaluate the escape possibilities from the beach depending on the width of the streets between each house parcel. Therefore we here present four different models using different parcel spacings.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth7_Flood0_1_000700.eps}
+	\qquad
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth7_Flood0_1_002000.eps}
+	\caption{Wide beach house setup: different time steps show the approach of the flood and the escaping pedestrians.}
+	\label{fig:beach_1}
+\end{figure}
+
+Fig.~\ref{fig:beach_1} shows the model evolution using a wide parcel spacing of 7 m. In this experiment, pedestrians do not have problems in escaping the rising flood: Their escape path is very easy and thus also sufficiently short. People do not accumulate to much, because there are no dramatic bottlenecks.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth5_Flood0_1_000700.eps}
+	\qquad
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth5_Flood0_1_002000.eps}
+	\caption{Intermediate beach house setup: different time steps show the approach of the flood and the escaping pedestrians.}
+	\label{fig:beach_2}
+\end{figure}
+
+A slightly denser setup is shown in Fig.~\ref{fig:beach_2}. The spacing between two adjacent parcels is here 5 m wide. People again seem to be able to escape well.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth3_Flood0_1_000700.eps}
+	\qquad
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth3_Flood0_1_002000.eps}
+	\caption{Narrow beach house setup: different time steps show the approach of the flood and the escaping pedestrians.}
+	\label{fig:beach_3}
+\end{figure}
+
+Fig.~\ref{fig:beach_3} presents an experiment with a narrow 3 m spacing between each house parcel. The pedestrians coming from the wide beach start to accumulate slightly at the house fronts in order to escape through the narrow paths. This slightly reduces the escape efficiency of this model.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth1_Flood0_1_000700.eps}
+	\qquad
+	\includegraphics[width=1.1\textwidth]{figures/BeachEvacuationOneExitStreetWidth1_Flood0_1_002000.eps}
+	\caption{Very narrow beach house setup: different time steps show the approach of the flood and the escaping pedestrians.}
+	\label{fig:beach_4}
+\end{figure}
+
+Finally, the model setup with the narrowest house spacing (1 m between adjacent parcels) is shown in Fig.~\ref{fig:beach_4}. People now dramatically start to accumulate and the entering of the streets from the beach starts to become a bottleneck. Since the pedestrians are sensitive to the accumulation of a lot of people, they start to re-decide their exit path and try to find other ways out. This leads to a dense flow of people running on the beach parallel to the beach front until they eventually decide to head into a narrow street. This effectively hinders fast evacuation and hence, many people are caught by the rising water.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{figures/AnalysisMULTI_BeachEvacuationOneExitStreetWidth1_Flood0_1.eps}
+	\caption{Escape efficiency for the different model setups. (a) Wide model setup with a street width of 7 m, (b) intermediate model setup with a street width of 5 m, (c) narrow model setup with a street width of 3 m and (d) extremely narrow model setup with a street width of 1 m. Curves show cumulative amount of people arrived at the exit (blue) or drowned in the flood (red) and the total of both (black).}
+	\label{fig:analysis_1}
+\end{figure}
+
+To decide on the amount of buildings per beach area it is useful to look at the number of people that are able to exit the area in a sufficient short amount of time. This is done in Fig.~\ref{fig:analysis_1}, where the cumulative amount of people is plotted that are either able to exit the model domain or that are caught by the flood. Important is here the number of persons that are able to leave in a certain amount of time. The values are marked in Fig.~\ref{fig:analysis_1}, which shows decreasing values from 41 exits per time down to 18 exits per time by increasing the density of the house parcels. The amount of exits per time in the very dense model is so low, that a dramatical amount of people are drowned in the flood.
+
+This leads us to the conclusion that the house parcel spacing needs to be larger than 1 m and can be as narrow as 3 m to guarantee economical prosperity that goes along with tourist savety.
+
+
 \section{Summary and Outlook}
 
+In this work we present an efficient numerical code that solves pedestrian flow and panic behaviour for large scale model setups as well as for a big number of agents. The model accuracy is benchmarked using a set of small model setups. Finally, the code is used give guidance in deciding about the beach house parcel spacing close to a beach. This is done by considering a possible flooding (i.e. rise of water level) and the subsequently upcoming escape panic. Parcel spacings of 3 m are shown to be sufficient, whereas a spacing of only 1 m leads to many dead people caused by the flood.
+
+Still there are numerical issues which might be solved in future. The shortest path formulation that takes the position of the agents into account might be improved. It is not realistic, that one agent knows the positions of all the other pedestrians in the whole model domain, nor will he be able to decide physically correct on the shortest path in reality. On the other hand, numerical experiments like those presented in this study have to be taken into account in a decision process rather than considered as true nature. Thus, numerical models in social study might prevent many dramatic events in future and possibly already have so.
 
 \section{References}
 
