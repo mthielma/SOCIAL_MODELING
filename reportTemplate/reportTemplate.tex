@@ -3,7 +3,8 @@
 \geometry{letterpaper}                   
 
 \usepackage{natbib}
-\usepackage{standalone}
+\usepackage{pdfpages}
+\usepackage{longtable}
 %\usepackage[latin1]{inputenc}
 %\usepackage[english]{babel}
 %\usepackage[T1]{fontenc} 
@@ -79,7 +80,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
+\includepdf{Declaration_of_originality}
 % IMPORTANT
 % you MUST include the ETH declaration of originality here; it is available for download on the course website or at http://www.ethz.ch/faculty/exams/plagiarism/index_EN; it can be printed as pdf and should be filled out in handwriting
 
@@ -95,18 +96,16 @@
 
 
 \section{Abstract}
-
-
+Tsunamis and Flooding events are natural catastrophes that pose a threat to humans being close to water bodies at the time of the event. It is a challenge for authorities to foresee such events and provide the means to minimize the number of fatalities. In the last decade, advances in numerical modeling of pedestrian dynamics have made it possible to model such situations and to test the influence of several parameters on evacuation dynamics. In this study, we present a code that attempts to model pedestrian dynamics. This code was written entirely in MATLAB (except some external packages, which were included as mex files) in the frame of the lecture "Modelling and Simulating Social Systems with MATLAB". We present some results on the behaviour of the code using different apporaches to describe the path finding process of a pedestrian and then apply our code to an artificial model of the evacuation of a beach in the case of a rapid flooding event.
 
 \section{Individual contributions}
-No one wrote the individual contributions.
-
+As we worked together on the whole code, it is very difficult to assess who contributed most to a particular part of the code. We both wrote different function, but oftentimes a fair bit of debugging was done by the other group member. Even the log files from github does not exactly reflect the contributions of each group member, since we also worked and debugged large parts of the code together. Concerning the report, F.C. wrote most of the theoretical part and the description of the final beach evacuation simulation (he also did the analysis of those results). M.T. mainly wrote the parts concerning the shortest path algorithm and was in charge of the documentation part.  
 \section{Introduction and Motivations}
 Locations close to water bodies (rivers, lakes) have always been naturally preferred for human settlements, since they provide i) water, ii) food through the animals inhabiting the water body and iii) transportation ways. In earlier times the settlements were usually located at a certain distance from the water body to prevent the settlement to be seriously affected by flooding. With the increase of inhabitants, those settlements grew closer to the water body, thus making it more vulnerable to flooding events.
 When a part of a city has to be evacuated because of a flooding event, it is important to have information about the social behavior of the inhabitants. Based on this information, more effective evacuation procedures can be developed that might be crucial in reducing possible fatalities.
-I this project, we developed a code to simulate such events. The code is based on existing findings about the behaviour of pedestrians in crowds and was extended (inspired by the work of REFERENCE) to take different additional effects in to account. In this study, we tested the effects of several additions in a set of small and simple models and then applied the code to a larger domain, where we investigated the evacuation of a beach which is about to be flooded. 
+I this project, we developed a code to simulate such events. The code is based on existing findings about the behaviour of pedestrians in crowds and was extended (inspired by the work of \citet{HeerBuehler}) to take different additional effects in to account. In this study, we tested the effects of several additions in a set of small and simple models and then applied the code to a larger domain, where we investigated the evacuation of a beach which is about to be flooded. 
 \section{Description of the Model}
-In the following, we describe the theory that provides the basis for our model. The model itself is a continuous model, meaning that each pedestrian is modeled as a separate agent. The agents in our model are panically trying to derive an exit. Number, size, mass and max. velocity of each agent can be changed for different model setups. The movement of each agent is driven by a set of forces which will be described in the following. In the following, the different forces are described in relation to their origin. 
+In the following, we describe the theory that provides the basis for our model (from \citet{Helbing2000}). The model itself is a continuous model, meaning that each pedestrian is modeled as a separate agent. The agents in our model are panically trying to derive an exit. Number, size, mass and max. velocity of each agent can be changed for different model setups. The movement of each agent is driven by a set of forces which will be described in the following. In the following, the different forces are described in relation to their origin.
 \subsection{Agent Forces}
 Agent forces can be divided into psychological and physical forces. Psychological forces are meant to mimic the will of each agent, whereas physical forces arise when agents actually touch each other.
 
@@ -148,7 +147,7 @@ When the different forces are added together, we obtain the total social force a
 
 \subsection{Wall forces}
 
-For a pedestrian panic to occur, walls are needed. They bound a certain amount of space, which might become small when filled with people. They further produce bottlenecks at positions where a room suddenly gets smaller or where there is an exit at which pedestrians are accumulated. From nature we know two main behaviors regarding walls: People usually don't like to walk too close to a wall and people can not walk through a wall. Therefore there are two forces to consider, when modeling such a feature, psychologic and physical forces, respectively.
+For a pedestrian panic to occur, walls are needed. They bound a certain amount of space, which might become small when filled with people. They further produce bottlenecks at positions where a room suddenly gets smaller or where there is an exit at which pedestrians are accumulated. From nature we know two main behaviors regarding walls: People usually don't like to walk too close to a wall and people can not walk through a wall. Therefore there are two forces to consider when modeling such a feature, psychologic and physical forces.
 
 \subsubsection{Psychological forces}
 
@@ -159,7 +158,7 @@ The psychological repulsive force defined here for the walls/buildings can be wr
 	\label{eq:fiWS}
 \end{equation}
 
-where $A_i$ and $B_i$ are constants, $n_{iW}$ is the normalized vector pointing from the pedestrian to the wall, $d_{iW}$ is the distance in between and $r_i$ is the size (i.e. radius) of the pedestrian (Helbing et al., 2000).
+where $A_i$ and $B_i$ are constants, $n_{iW}$ is the normalized vector pointing from the pedestrian to the wall, $d_{iW}$ is the distance in between and $r_i$ is the size (i.e. radius) of the pedestrian.
 
 \subsubsection{Physical forces}
 As in the case of physical inter-agent forces, an agent is subject to physical forces from the walls if it comes too close to a wall. The physical wall forces can be divided into a normal force $f_{iWPn}$ and a tangential force $f_{iWPt}$ acting from the wall and are written as:
@@ -190,12 +189,12 @@ The total repulsive force from the architecture $f_{iW}$ can then be written as
 \subsection{Exits}
 \label{sec:Exits1}
 
-In our model, the sole attractive force is the exit force. As for the social forces, it is rather a psychological force representing the will of each agent to reach the exit. In this work, we chose the value of the exit force to be proportional to the sum of the other psychological forces (in our code, one can choose a proportionality constant to adjust the exit force). To determine the direction of the exit force, we used two different approaches: i) the agent is drawn directly towards the exit, regardless of any obstacles in between him and an exit, and ii) the agent decides on its walking direction based on the estimate of the time it needs to reach the exit (e.g. \citet{Graf,Kneidl}).
+In our model, the sole attractive force is the exit force. As for the social forces, it is rather a psychological force representing the will of each agent to reach the exit. In this work, we chose the value of the exit force to be proportional to the sum of the other psychological forces (in our code, one can choose a proportionality constant to adjust the exit force). To determine the direction of the exit force, we used two different approaches: i) the agent is drawn directly towards the exit, regardless of any obstacles in between him and an exit, and ii) the agent decides on its walking direction based on the estimate of the time it needs to reach the exit (e.g. \citet{HeerBuehler}).
 While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect at all the decision processes of a human agent, since obstacles between the agent and the exit are always taken into account. Second, this implementation might result in agents being trapped in corners, which is not realistic. For the second implementation, we used a shortest path algorithm to compute the estimated time to the exit.
 
 \subsubsection{Shortest path formulation}
-Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. One of the earliest solutions to this problem was presented by Dykstra (reference). Shebian (right name? reference?) presented a fast and efficient method to solve a certain class of shortest path problems, which is called the Fast marching method. It is a special case of level set methods and solves the Eikonal equation. 
-In geophysics, the Eikonal equation is used to describe the propagation of a wavefront through a medium. The problem of pedestrians finding the shortest path to an exit is a very similar one. 
+Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. \citet{Sethian} presented a fast and efficient method to solve a certain class of shortest path problems, which is called the Fast marching method. It is a special case of level set methods and solves the Eikonal equation. 
+In geophysics, the Eikonal equation is used to describe the propagation of a wavefront through a medium. The problem of pedestrians finding the shortest path to an exit is a very similar one. We can therefore use this method in our code to find the shortest path between an agent and the exit.
 
 \subsection{Flood}
 
@@ -211,13 +210,13 @@ The free (unobstructed by obstacles) walking speed of pedestrians is determined 
 \item the forces acting on an agent
 \end{enumerate}
 
-In our model, we assume the conditions of the ground to be the same everywhere, meaning that there is no effect of ground roughness on the velocity of the agent. However, as we intend to include topography in our model, we introduce a walking speed function that is dependent on the slope $S$ of the ground (TOBLER):
+In our model, we assume the conditions of the ground to be the same everywhere, meaning that there is no effect of ground roughness on the velocity of the agent. However, as we intend to include topography in our model, we introduce a walking speed function that is dependent on the slope $S$ of the ground \citep{tobler}:
 
 \begin{equation}
 	v(S) = A_{S} \exp{\left( -B_S | S + S_{crit} |  \right)}\mbox{,}
 \end{equation}
 
-where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocities.
+where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards. \citet{tobler} used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocities.
 
 To account for the impact of psychological and physical forces on pedestrian walking speed, \citet{Helbing2000} used the following equation for the change of agent velocity in time:
 
@@ -227,45 +226,52 @@ To account for the impact of psychological and physical forces on pedestrian wal
 
 where $v_i^0\mathbf{e}_i$ is the desired velocity in the desired direction.
 
-
-
-
-
-
 \section{Implementation}\label{sec:implementation}
 
-This section is meant to both give an overview of the methods used in this code as well as to provide a documentation of the code. Therefore, some details are mentioned here that might not be crucial for any code that simulates pedestrian dynamics, but are needed in our implementation. 
+This section is meant to both give an overview of the methods used in this code as well as to provide a documentation of the code. Therefore, some details are mentioned here that might not be crucial for any code that simulates pedestrian dynamics, but are needed in our implementation.\\
+We tried to organize the code in a modular way, each module being a separate function. We did not do that in a rigorously consequent manner, but to a large extent most of the different modules are contained in separate functions. Using a number of different switches, the user can switch on and off different modules of the code (more details on the different switches can be found in \ref{sec:input_file}).\\
+The actual simulation is carried out in the main function EscapePanic.m. The structure of this function can be seen in fig.\ref{fig:EscapePanic}. 
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textheight]{figures/EscapePanic}
+\caption{Flow diagram of the main simulation function EscapePanic.m. Actions that are drawn in parallel belong to an if-loop.}
+\label{fig:EscapePanic}
+\end{figure}
+To save computation time, we decided to compute several fields (e.g. the psychological forces from buildings) on a regular grid instead of computing it individually for each agent. To get the value of the respective field for an individual agent, we then interpolated this field to the agents. We assume that by using a sufficient high resolution (0.1 m spacing) for this field, our results are sufficiently accurate. The regular grid as well as the fields are computed before we enter the time loop in our simulations (also see fig.\ref{fig:pre-loop} for a flow diagram of the pre-loop computations). Additionally, we initalize an array of structures called AGENT, in which all values related to the agents are stored. This makes is relatively easy to access the parameters for each agent. The cost of using such an array is that the assignment of values to particular fields of a structure in the array is relatively expensive in terms of computational time since it is not straightforward to vectorize operations on such an array of structures. We therefore usually had to transfer the vlaues in the fields of the different structures to vector, perform the operation on this vector, then transferring it to a cell array, which then allowed us to assign the contents of this cell array to the respective field of the structures in the AGENT array of structures. However, since other operations take much more time in our simulation, we prefer this data structure because of its accessibility.\\
+\begin{figure}
+\centering
+\includegraphics[height=0.5\textheight]{figures/PreLoopComputations}
+\caption{Flow diagram of the pre-loop computations in EscapePanic.m. Actions that are drawn in parallel belong to an if-loop.}
+\label{fig:pre-loop}
+\end{figure}
 
-\subsection{Initialization of Buildings and Agents}
-
-Buildings and Agents (and other input parameters) are initialized in using a simple parameter file. 
-
+\subsection{Initialization of Buildings, Exits and Flood maps}
+Building information is passed to the EscapePanic function as a list where the minimal and maximal x- and y-values are stored. This is feasible only when using buildings that conform to the lines of a cartesian grid. In the case of more complex building structures, this would have to be changed. From this building list, we then produce a boolean building map with a high spatial resolution, where the nodes are assigned a 1 when a building is located at the respective node and 0 when no building is located there. This building map is then later on used in several functions. The same is done for exits and a flood map.
 \subsection{Agents}
-
-Agents are initially distributed randomly in a defined area. Both number of agents and the placing area can be set initially.
-
+The AGENT structure is initialized using a separate function, where we initialize both agent parameters such as maximal agent velocity, mass etc. and fields that will contain information about forces acting on each agent later on. Several agent parameters can be varied in a random manner. The perturbation can be set in the input file by the user. Initial agent locations are computed in a random manner inside a predefined starting area.
 \subsubsection{Agent forces}
-
-
-
-\subsection{Architecture}
-
-The architecture in our models consist of repulsive walls and attractive exits.
+The different forces acting on the agents are computed in different functions and stored in the AGENT array of structures.
+\begin{description}
+\item{\textbf{Psychological forces from buildings: }}As those forces are static throughout the simulation, they are computed before the time loop on a regular grid and then interpolated to the agents at each time step. Values that have to be interpolated are the magnitude of the force and the direction of the force. The direction is again normalized after interpolation. To compute the psychological forces on the regular grid, we use the MATLAB function bwdist from the image processing toolbox, which computes the distance from a node with value 0 to a node with value 1 in a very fast manner. 
+\item{\textbf{Psychological forces from the flood: }}Those forces are computed in a similar manner as the psychological forces from the buildings, but as the water level is changing at each time step, this has to be done inside the time loop.
+\item{\textbf{Psychological forces from agents: }}Prior to computing those forces, a kd-tree \citep{kdtree} is created inside the time loop to allow for a fast range search of the agent locations. Inside the agent loop, we then perform this range search to find all the agents located in a box around the "active" (meaning that the forces for this agent are computed in this step of the agent loop) agent. We then compute the distance of the active agent to the agents in this box and use this information to compute the social force resulting from those agents.
+\item{\textbf{Physical forces from agents: }}Using the information about the distance from the step above, we can now compute the physical force from other agents acting on the active agent, if they are too close. We can compute both the normal as well as the tangential force. In our code, the tangential force computation lead to spurious effects, which is why we switched it off in our simulations. We suspect that there is a bug in this computation (most likely a sign error), but due to the limited amount of time available, we were not able to fix this issue.
+\item{\textbf{Physical forces from buildings: }}The physical forces from building on the agent are also inly computed when the agent is getting too close to a building. As for the physical forces from the agents, we omit the tangential forces.
+\item{\textbf{Exit forces: }}Exit forces can be computed in this code in two different ways: Either one can set the exit force to be proportional to the other social forces acting on the agent, only that the exit force is directed towards the exit, or one can use a constant exit force. We chose to use a constant exit force for simplicity. The computation of the exit direction is described below.
+\end{description}
 
 \subsubsection{Repulsive walls}
 \label{sec:WallsImplementation}
-
 Repulsive walls are added using a list of minimum and maximum values in x- and y-direction. Therefore only square buildings are implemented in the current version of the code. The single buildings are then put together into a building map, where we calculate the distance between every free point in the model domain (not covered by a building) and the nearest wall. From this distance we calculate the psychologic wall force on all agents and, if they touch the wall, the physical wall forces as well. Eq.~\eqref{eq:fiWS} for the psychologic wall force can be rewritten as
 
 \begin{equation}
 	{f_{iWS}} = \left\{ {{A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} } \right\}{{\bf n}_{iW}}
 	\label{eq:fiWS2}
 \end{equation}
-
 which allows for calculating the first part already before starting the time loop. The second part is then added later on in the agent loop.
 
 \subsubsection{Exit forces}
-As mentioned above, we tested several different methodes to mimic the desire of an agent to reach the exit. All methods use a shortest path algorithm which was downloaded from the Matlab File Exchange. We then implemented 5 different ways to compute the desired direction to the exit of an agent:
+As mentioned above, we tested several different methodes to mimic the desire of an agent to reach the exit. All methods use a shortest path algorithm which was downloaded from the Matlab File Exchange \citep{fastmarching}. We then implemented 5 different ways to compute the desired direction to the exit of an agent:
 \begin{description}
 \item{\textbf{Direct exit direction: }}In this case, all nodes in our domain are assigned a constant velocity $v_0$, which is equal to the unperturbed maximal velocity of the agents. Using the fast marching algorithm, we then obtain the estimated time it takes to go from each node to the exit. Taking the gradient of this field in both x- and y-direction and normalizing them yields the desired direction of the agents.
 \item{\textbf{Shortest path with buildings taken into account: }} In this case, we set the velocity at the nodes where a building is located to a very small value ($10^{-8}$). Setting this value to 0 results in numerical errors, since the travel time would then become infinite at those nodes. This approach also results in an exit direction that is perpendicular to the building walls at the nodes that are part of a building wall. This is actually desirable, as it adds an additional "desire" to the agent to stay away from a wall.
@@ -300,24 +306,31 @@ In this study, we use a set of different model setups and several different mode
 	 \begin{footnotesize}
 	\caption{Models and numerical setups used in this work.}
 	\label{tab:Parameters}
-	\begin{tabular}{p{2.9cm} p{2.0cm} p{2.5cm} p{2.0cm} p{2.0cm} p{2.0cm} p{2.0cm} }
+	\begin{tabular}{l l r r  r }
 	\hline
-	 \textbf{Model} & \textbf{Exit force} & \textbf{perturbations} & \textbf{topography} & \textbf{des. vel.} & \textbf{...} & \textbf{...}\\
-	 & formulation & & & $v_{0}$    \\
-	 & & & & m/s &   \\
+	 \textbf{Model} & \textbf{Exit force} & \textbf{perturbations} & \textbf{topography} &\textbf{flood}  \\
+	 & formulation & &  \\
+	 & & &  \\
 	\hline
 		&  \\
 			&   \\
 	\hline
-	{\bf Model1\_direct\_1}	& direct 	& no			& no	& 5.0 & 			\\
-	{\bf Model1\_direct\_2}	& direct 	& size, mass, $\Delta f_{ijS}$ 	& no 	& 5.0 &		\\
-	{\bf Model2\_direct\_1}	& direct 	& size, mass 	& no 	& 5.0	 &				\\
-	{\bf Model2\_shortest\_1}	& sh. path & size, mass 	& no 	& 5.0	 &			\\
+	{\bf Model1\_direct\_1}	& direct 	& no			& no& no	\\
+	{\bf Model1\_direct\_2}	& direct 	& size, mass, $\Delta f_{ijS}$ 	& no& no\\
+	{\bf Model2\_direct\_1}	& direct 	& size, mass 	& no 	& no\\
+	{\bf Model2\_shortest\_1}	& sh. path & size, mass 	& no 	& no\\
+	{\bf EscapePanicTwoExitsDirect} & direct & mass, $\Delta f_{ijS}$ & no& no\\
+	{\bf EscapePanicTwoExitsShortestPath} & sh. path & mass, $\Delta f_{ijS}$ & no& no\\
+	{\bf EscapePanicTwoExitsShortestPathAgent} & sh. path ag. & mass, $\Delta f_{ijS}$ & no& no\\
+	{\bf EscapePanicTwoExitsShortestPathAgentTopo} & sh. path ag. top. & mass, $\Delta f_{ijS}$ & yes& no\\
+	{\bf BeachRun5} & sh. path ag. top. & size, $v_0$, mass, $\Delta f_{ijS}$  & yes & yes\\
+	{\bf BeachRun6} & sh. path ag. top. & size, $v_0$, mass, $\Delta f_{ijS}$  & yes  & yes\\
+	{\bf BeachRun7} & sh. path ag. top. & size, $v_0$, mass, $\Delta f_{ijS}$  & yes  & yes\\
+	{\bf BeachRun8} & sh. path ag. top. & size, $v_0$, mass, $\Delta f_{ijS}$ &  yes & yes\\
 	\hline
 	\end{tabular}
 	
-	{\bf sh. path:} shortest path formulation / {\bf des. vel.:} desired velocity /    \\
-	$^{(a)}$ footnote
+	{\bf sh. path:} shortest path formulation / {\bf sh. path ag.:} shortest path formulation with agents / {\bf sh. path ag. top.:}\\ shortest path formulation with agents and topography  \\
 	\end{footnotesize}
 \end{table}
 \end{landscape}
@@ -452,11 +465,6 @@ In this last simulation, we tested the influence of topography on agent behaviou
 
 In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 15$ m and $\sigma_y = 6$ m.
 
-
-\subsection{Evacuation through a road network}
-
-\subsection{Evacuation through a road network with topography and flooding}
-
 \subsection{Evacuation of a beach in the case of a tsunami event}
 
 \begin{figure}
@@ -468,7 +476,7 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 	\label{fig:beach_initial}
 \end{figure}
 
-Fig.~\ref{fig:beach_initial} shows the initial model setup that consists of $55\times110$ m wide box, several beach houses and a anti-flood wall in the back including a relatively wide exit. Topography is included in this setup shown by the topography contours. This is needed for a flood to rise over time until the water reaches the only exit of the model. One thousand people are initially placed at the beach close to the water (or in the water). At the model begin, the flood starts to rise and the people immediately start to panically escape the beach area towards the exit. The beach houses in between hinder them (depending on the model setup) to do so in a sufficiently short time. The goal of this setup is to evaluate the escape possibilities from the beach depending on the width of the streets between each house parcel. Therefore we here present four different models using different parcel spacings.
+Fig.~\ref{fig:beach_initial} shows the initial model setup that consists of $55\times110$ m wide box, several beach houses and a anti-flood wall in the back including a relatively wide exit. Topography is included in this setup shown by the topography contours. This is needed for a flood to rise over time until the water reaches the only exit of the model. One thousand people are initially placed at the beach close to the water (or in the water). At the model start, the flood starts to rise and the people immediately start to panically escape the beach area towards the exit. The beach houses in between hinder them (depending on the model setup) to do so in a sufficiently short time. The goal of this setup is to evaluate the escape possibilities from the beach depending on the width of the streets between each house parcel. Therefore we here present four different models using different parcel spacings.
 
 \begin{figure}
 	\centering
@@ -530,59 +538,110 @@ This leads us to the conclusion that the house parcel spacing needs to be larger
 
 In this work we present an efficient numerical code that solves pedestrian flow and panic behaviour for large scale model setups as well as for a big number of agents. The model accuracy is benchmarked using a set of small model setups. Finally, the code is used give guidance in deciding about the beach house parcel spacing close to a beach. This is done by considering a possible flooding (i.e. rise of water level) and the subsequently upcoming escape panic. Parcel spacings of 3 m are shown to be sufficient, whereas a spacing of only 1 m leads to many dead people caused by the flood.
 
-Still there are numerical issues which might be solved in future. The shortest path formulation that takes the position of the agents into account might be improved. It is not realistic, that one agent knows the positions of all the other pedestrians in the whole model domain, nor will he be able to decide physically correct on the shortest path in reality. On the other hand, numerical experiments like those presented in this study have to be taken into account in a decision process rather than considered as true nature. Thus, numerical models in social study might prevent many dramatic events in future and possibly already have so.
+Still there are numerical issues which might be solved in future. The shortest path formulation that takes the position of the agents into account might be improved. It is not realistic, that one agent knows the positions of all the other pedestrians in the whole model domain, nor will he be able to decide physically correct on the shortest path in reality. On the other hand, numerical experiments like those presented in this study have to be taken into account in a decision process rather than considered as true nature. Thus, numerical models in social study might prevent many dramatic events in future and possibly already have done so.
 
 \section{References}
 
-
 \bibliographystyle{plainnat}
-%\bibliography{/Users/fabio/ETH/Vorlesungen/SOCIAL_MODELING/reportTemplate/bib/socialmodelling}
+\bibliography{socialmodelling}
 
-
-\begin{thebibliography}{3}
-\providecommand{\natexlab}[1]{#1}
-\providecommand{\url}[1]{\texttt{#1}}
-\expandafter\ifx\csname urlstyle\endcsname\relax
-  \providecommand{\doi}[1]{doi: #1}\else
-  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
-
-\bibitem[Graf and Krebs(2010)]{Graf}
-D.~Graf and M.~Krebs.
-\newblock Train boarding platform simulation.
-\newblock Modelling and Simulating Social Systems with MATLAB, ETHZ, 2010.
-
-\bibitem[Helbing et~al.(2000)Helbing, Farkas, and Vicsek]{Helbing2000}
-D.~Helbing, I.~Farkas, and T.~Vicsek.
-\newblock Simulating dynamical features of escape panic.
-\newblock \emph{Nature}, 407\penalty0 (6803):\penalty0 487--490, 2000.
-
-\bibitem[Kneidl and Borrmann(2011)]{Kneidl}
-A.~Kneidl and A.~Borrmann.
-\newblock How do pedestrians find their way? results of an experimental study
-  with students compared to simulation results.
-\newblock In \emph{Conference on Emergency Evacuation}. Warsaw, Poland, 2011.
-
-\end{thebibliography}
 
 \begin{appendix}
 \section{Code structure and source code}
-In fig ???., the basic structure of our code is shown. We split the code description in several different parts to provide a bit more readability. In principle, we tried to put most of the computations in separate functions. The input data and parameters necessary to run the simulation are all set in a separate input file, which then calls the actual simulation function. Rather than plotting the results "on the fly", the necessary data is saved regularly. visualization is done in an postprocessing step.
-\subsection{Input file}
-In our input file, the user can set all the parameters that are needed
+In fig.\ref{fig:EscapePanic}., the basic structure of our code is shown. We split the code description in several different parts to provide a bit more readability. In principle, we tried to put most of the computations in separate functions. The input data and parameters necessary to run the simulation are all set in a separate input file, which then calls the actual simulation function. Rather than plotting the results "on the fly", the necessary data is saved regularly. Visualization is done in an postprocessing step.
+\subsection{Input file}\label{sec:input_file}
+In our input file, the user can set all the parameters that are needed. In tab.\ref{tab:input} and \ref{tab:input2}, we list all parameters that can be varied in the code, the  parameters we used and their effect.
+
+\begin{table}
+\begin{tabular}{l l l}
+\hline
+\textbf{Input parameter} & \textbf{value} & \textbf{meaning/effect}\\  
+\hline
+Parameter.Foldername & 'test' & name of the output folder\\
+Parameter.Save & boolean & save output files or not\\
+Parameter.SaveTimeStep & 10 & saves output every $n$ timesteps\\
+Parameter.Resolution & 0.1 & resolution of the regular grid \\
+Parameter.maxtime & 10 &maximum simulation time (in min)\\
+Parameter.dt & 0.01 & simulation timestep\\
+Parameter.nagent & 20-1000 & number of agents\\
+Parameter.AgentSetup &random,given,load& determines the initial agent location\\
+Parameter.m & 80 & agent mass in kg\\
+Parameter.m\_pert & 10 & agent mass perturbation\\
+Parameter.v & 5 & agent max velocity in m/s\\
+Parameter.v\_pert & 5 & velocity perturbation\\
+Parameter.t\_acc & 0.5 & acceleration time in s\\
+Parameter.AgentSize & 0.25 & agent radius in m\\
+Parameter.AgentSize\_pert & 0.05 & agent radius perturbation\\ 
+Parameter.BoxSize\_pert & 5 & box size around agent\\ 
+Parameter.PhysicalForces & boolean & switch physical forces on/off\\
+Parameter.Tangential & boolean & switch tangential forces on/off\\
+Parameter.k & 1.2e5 & phys. normal force prefactor\\
+Parameter.kappa & 2.4e5 & phys. tangential force prefactor\\
+Parameter.SocialForces & boolean & switch social forces on/off\\
+Parameter.pert\_social & 0.05 & percentage of social force perturbation\\
+Parameter.A & 2e3 & social force prefactor\\
+Parameter.B & 0.08 & social force exponential factor\\
+Parameter.ExitFactor & 1  & exit force prop. factor \\
+Parameter.ExitForce & constant,proportional & constant or proportional exit force\\
+
+\hline
+
+\hline
+\end{tabular}
+\label{tab:input}
+\caption{Input parameters for EscapePanic.m Part 1}
+\end{table}
+
+
+\begin{table}
+\begin{tabular}{l l l}
+\hline
+\textbf{Input parameter} & \textbf{value} & \textbf{meaning/effect}\\  
+\hline
+Parameter.WithFlood & boolean & switch flooding on/ off\\
+Parameter.z0\_flood & 0 & initial water height\\
+Parameter.dzdt\_flood & 0.1 & rising rate\\
+Parameter.dangerousDepth & 0.2 & if water depth is greater, agents drown\\
+Parameter.FloodSpeed & $v_0/2$ & max velocity of agents in water\\
+Parameter.A\_flood & 5e2 & social force parameter for flood\\
+Parameter.B\_flood & 0.08 & social force parameter for flood\\ 
+Parameter.DirectExitPath & boolean & use direct exit direction or not?\\
+Parameter.orig\_sensitivity & 1 & sensitivity of agent to exit direction\\
+& & without agents\\
+Parameter.agent\_sensitivity & 2.5 & sens. of agents to others in the way\\
+Parameter.topo\_sensitivity & 1 & not used anymore\\
+Parameter.decision\_time & 0.05 & recompute shortest path after this time\\
+Parameter.WithAgents & boolean & take agents into account?\\
+Parameter.WithTopo & boolean & take topo into account?\\
+Parameter.Enlarge & 0.3 & building enlargement \\
+Parameter.Topo\_name & none,name & topo file to be used\\
+Parameter.slope\_f & 3.5&factor for slope-dependent vel.\\
+Parameter.slope\_crit & 0.05 & factor for slope-dependent vel.\\
+Parameter.xmin & 0 & domain boundaries\\
+Parameter.xmax & 20 - 50\\
+Parameter.ymin & 0 \\
+Parameter.ymax & 10-150\\
+
+\hline
+
+\hline
+\end{tabular}
+\label{tab:input2}
+\caption{Input parameters for EscapePanic.m Part 2}
+\end{table}
+\begin{landscape}
+\include{RunEscapePanic}
+\end{landscape}
+
+\subsection{Beach evacution runs: Input file}\label{sec:input_file}
+For the beach evacuation runs, we used two functions to create the building list and the topography. In the following, we list one example input file for the beach runs and the two additional functions.
+\begin{landscape}
+\include{BeachRun1}
+\include{CreateTopo}
+\include{SetBuildings}
+\end{landscape}
 \subsection{Simulation function}
 The simulation function that is called by the input file runs the entire simulation, saves the output and plots intermediate results if desired. Before entering the time loop, a number of actions is performed (see fig.\ref{fig:pre-loop}). The computation of all forces that do not change throughout the simulation is done here. After the pre-loop stage, we enter the time loop. In here, we perform a number of computations for all agents, before entering an agent loop, in which we compute individual and agent-specific parameters (see fig.\ref{fig:EscapePanic}). After completing the time loop, some parameters for later analysis are save and the function exits. 
-\begin{figure}
-\centering
-\includegraphics[height=0.5\textheight]{figures/PreLoopComputations}
-\caption{Flow diagram of the pre-loop computations in EscapePanic.m. Actions that are drawn in parallel belong to an if-loop.}
-\label{fig:pre-loop}
-\end{figure}
-\begin{figure}
-\centering
-\includegraphics[height=0.8\textheight]{figures/EscapePanic}
-\caption{Flow diagram of the main simulation function EscapePanic.m. Actions that are drawn in parallel belong to an if-loop.}
-\label{fig:EscapePanic}
-\end{figure}
 
 Source code files are listed in the order of their appearance.
 \begin{landscape}
@@ -606,6 +665,18 @@ Source code files are listed in the order of their appearance.
 \include{SourceCode/CheckAgentsInBuildings}
 \end{landscape}
 
+\subsection{Visualization}
+The results can be visualized in a number of ways. In this section, we list the source code of the plotting functions we used.
+\begin{landscape}
+\include{SourceCode/plotOutput}
+\include{SourceCode/PlotFlood}
+\include{SourceCode/PlotBuildings}
+\include{SourceCode/PlotAgents}
+\include{SourceCode/PlotTopography3D}
+\include{SourceCode/PlotAgents3D}
+\include{SourceCode/CreateSphere}
+\include{SourceCode/PlotBuildings3D}
+\end{landscape}
 \end{appendix}
 
 \end{document}  
