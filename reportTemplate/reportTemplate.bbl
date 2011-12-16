@@ -1,0 +1,39 @@
+\begin{thebibliography}{6}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Heer and B\"uhler(2011)]{HeerBuehler}
+Philipp Heer and Lukas B\"uhler.
+\newblock Pedestrian dynamics: Airplane evacuation simulation.
+\newblock May 2011.
+
+\bibitem[Helbing et~al.(2000)Helbing, Farkas, and Vicsek]{Helbing2000}
+D.~Helbing, I.~Farkas, and T.~Vicsek.
+\newblock Simulating dynamical features of escape panic.
+\newblock \emph{Nature}, 407\penalty0 (6803):\penalty0 487--490, 2000.
+
+\bibitem[Kroon()]{fastmarching}
+Dirk-Jan Kroon.
+\newblock Accurate fast marching \\
+  (http://www.mathworks.com/matlabcentral/fileexchange/24531).
+
+\bibitem[Michael()]{kdtree}
+Steven Michael.
+\newblock Kd tree nearest neighbor and range search
+  (http://www.mathworks.com/matlabcentral/fileexchange/7030).
+
+\bibitem[Sethian(1996)]{Sethian}
+J~Sethian.
+\newblock A fast marching level set method for monotonically advancing fronts.
+\newblock \emph{Proceedings of the National Academy of Sciences}, Jan 1996.
+\newblock URL \url{http://www.pnas.org/content/93/4/1591.short}.
+
+\bibitem[Tobler(1993)]{tobler}
+Waldo Tobler.
+\newblock Non-isotropic geographic modeling.
+\newblock Tr-93-1, NCGIA, 1993.
+
+\end{thebibliography}
