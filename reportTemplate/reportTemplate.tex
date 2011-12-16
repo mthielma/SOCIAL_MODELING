@@ -257,7 +257,7 @@ The architecture in our models consist of repulsive walls and attractive exits.
 Repulsive walls are added using a list of minimum and maximum values in x- and y-direction. Therefore only square buildings are implemented in the current version of the code. The single buildings are then put together into a building map, where we calculate the distance between every free point in the model domain (not covered by a building) and the nearest wall. From this distance we calculate the psychologic wall force on all agents and, if they touch the wall, the physical wall forces as well. Eq.~\eqref{eq:fiWS} for the psychologic wall force can be rewritten as
 
 \begin{equation}
-	{f_{iWS}} = \left\{ { {A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right]} } \right\}{{\bf n}_{iW}} \cdot \left\{ { \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} \right\}{{\bf n}_{iW}}
+	{f_{iWS}} = \left\{ {{A_i} {\exp \left[ {\frac{{ - {d_{iW}}}}{{{B_i}}}} \right] \cdot \exp \left[ {\frac{{{r_i}}}{{{B_i}}}} \right]} } \right\}{{\bf n}_{iW}}
 	\label{eq:fiWS2}
 \end{equation}
 
@@ -496,6 +496,14 @@ In this simulation, we chose $A = 1 $ m, $x_0 = 10$ m, $y_0 = 5$ m, $\sigma_x = 
 	\caption{Very narrow beach house setup: different time steps show the approach of the flood and the escaping pedestrians.}
 	\label{fig:beach_4}
 \end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{figures/AnalysisMULTI_BeachEvacuationOneExitStreetWidth1_Flood0_1.eps}
+	\caption{Escape efficiency for the different model setups. (a) Wide model setup with a street width of 7 m, (b) intermediate model setup with a street width of 5 m, (c) narrow model setup with a street width of 3 m and (d) extremely narrow model setup with a street width of 1 m. Curves show cumulative amount of people arrived at the exit (blue) or drowned in the flood (red) and the total of both (black).}
+	\label{fig:analysis_1}
+\end{figure}
+
 
 \section{Summary and Outlook}
 
