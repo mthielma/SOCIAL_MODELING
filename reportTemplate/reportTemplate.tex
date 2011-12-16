@@ -3,7 +3,7 @@
 \geometry{letterpaper}                   
 
 \usepackage{natbib}
-\usepackage{standalone}
+%\usepackage{standalone}
 %\usepackage[latin1]{inputenc}
 %\usepackage[english]{babel}
 %\usepackage[T1]{fontenc} 
@@ -104,9 +104,12 @@ No one wrote the individual contributions.
 \section{Introduction and Motivations}
 Locations close to water bodies (rivers, lakes) have always been naturally preferred for human settlements, since they provide i) water, ii) food through the animals inhabiting the water body and iii) transportation ways. In earlier times the settlements were usually located at a certain distance from the water body to prevent the settlement to be seriously affected by flooding. With the increase of inhabitants, those settlements grew closer to the water body, thus making it more vulnerable to flooding events.
 When a part of a city has to be evacuated because of a flooding event, it is important to have information about the social behavior of the inhabitants. Based on this information, more effective evacuation procedures can be developed that might be crucial in reducing possible fatalities.
-I this project, we developed a code to simulate such events. The code is based on existing findings about the behaviour of pedestrians in crowds and was extended (inspired by the work of REFERENCE) to take different additional effects in to account. In this study, we tested the effects of several additions in a set of small and simple models and then applied the code to a larger domain, where we investigated the evacuation of a beach which is about to be flooded. 
+
+I this project, we develop a code to simulate such events. The code is based on existing findings about the behaviour of pedestrians in crowds and was extended (inspired by the work of REFERENCE) to take different additional effects in to account. In this study, we tested the effects of several additions in a set of small and simple models and then applied the code to a larger domain, where we investigated the evacuation of a beach which is about to be flooded. This is done in relation to the distribution of beach house parcels that might prevent the pedestrians from a fast evacuation.
+
 \section{Description of the Model}
-In the following, we describe the theory that provides the basis for our model. The model itself is a continuous model, meaning that each pedestrian is modeled as a separate agent. The agents in our model are panically trying to derive an exit. Number, size, mass and max. velocity of each agent can be changed for different model setups. The movement of each agent is driven by a set of forces which will be described in the following. In the following, the different forces are described in relation to their origin. 
+In the following, we describe the theory that provides the basis for our model. The model itself is a continuous model, meaning that each pedestrian is modeled as a separate agent. The agents in our model are panically trying to derive an exit. Number, size, mass and max. velocity of each agent can be changed for different model setups. The movement of each agent is driven by a set of forces which will be described in the next sections. In the following, the different forces are described in relation to their origin. 
+
 \subsection{Agent Forces}
 Agent forces can be divided into psychological and physical forces. Psychological forces are meant to mimic the will of each agent, whereas physical forces arise when agents actually touch each other.
 
@@ -191,7 +194,8 @@ The total repulsive force from the architecture $f_{iW}$ can then be written as
 \label{sec:Exits1}
 
 In our model, the sole attractive force is the exit force. As for the social forces, it is rather a psychological force representing the will of each agent to reach the exit. In this work, we chose the value of the exit force to be proportional to the sum of the other psychological forces (in our code, one can choose a proportionality constant to adjust the exit force). To determine the direction of the exit force, we used two different approaches: i) the agent is drawn directly towards the exit, regardless of any obstacles in between him and an exit, and ii) the agent decides on its walking direction based on the estimate of the time it needs to reach the exit (e.g. \citet{Graf,Kneidl}).
-While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect at all the decision processes of a human agent, since obstacles between the agent and the exit are always taken into account. Second, this implementation might result in agents being trapped in corners, which is not realistic. For the second implementation, we used a shortest path algorithm to compute the estimated time to the exit.
+
+While i) is relatively straightforward to implement, there are several crucial drawbacks to this method: First, it does not reflect all the decision processes of a human agent, since obstacles between the agent and the exit are always taken into account. Second, this implementation might result in agents being trapped in corners, which is not realistic. For the second implementation, we used a shortest path algorithm to compute the estimated time to the exit.
 
 \subsubsection{Shortest path formulation}
 Finding the shortest path between two points is a mathematical problem that has received much attention since it's solution can be used in a huge number of applications. One of the earliest solutions to this problem was presented by Dykstra (reference). Shebian (right name? reference?) presented a fast and efficient method to solve a certain class of shortest path problems, which is called the Fast marching method. It is a special case of level set methods and solves the Eikonal equation. 
@@ -217,7 +221,7 @@ In our model, we assume the conditions of the ground to be the same everywhere, 
 	v(S) = A_{S} \exp{\left( -B_S | S + S_{crit} |  \right)}\mbox{,}
 \end{equation}
 
-where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of 5-6 m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocities.
+where $A_S$ and $B_{S}$ represent constant factors and $S_{crit}$ is the critical slope above which a pedestrian actually slows down while walking downwards (see also Fig.\ref{fig:walking_speed}). TOBLER used values of $A_S = 6$, $B_S = 3.5$ and $S_{crit} = 0.05$. On flat terrain, those parameters result in a walking speed of 5 km/h., if $A_S$ is given in units of km/h. In panic situations however, this velocity can reach values of $5-6$ m/s. Here, we take this into account by varying the factor $A_S$ in the walking speed function to account for higher velocities.
 
 To account for the impact of psychological and physical forces on pedestrian walking speed, \citet{Helbing2000} used the following equation for the change of agent velocity in time:
 
@@ -265,7 +269,7 @@ Repulsive walls are added using a list of minimum and maximum values in x- and y
 which allows for calculating the first part already before starting the time loop. The second part is then added later on in the agent loop.
 
 \subsubsection{Exit forces}
-As mentioned above, we tested several different methodes to mimic the desire of an agent to reach the exit. All methods use a shortest path algorithm which was downloaded from the Matlab File Exchange. We then implemented 5 different ways to compute the desired direction to the exit of an agent:
+As mentioned above, we tested several different methods to mimic the desire of an agent to reach the exit. All methods use a shortest path algorithm, which was downloaded from the Matlab File Exchange. We then implemented five different ways to compute the desired direction to the exit of an agent:
 \begin{description}
 \item{\textbf{Direct exit direction: }}In this case, all nodes in our domain are assigned a constant velocity $v_0$, which is equal to the unperturbed maximal velocity of the agents. Using the fast marching algorithm, we then obtain the estimated time it takes to go from each node to the exit. Taking the gradient of this field in both x- and y-direction and normalizing them yields the desired direction of the agents.
 \item{\textbf{Shortest path with buildings taken into account: }} In this case, we set the velocity at the nodes where a building is located to a very small value ($10^{-8}$). Setting this value to 0 results in numerical errors, since the travel time would then become infinite at those nodes. This approach also results in an exit direction that is perpendicular to the building walls at the nodes that are part of a building wall. This is actually desirable, as it adds an additional "desire" to the agent to stay away from a wall.
@@ -523,7 +527,7 @@ Finally, the model setup with the narrowest house spacing (1 m between adjacent 
 
 To decide on the amount of buildings per beach area it is useful to look at the number of people that are able to exit the area in a sufficient short amount of time. This is done in Fig.~\ref{fig:analysis_1}, where the cumulative amount of people is plotted that are either able to exit the model domain or that are caught by the flood. Important is here the number of persons that are able to leave in a certain amount of time. The values are marked in Fig.~\ref{fig:analysis_1}, which shows decreasing values from 41 exits per time down to 18 exits per time by increasing the density of the house parcels. The amount of exits per time in the very dense model is so low, that a dramatical amount of people are drowned in the flood.
 
-This leads us to the conclusion that the house parcel spacing needs to be larger than 1 m and can be as narrow as 3 m to guarantee economical prosperity that goes along with tourist savety.
+This leads us to the conclusion that the house parcel spacing needs to be larger than 1 m and can be as narrow as 3 m to guarantee economical prosperity that goes along with tourist safety.
 
 
 \section{Summary and Outlook}
@@ -566,7 +570,7 @@ A.~Kneidl and A.~Borrmann.
 
 \begin{appendix}
 \section{Code structure and source code}
-In fig ???., the basic structure of our code is shown. We split the code description in several different parts to provide a bit more readability. In principle, we tried to put most of the computations in separate functions. The input data and parameters necessary to run the simulation are all set in a separate input file, which then calls the actual simulation function. Rather than plotting the results "on the fly", the necessary data is saved regularly. visualization is done in an postprocessing step.
+In fig ???., the basic structure of our code is shown. We split the code description in several different parts to provide a bit more readability. In principle, we tried to put most of the computations in separate functions. The input data and parameters necessary to run the simulation are all set in a separate input file, which then calls the actual simulation function. Rather than plotting the results "on the fly", the necessary data is saved regularly. visualization is done in an post-processing step.
 \subsection{Input file}
 In our input file, the user can set all the parameters that are needed
 \subsection{Simulation function}
